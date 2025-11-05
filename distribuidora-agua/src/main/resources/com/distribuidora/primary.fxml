@@ -31,11 +31,12 @@
                         <TextField fx:id="telefoneField" layoutX="81.0" layoutY="82.0" />
                         <TextField fx:id="enderecoField" layoutX="81.0" layoutY="127.0" />
                         <Button fx:id="salvarButton" layoutX="81.0" layoutY="177.0" mnemonicParsing="false" onAction="#handleSalvarCliente" text="Salvar cliente" />
-                        <TableView fx:id="clientesTable" layoutX="14.0" layoutY="210.0" prefHeight="200.0" prefWidth="200.0">
-                          <columns>
-                            <TableColumn prefWidth="75.0" text="C1" />
-                            <TableColumn prefWidth="75.0" text="C2" />
-                          </columns>
+                        <TableView fx:id="clientesTable" layoutX="9.0" layoutY="210.0" prefHeight="233.0" prefWidth="362.0">
+                           <columns>
+                              <TableColumn fx:id="colNome" prefWidth="115.0" text="Nome" />
+                              <TableColumn fx:id="colTelefone" prefWidth="122.0" text="Telefone" />
+                              <TableColumn fx:id="colEndereco" prefWidth="124.0" text="Endereco" />
+                           </columns>
                         </TableView>
                      </children>
                   </AnchorPane>

@@ -3,11 +3,15 @@ package com.distribuidora;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 
@@ -17,7 +21,49 @@ public class PrimaryController {
     @FXML private TextField telefoneField;
     @FXML private TextField enderecoField;
     @FXML private Button salvarButton;
-    @FXML private TableView clientesTable;
+    @FXML private TableView<Cliente> clientesTable;
+    @FXML private TableColumn<Cliente, String> colNome;
+    @FXML private TableColumn<Cliente, String> colTelefone;
+    @FXML private TableColumn<Cliente, String> colEndereco;
+
+    private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
+
+    @FXML
+    private void initialize() {
+        // Configura as colunas da tabela para usar as propriedades do Cliente
+        colNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
+        colTelefone.setCellValueFactory(cellData -> cellData.getValue().telefoneProperty());
+        colEndereco.setCellValueFactory(cellData -> cellData.getValue().enderecoProperty());
+
+        // Carrega os clientes do banco
+        carregarClientes();
+    }
+
+    private void carregarClientes() {
+        clientesData.clear();
+        String sql = "SELECT id, nome, telefone, endereco FROM Clientes";
+
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Cliente cliente = new Cliente(
+                    rs.getInt("id"),
+                    rs.getString("nome"),
+                    rs.getString("telefone"),
+                    rs.getString("endereco")
+                );
+                clientesData.add(cliente);
+            }
+
+            // Atualiza a tabela com os dados
+            clientesTable.setItems(clientesData);
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao carregar clientes: " + e.getMessage());
+        }
+    }
 
     @FXML
     private void handleSalvarCliente() {
@@ -54,6 +100,9 @@ public class PrimaryController {
             alert.setHeaderText(null);
             alert.setContentText("Cliente salvo com sucesso!");
             alert.showAndWait();
+
+            // Recarrega a tabela
+            carregarClientes();
 
         } catch (SQLException e) {
             System.err.println("Erro ao salvar cliente: " + e.getMessage());
