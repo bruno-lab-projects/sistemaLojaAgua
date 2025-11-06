@@ -24,7 +24,8 @@ public class Database {
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "nome TEXT NOT NULL,"
                 + "telefone TEXT,"
-                + "endereco TEXT"
+                + "endereco TEXT,"
+                + "observacoes TEXT"
                 + ");";
 
         String sqlFuncionarios = "CREATE TABLE IF NOT EXISTS Funcionarios ("

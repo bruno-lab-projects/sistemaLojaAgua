@@ -9,13 +9,15 @@ public class Cliente {
     private SimpleStringProperty nome;
     private SimpleStringProperty telefone;
     private SimpleStringProperty endereco;
+    private SimpleStringProperty observacoes;
 
     // Construtor
-    public Cliente(int id, String nome, String telefone, String endereco) {
+    public Cliente(int id, String nome, String telefone, String endereco, String observacoes) {
         this.id = new SimpleIntegerProperty(id);
         this.nome = new SimpleStringProperty(nome);
         this.telefone = new SimpleStringProperty(telefone);
         this.endereco = new SimpleStringProperty(endereco);
+        this.observacoes = new SimpleStringProperty(observacoes);
     }
 
     // Getters e Setters para ID
@@ -68,5 +70,18 @@ public class Cliente {
 
     public SimpleStringProperty enderecoProperty() {
         return endereco;
+    }
+
+    // Getters e Setters para Observacoes
+    public String getObservacoes() {
+        return observacoes.get();
+    }
+
+    public void setObservacoes(String observacoes) {
+        this.observacoes.set(observacoes);
+    }
+
+    public SimpleStringProperty observacoesProperty() {
+        return observacoes;
     }
 }

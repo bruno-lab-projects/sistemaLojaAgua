@@ -20,11 +20,13 @@ public class PrimaryController {
     @FXML private TextField nomeField;
     @FXML private TextField telefoneField;
     @FXML private TextField enderecoField;
+    @FXML private TextField observacoesField;
     @FXML private Button salvarButton;
     @FXML private TableView<Cliente> clientesTable;
     @FXML private TableColumn<Cliente, String> colNome;
     @FXML private TableColumn<Cliente, String> colTelefone;
     @FXML private TableColumn<Cliente, String> colEndereco;
+    @FXML private TableColumn<Cliente, String> colObservacoes;
 
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
 
@@ -34,6 +36,7 @@ public class PrimaryController {
         colNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
         colTelefone.setCellValueFactory(cellData -> cellData.getValue().telefoneProperty());
         colEndereco.setCellValueFactory(cellData -> cellData.getValue().enderecoProperty());
+        colObservacoes.setCellValueFactory(cellData -> cellData.getValue().observacoesProperty());
 
         // Carrega os clientes do banco
         carregarClientes();
@@ -41,7 +44,7 @@ public class PrimaryController {
 
     private void carregarClientes() {
         clientesData.clear();
-        String sql = "SELECT id, nome, telefone, endereco FROM Clientes";
+        String sql = "SELECT id, nome, telefone, endereco, observacoes FROM Clientes";
 
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -52,7 +55,8 @@ public class PrimaryController {
                     rs.getInt("id"),
                     rs.getString("nome"),
                     rs.getString("telefone"),
-                    rs.getString("endereco")
+                    rs.getString("endereco"),
+                    rs.getString("observacoes")
                 );
                 clientesData.add(cliente);
             }
@@ -71,6 +75,7 @@ public class PrimaryController {
         String nome = nomeField.getText();
         String telefone = telefoneField.getText();
         String endereco = enderecoField.getText();
+        String observacoes = observacoesField.getText();
 
         // 2. Verifica se o nome está vazio
         if (nome == null || nome.isBlank()) {
@@ -83,7 +88,7 @@ public class PrimaryController {
         }
 
         // 3. Define o SQL
-        String sql = "INSERT INTO Clientes (nome, telefone, endereco) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO Clientes (nome, telefone, endereco, observacoes) VALUES (?, ?, ?, ?)";
 
         // 4 e 5. Conecta ao banco e executa o INSERT
         try (Connection conn = Database.connect();
@@ -92,6 +97,7 @@ public class PrimaryController {
             pstmt.setString(1, nome);
             pstmt.setString(2, telefone);
             pstmt.setString(3, endereco);
+            pstmt.setString(4, observacoes);
             pstmt.executeUpdate();
 
             // 6. Mostra mensagem de sucesso
@@ -117,6 +123,7 @@ public class PrimaryController {
         nomeField.clear();
         telefoneField.clear();
         enderecoField.clear();
+        observacoesField.clear();
     }
 
     @FXML
