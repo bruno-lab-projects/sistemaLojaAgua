@@ -59,10 +59,23 @@ public class Database {
                 return;
             }
             try (Statement stmt = conn.createStatement()) {
+                // Cria as tabelas
                 stmt.execute(sqlClientes);
                 stmt.execute(sqlFuncionarios);
                 stmt.execute(sqlProdutos);
                 stmt.execute(sqlPedidos);
+
+                // Seed dos produtos (plantar dados iniciais)
+                String seedProduto1 = "INSERT INTO Produtos (nome, preco) "
+                        + "SELECT 'Água Indaia', 19.00 "
+                        + "WHERE NOT EXISTS (SELECT 1 FROM Produtos WHERE nome = 'Água Indaia');";
+                
+                String seedProduto2 = "INSERT INTO Produtos (nome, preco) "
+                        + "SELECT 'Água Maiorca', 13.00 "
+                        + "WHERE NOT EXISTS (SELECT 1 FROM Produtos WHERE nome = 'Água Maiorca');";
+                
+                stmt.execute(seedProduto1);
+                stmt.execute(seedProduto2);
             }
         } catch (SQLException e) {
             System.err.println("Erro ao inicializar o banco: " + e.getMessage());

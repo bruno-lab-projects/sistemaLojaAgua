@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -14,9 +15,11 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.cell.PropertyValueFactory;
 
 public class PrimaryController {
 
+    // Componentes da aba Clientes
     @FXML private TextField nomeField;
     @FXML private TextField telefoneField;
     @FXML private TextField enderecoField;
@@ -28,11 +31,18 @@ public class PrimaryController {
     @FXML private TableColumn<Cliente, String> colEndereco;
     @FXML private TableColumn<Cliente, String> colObservacoes;
 
+    // Componentes da aba Produtos
+    @FXML private TextField produtoPrecoField;
+    @FXML private Button salvarPrecoButton;
+    @FXML private TableView<Produto> produtosTable;
+    @FXML private TableColumn<Produto, String> colProdutoNome;
+    @FXML private TableColumn<Produto, Double> colProdutoPreco;
+
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
 
     @FXML
     private void initialize() {
-        // Configura as colunas da tabela para usar as propriedades do Cliente
+        // Configura as colunas da tabela de clientes
         colNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
         colTelefone.setCellValueFactory(cellData -> cellData.getValue().telefoneProperty());
         colEndereco.setCellValueFactory(cellData -> cellData.getValue().enderecoProperty());
@@ -40,6 +50,24 @@ public class PrimaryController {
 
         // Carrega os clientes do banco
         carregarClientes();
+
+        // Configura as colunas da tabela de produtos
+        colProdutoNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
+        colProdutoPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
+
+        // Adiciona listener para saber qual produto foi clicado
+        produtosTable.getSelectionModel().selectedItemProperty().addListener(
+            (obs, oldSelection, newSelection) -> {
+                if (newSelection != null) {
+                    // Quando o usuário clicar em um produto,
+                    // preenche o campo de texto com o preço atual
+                    produtoPrecoField.setText(String.valueOf(newSelection.getPreco()));
+                }
+            }
+        );
+
+        // Carrega os produtos do banco
+        loadProdutosDaTabela();
     }
 
     private void carregarClientes() {
@@ -124,6 +152,72 @@ public class PrimaryController {
         telefoneField.clear();
         enderecoField.clear();
         observacoesField.clear();
+    }
+
+    @FXML
+    private void handleSalvarPreco() {
+        // 1. Pegue o produto que está selecionado na tabela
+        Produto produtoSelecionado = produtosTable.getSelectionModel().getSelectedItem();
+        // 2. Pegue o novo preço do campo de texto
+        String precoStr = produtoPrecoField.getText();
+
+        // 3. Verificações de erro
+        if (produtoSelecionado == null) {
+            new Alert(Alert.AlertType.ERROR, "Por favor, selecione um produto na tabela primeiro.").show();
+            return;
+        }
+        double novoPreco;
+        try {
+            novoPreco = Double.parseDouble(precoStr);
+        } catch (NumberFormatException e) {
+            new Alert(Alert.AlertType.ERROR, "Preço inválido. Use apenas números (ex: 19.50).").show();
+            return;
+        }
+
+        // 4. Crie o SQL de UPDATE:
+        String sql = "UPDATE Produtos SET preco = ? WHERE id = ?";
+
+        // 5. Use 'Database.connect()' e 'PreparedStatement' para salvar o novo preço.
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setDouble(1, novoPreco);
+            pstmt.setInt(2, produtoSelecionado.getId());
+            pstmt.executeUpdate();
+
+            new Alert(Alert.AlertType.INFORMATION, "Preço atualizado com sucesso!").show();
+
+        } catch (SQLException e) {
+            new Alert(Alert.AlertType.ERROR, "Erro ao atualizar o preço: " + e.getMessage()).show();
+        }
+
+        // 6. Limpe o campo e recarregue a tabela
+        produtoPrecoField.clear();
+        loadProdutosDaTabela();
+    }
+
+    private void loadProdutosDaTabela() {
+        // Este método é quase IDÊNTICO ao 'carregarClientes()'.
+
+        ObservableList<Produto> listaProdutos = FXCollections.observableArrayList();
+        String sql = "SELECT * FROM Produtos ORDER BY nome";
+
+        try (Connection conn = Database.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                listaProdutos.add(new Produto(
+                    rs.getInt("id"),
+                    rs.getString("nome"),
+                    rs.getDouble("preco")
+                ));
+            }
+            produtosTable.setItems(listaProdutos);
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao carregar produtos: " + e.getMessage());
+        }
     }
 
     @FXML
