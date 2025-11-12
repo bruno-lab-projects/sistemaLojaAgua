@@ -107,6 +107,29 @@ public class PrimaryController {
         // Define a quantidade padrão como 1
         pedidoQtdField.setText("1");
 
+        // Adiciona listener para preencher campos avulsos automaticamente
+        pedidoClienteCombo.getSelectionModel().selectedItemProperty().addListener(
+            (obs, oldSelection, newSelection) -> {
+                if (newSelection != null) {
+                    // Se o usuário ESCOLHEU um cliente:
+                    // 1. Preencha os campos avulsos com os dados do cliente
+                    pedidoNomeAvulsoField.setText(newSelection.getNome());
+                    pedidoEnderecoAvulsoField.setText(newSelection.getEndereco());
+                    // 2. Desabilite os campos avulsos
+                    pedidoNomeAvulsoField.setDisable(true);
+                    pedidoEnderecoAvulsoField.setDisable(true);
+                } else {
+                    // Se o usuário LIMPOU o ComboBox:
+                    // 1. Limpe os campos avulsos
+                    pedidoNomeAvulsoField.clear();
+                    pedidoEnderecoAvulsoField.clear();
+                    // 2. Re-abilite os campos
+                    pedidoNomeAvulsoField.setDisable(false);
+                    pedidoEnderecoAvulsoField.setDisable(false);
+                }
+            }
+        );
+
         // Configura as colunas da tabela de pedidos
         colPedidoCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
         colPedidoProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
@@ -265,6 +288,18 @@ public class PrimaryController {
             }
             produtosTable.setItems(listaProdutos);
 
+            // Define "Água Maiorca" como produto padrão no ComboBox
+            Produto produtoPadrao = null;
+            for (Produto p : listaProdutos) {
+                if (p.getNome().equalsIgnoreCase("Água Maiorca")) {
+                    produtoPadrao = p;
+                    break;
+                }
+            }
+            if (produtoPadrao != null) {
+                pedidoProdutoCombo.setValue(produtoPadrao);
+            }
+
         } catch (SQLException e) {
             System.out.println("Erro ao carregar produtos: " + e.getMessage());
         }
@@ -329,11 +364,6 @@ public class PrimaryController {
             quantidade = Integer.parseInt(qtdStr);
         } catch (NumberFormatException e) {
             new Alert(AlertType.ERROR, "Quantidade inválida.").show();
-            return;
-        }
-        // Validação principal: Ou tem cliente, ou tem nome avulso.
-        if (cliente == null && nomeAvulso.isBlank()) {
-            new Alert(AlertType.ERROR, "Selecione um Cliente ou preencha o Nome Avulso.").show();
             return;
         }
 
