@@ -38,6 +38,12 @@ public class PrimaryController {
     @FXML private TableColumn<Produto, String> colProdutoNome;
     @FXML private TableColumn<Produto, Double> colProdutoPreco;
 
+    // Componentes da aba Funcionários
+    @FXML private TextField funcionarioNomeField;
+    @FXML private Button salvarFuncionarioButton;
+    @FXML private TableView<Funcionario> funcionariosTable;
+    @FXML private TableColumn<Funcionario, String> colFuncionarioNome;
+
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
 
     @FXML
@@ -68,6 +74,12 @@ public class PrimaryController {
 
         // Carrega os produtos do banco
         loadProdutosDaTabela();
+
+        // Configura as colunas da tabela de funcionários
+        colFuncionarioNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
+
+        // Carrega os funcionários do banco
+        loadFuncionariosDaTabela();
     }
 
     private void carregarClientes() {
@@ -217,6 +229,46 @@ public class PrimaryController {
 
         } catch (SQLException e) {
             System.out.println("Erro ao carregar produtos: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleSalvarFuncionario() {
+        String nome = funcionarioNomeField.getText();
+        if (nome.isBlank()) {
+            new Alert(Alert.AlertType.ERROR, "O nome é obrigatório.").show();
+            return;
+        }
+
+        String sql = "INSERT INTO Funcionarios (nome) VALUES (?)";
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, nome);
+            pstmt.executeUpdate();
+            new Alert(Alert.AlertType.INFORMATION, "Funcionário salvo!").show();
+
+        } catch (SQLException e) {
+            new Alert(Alert.AlertType.ERROR, "Erro ao salvar: " + e.getMessage()).show();
+        }
+
+        funcionarioNomeField.clear();
+        loadFuncionariosDaTabela();
+    }
+
+    private void loadFuncionariosDaTabela() {
+        ObservableList<Funcionario> lista = FXCollections.observableArrayList();
+        String sql = "SELECT * FROM Funcionarios ORDER BY nome";
+        try (Connection conn = Database.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                lista.add(new Funcionario(rs.getInt("id"), rs.getString("nome")));
+            }
+            funcionariosTable.setItems(lista);
+        } catch (SQLException e) {
+            System.out.println("Erro ao carregar funcionários: " + e.getMessage());
         }
     }
 
