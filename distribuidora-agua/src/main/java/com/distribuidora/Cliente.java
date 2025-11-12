@@ -84,4 +84,9 @@ public class Cliente {
     public SimpleStringProperty observacoesProperty() {
         return observacoes;
     }
+
+    @Override
+    public String toString() {
+        return getNome();
+    }
 }

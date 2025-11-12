@@ -6,6 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -13,6 +15,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -43,6 +46,21 @@ public class PrimaryController {
     @FXML private Button salvarFuncionarioButton;
     @FXML private TableView<Funcionario> funcionariosTable;
     @FXML private TableColumn<Funcionario, String> colFuncionarioNome;
+
+    // Componentes da aba Pedidos
+    @FXML private ComboBox<Cliente> pedidoClienteCombo;
+    @FXML private ComboBox<Produto> pedidoProdutoCombo;
+    @FXML private ComboBox<Funcionario> pedidoFuncionarioCombo;
+    @FXML private TextField pedidoQtdField;
+    @FXML private Button criarPedidoButton;
+    @FXML private TableView<Pedido> pedidosTable;
+    @FXML private TableColumn<Pedido, String> colPedidoCliente;
+    @FXML private TableColumn<Pedido, String> colPedidoProduto;
+    @FXML private TableColumn<Pedido, Integer> colPedidoQtd;
+    @FXML private TableColumn<Pedido, String> colPedidoFuncionario;
+    @FXML private TableColumn<Pedido, String> colPedidoStatus;
+    @FXML private TableColumn<Pedido, String> colPedidoData;
+    @FXML private TableColumn<Pedido, Double> colPedidoTotal;
 
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
 
@@ -80,6 +98,23 @@ public class PrimaryController {
 
         // Carrega os funcionários do banco
         loadFuncionariosDaTabela();
+
+        // Popula os ComboBoxes da aba Pedidos com as listas das outras tabelas
+        pedidoClienteCombo.setItems(clientesTable.getItems());
+        pedidoProdutoCombo.setItems(produtosTable.getItems());
+        pedidoFuncionarioCombo.setItems(funcionariosTable.getItems());
+
+        // Configura as colunas da tabela de pedidos
+        colPedidoCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
+        colPedidoProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
+        colPedidoQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
+        colPedidoFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
+        colPedidoStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        colPedidoData.setCellValueFactory(new PropertyValueFactory<>("dataHora"));
+        colPedidoTotal.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
+
+        // Carrega os pedidos do banco
+        loadPedidosDaTabela();
     }
 
     private void carregarClientes() {
@@ -269,6 +304,113 @@ public class PrimaryController {
             funcionariosTable.setItems(lista);
         } catch (SQLException e) {
             System.out.println("Erro ao carregar funcionários: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleCriarPedido() {
+        // 1. Pegue os objetos selecionados nos ComboBoxes
+        Cliente cliente = pedidoClienteCombo.getValue();
+        Produto produto = pedidoProdutoCombo.getValue();
+        Funcionario func = pedidoFuncionarioCombo.getValue();
+        String qtdStr = pedidoQtdField.getText();
+
+        // 2. Valide os dados
+        if (cliente == null) {
+            new Alert(AlertType.ERROR, "Por favor, selecione um cliente.").show();
+            return;
+        }
+        if (produto == null) {
+            new Alert(AlertType.ERROR, "Por favor, selecione um produto.").show();
+            return;
+        }
+        if (func == null) {
+            new Alert(AlertType.ERROR, "Por favor, selecione um funcionário.").show();
+            return;
+        }
+
+        int quantidade;
+        try {
+            quantidade = Integer.parseInt(qtdStr);
+            if (quantidade <= 0) {
+                new Alert(AlertType.ERROR, "Quantidade deve ser maior que zero.").show();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            new Alert(AlertType.ERROR, "Quantidade inválida. Use apenas números inteiros.").show();
+            return;
+        }
+
+        // 3. Prepare os dados para salvar
+        String dataAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String statusInicial = "Feito";
+
+        String sql = "INSERT INTO Pedidos (cliente_id, funcionario_id, produto_id, status, data_hora, quantidade) " +
+                     "VALUES (?, ?, ?, ?, ?, ?)";
+
+        // 4. Salve no banco
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, cliente.getId());
+            pstmt.setInt(2, func.getId());
+            pstmt.setInt(3, produto.getId());
+            pstmt.setString(4, statusInicial);
+            pstmt.setString(5, dataAgora);
+            pstmt.setInt(6, quantidade);
+            pstmt.executeUpdate();
+
+            // 5. Mostre mensagem de sucesso
+            new Alert(AlertType.INFORMATION, "Pedido criado com sucesso!").show();
+
+            // Limpe os campos
+            pedidoClienteCombo.setValue(null);
+            pedidoProdutoCombo.setValue(null);
+            pedidoFuncionarioCombo.setValue(null);
+            pedidoQtdField.clear();
+
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao criar pedido: " + e.getMessage()).show();
+        }
+
+        // 6. Recarregue a tabela de pedidos
+        loadPedidosDaTabela();
+    }
+
+    private void loadPedidosDaTabela() {
+        // SQL com JOINs para pegar os nomes de todas as tabelas relacionadas
+        String sql = "SELECT p.id, c.nome as cliente, pr.nome as produto, p.quantidade, " +
+                     "f.nome as funcionario, p.status, p.data_hora, (pr.preco * p.quantidade) as total " +
+                     "FROM Pedidos p " +
+                     "JOIN Clientes c ON p.cliente_id = c.id " +
+                     "JOIN Produtos pr ON p.produto_id = pr.id " +
+                     "JOIN Funcionarios f ON p.funcionario_id = f.id " +
+                     "ORDER BY p.data_hora DESC";
+
+        ObservableList<Pedido> listaPedidos = FXCollections.observableArrayList();
+
+        try (Connection conn = Database.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Pedido pedido = new Pedido(
+                    rs.getInt("id"),
+                    rs.getString("cliente"),
+                    rs.getString("produto"),
+                    rs.getInt("quantidade"),
+                    rs.getString("funcionario"),
+                    rs.getString("status"),
+                    rs.getString("data_hora"),
+                    rs.getDouble("total")
+                );
+                listaPedidos.add(pedido);
+            }
+
+            pedidosTable.setItems(listaPedidos);
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao carregar pedidos: " + e.getMessage());
         }
     }
 

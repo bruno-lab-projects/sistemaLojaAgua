@@ -55,4 +55,9 @@ public class Produto {
     public SimpleDoubleProperty precoProperty() {
         return preco;
     }
+
+    @Override
+    public String toString() {
+        return getNome() + " - R$" + String.format("%.2f", getPreco());
+    }
 }

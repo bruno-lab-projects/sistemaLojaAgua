@@ -39,4 +39,9 @@ public class Funcionario {
     public SimpleStringProperty nomeProperty() {
         return nome;
     }
+
+    @Override
+    public String toString() {
+        return getNome();
+    }
 }
