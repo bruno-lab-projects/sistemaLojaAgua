@@ -12,19 +12,21 @@ public class Pedido {
     private SimpleIntegerProperty quantidade;
     private SimpleStringProperty funcionarioNome;
     private SimpleStringProperty status;
-    private SimpleStringProperty dataHora;
+    private SimpleStringProperty hora;
+    private SimpleStringProperty endereco;
     private SimpleDoubleProperty precoTotal;
 
     // Construtor
     public Pedido(int id, String clienteNome, String produtoNome, int quantidade,
-                  String funcionarioNome, String status, String dataHora, double precoTotal) {
+                  String funcionarioNome, String status, String hora, String endereco, double precoTotal) {
         this.id = new SimpleIntegerProperty(id);
         this.clienteNome = new SimpleStringProperty(clienteNome);
         this.produtoNome = new SimpleStringProperty(produtoNome);
         this.quantidade = new SimpleIntegerProperty(quantidade);
         this.funcionarioNome = new SimpleStringProperty(funcionarioNome);
         this.status = new SimpleStringProperty(status);
-        this.dataHora = new SimpleStringProperty(dataHora);
+        this.hora = new SimpleStringProperty(hora);
+        this.endereco = new SimpleStringProperty(endereco);
         this.precoTotal = new SimpleDoubleProperty(precoTotal);
     }
 
@@ -106,17 +108,30 @@ public class Pedido {
         return status;
     }
 
-    // Getters e Setters para DataHora
-    public String getDataHora() {
-        return dataHora.get();
+    // Getters e Setters para Hora
+    public String getHora() {
+        return hora.get();
     }
 
-    public void setDataHora(String dataHora) {
-        this.dataHora.set(dataHora);
+    public void setHora(String hora) {
+        this.hora.set(hora);
     }
 
-    public SimpleStringProperty dataHoraProperty() {
-        return dataHora;
+    public SimpleStringProperty horaProperty() {
+        return hora;
+    }
+
+    // Getters e Setters para Endereco
+    public String getEndereco() {
+        return endereco.get();
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco.set(endereco);
+    }
+
+    public SimpleStringProperty enderecoProperty() {
+        return endereco;
     }
 
     // Getters e Setters para PrecoTotal

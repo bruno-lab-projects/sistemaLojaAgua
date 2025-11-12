@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javafx.collections.FXCollections;
@@ -16,8 +17,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class PrimaryController {
@@ -50,18 +56,47 @@ public class PrimaryController {
     // Componentes da aba Pedidos
     @FXML private ComboBox<Cliente> pedidoClienteCombo;
     @FXML private ComboBox<Produto> pedidoProdutoCombo;
-    @FXML private TextField pedidoQtdField;
+    @FXML private Spinner<Integer> pedidoQtdSpinner;
     @FXML private TextField pedidoNomeAvulsoField;
     @FXML private TextField pedidoEnderecoAvulsoField;
     @FXML private Button criarPedidoButton;
-    @FXML private TableView<Pedido> pedidosTable;
-    @FXML private TableColumn<Pedido, String> colPedidoCliente;
-    @FXML private TableColumn<Pedido, String> colPedidoProduto;
-    @FXML private TableColumn<Pedido, Integer> colPedidoQtd;
-    @FXML private TableColumn<Pedido, String> colPedidoFuncionario;
-    @FXML private TableColumn<Pedido, String> colPedidoStatus;
-    @FXML private TableColumn<Pedido, String> colPedidoData;
-    @FXML private TableColumn<Pedido, Double> colPedidoTotal;
+    @FXML private DatePicker pedidoDatePicker;
+    @FXML private TabPane statusTabPane;
+
+    // Botões de Ação
+    @FXML private Button marcarSaiuButton;
+    @FXML private Button marcarEntregueButton;
+    @FXML private Button cancelarPedidoButton;
+
+    // Tabela 1: Pedidos Feitos
+    @FXML private TableView<Pedido> tablePedidosFeitos;
+    @FXML private TableColumn<Pedido, String> colFeitosCliente;
+    @FXML private TableColumn<Pedido, String> colFeitosEndereco;
+    @FXML private TableColumn<Pedido, String> colFeitosProduto;
+    @FXML private TableColumn<Pedido, Integer> colFeitosQtd;
+    @FXML private TableColumn<Pedido, String> colFeitosHora;
+    @FXML private TableColumn<Pedido, Double> colFeitosTotal;
+    @FXML private TableColumn<Pedido, String> colFeitosFuncionario;
+
+    // Tabela 2: Na Rua
+    @FXML private TableView<Pedido> tablePedidosNaRua;
+    @FXML private TableColumn<Pedido, String> colNaRuaCliente;
+    @FXML private TableColumn<Pedido, String> colNaRuaEndereco;
+    @FXML private TableColumn<Pedido, String> colNaRuaProduto;
+    @FXML private TableColumn<Pedido, Integer> colNaRuaQtd;
+    @FXML private TableColumn<Pedido, String> colNaRuaHora;
+    @FXML private TableColumn<Pedido, Double> colNaRuaTotal;
+    @FXML private TableColumn<Pedido, String> colNaRuaFuncionario;
+
+    // Tabela 3: Entregues
+    @FXML private TableView<Pedido> tablePedidosEntregues;
+    @FXML private TableColumn<Pedido, String> colEntreguesCliente;
+    @FXML private TableColumn<Pedido, String> colEntreguesEndereco;
+    @FXML private TableColumn<Pedido, String> colEntreguesProduto;
+    @FXML private TableColumn<Pedido, Integer> colEntreguesQtd;
+    @FXML private TableColumn<Pedido, String> colEntreguesHora;
+    @FXML private TableColumn<Pedido, Double> colEntreguesTotal;
+    @FXML private TableColumn<Pedido, String> colEntreguesFuncionario;
 
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
 
@@ -104,8 +139,10 @@ public class PrimaryController {
         pedidoClienteCombo.setItems(clientesTable.getItems());
         pedidoProdutoCombo.setItems(produtosTable.getItems());
 
-        // Define a quantidade padrão como 1
-        pedidoQtdField.setText("1");
+        // Configura o Spinner de quantidade com valores de 1 a 99, padrão 1
+        SpinnerValueFactory<Integer> valueFactory =
+            new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1); // (min, max, padrão)
+        pedidoQtdSpinner.setValueFactory(valueFactory);
 
         // Adiciona listener para preencher campos avulsos automaticamente
         pedidoClienteCombo.getSelectionModel().selectedItemProperty().addListener(
@@ -130,17 +167,45 @@ public class PrimaryController {
             }
         );
 
-        // Configura as colunas da tabela de pedidos
-        colPedidoCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
-        colPedidoProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
-        colPedidoQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
-        colPedidoFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
-        colPedidoStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-        colPedidoData.setCellValueFactory(new PropertyValueFactory<>("dataHora"));
-        colPedidoTotal.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
+        // Configura o DatePicker com a data de hoje
+        pedidoDatePicker.setValue(LocalDate.now());
+        
+        // Adiciona listener para carregar pedidos quando a data mudar
+        pedidoDatePicker.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                loadPedidosPorData();
+            }
+        });
+
+        // Configura as colunas da tabela de pedidos FEITOS
+        colFeitosCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
+        colFeitosEndereco.setCellValueFactory(new PropertyValueFactory<>("endereco"));
+        colFeitosProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
+        colFeitosQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
+        colFeitosHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
+        colFeitosTotal.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
+        colFeitosFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
+
+        // Configura as colunas da tabela de pedidos NA RUA
+        colNaRuaCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
+        colNaRuaEndereco.setCellValueFactory(new PropertyValueFactory<>("endereco"));
+        colNaRuaProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
+        colNaRuaQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
+        colNaRuaHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
+        colNaRuaTotal.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
+        colNaRuaFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
+
+        // Configura as colunas da tabela de pedidos ENTREGUES
+        colEntreguesCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
+        colEntreguesEndereco.setCellValueFactory(new PropertyValueFactory<>("endereco"));
+        colEntreguesProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
+        colEntreguesQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
+        colEntreguesHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
+        colEntreguesTotal.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
+        colEntreguesFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
 
         // Carrega os pedidos do banco
-        loadPedidosDaTabela();
+        loadPedidosPorData();
     }
 
     private void carregarClientes() {
@@ -273,7 +338,7 @@ public class PrimaryController {
         // Este método é quase IDÊNTICO ao 'carregarClientes()'.
 
         ObservableList<Produto> listaProdutos = FXCollections.observableArrayList();
-        String sql = "SELECT * FROM Produtos ORDER BY nome";
+        String sql = "SELECT * FROM Produtos ORDER BY preco ASC";
 
         try (Connection conn = Database.connect();
              Statement stmt = conn.createStatement();
@@ -288,21 +353,26 @@ public class PrimaryController {
             }
             produtosTable.setItems(listaProdutos);
 
-            // Define "Água Maiorca" como produto padrão no ComboBox
-            Produto produtoPadrao = null;
-            for (Produto p : listaProdutos) {
-                if (p.getNome().equalsIgnoreCase("Água Maiorca")) {
-                    produtoPadrao = p;
-                    break;
-                }
-            }
-            if (produtoPadrao != null) {
-                pedidoProdutoCombo.setValue(produtoPadrao);
-            }
+            // Define o produto padrão no ComboBox
+            setProdutoPadrao();
 
         } catch (SQLException e) {
             System.out.println("Erro ao carregar produtos: " + e.getMessage());
         }
+    }
+
+    private void setProdutoPadrao() {
+        Produto produtoPadrao = null;
+
+        // Use 'produtosTable.getItems()' para pegar a lista atual de produtos
+        for (Produto p : produtosTable.getItems()) {
+            if (p.getNome().equalsIgnoreCase("Água Maiorca")) {
+                produtoPadrao = p;
+                break;
+            }
+        }
+        // Define o valor no ComboBox
+        pedidoProdutoCombo.setValue(produtoPadrao);
     }
 
     @FXML
@@ -350,20 +420,13 @@ public class PrimaryController {
         // 1. Pegue todos os valores
         Cliente cliente = pedidoClienteCombo.getValue();
         Produto produto = pedidoProdutoCombo.getValue();
-        String qtdStr = pedidoQtdField.getText();
+        int quantidade = pedidoQtdSpinner.getValue();
         String nomeAvulso = pedidoNomeAvulsoField.getText();
         String enderecoAvulso = pedidoEnderecoAvulsoField.getText();
 
         // 2. Validações
         if (produto == null) {
             new Alert(AlertType.ERROR, "Selecione um Produto.").show();
-            return;
-        }
-        int quantidade;
-        try {
-            quantidade = Integer.parseInt(qtdStr);
-        } catch (NumberFormatException e) {
-            new Alert(AlertType.ERROR, "Quantidade inválida.").show();
             return;
         }
 
@@ -403,47 +466,80 @@ public class PrimaryController {
 
         // 5. Limpe os campos
         pedidoClienteCombo.setValue(null);
-        pedidoProdutoCombo.setValue(null);
+        setProdutoPadrao();
         pedidoNomeAvulsoField.clear();
         pedidoEnderecoAvulsoField.clear();
-        pedidoQtdField.setText("1"); // Reseta para o padrão
+        pedidoQtdSpinner.getValueFactory().setValue(1); // Reseta para o padrão
 
         // 6. Recarregue a tabela
-        loadPedidosDaTabela();
+        loadPedidosPorData();
     }
 
-    private void loadPedidosDaTabela() {
-        // Este novo SQL usa LEFT JOIN e COALESCE
+    private void loadPedidosPorData() {
+        // Obtém a data selecionada no DatePicker
+        LocalDate dataSelecionada = pedidoDatePicker.getValue();
+        if (dataSelecionada == null) {
+            return; // Não faz nada se não houver data selecionada
+        }
+        
+        String dataStr = dataSelecionada.toString(); // formato YYYY-MM-DD
+
         String sql = "SELECT p.id, " +
-                     "COALESCE(c.nome, p.nome_avulso) as cliente, " + // Pega o nome do cliente OU o nome avulso
+                     "COALESCE(c.nome, p.nome_avulso) as cliente, " +
                      "pr.nome as produto, p.quantidade, " +
-                     "COALESCE(f.nome, 'Aguardando') as funcionario, " + // Pega o nome do func. OU 'Aguardando'
-                     "p.status, p.data_hora, (pr.preco * p.quantidade) as total " +
+                     "COALESCE(f.nome, 'Aguardando') as funcionario, " +
+                     "p.status, strftime('%H:%M', p.data_hora) as hora, " +
+                     "COALESCE(c.endereco, p.endereco_avulso) as endereco, " +
+                     "(pr.preco * p.quantidade) as total " +
                      "FROM Pedidos p " +
-                     "LEFT JOIN Clientes c ON p.cliente_id = c.id " + // LEFT JOIN
+                     "LEFT JOIN Clientes c ON p.cliente_id = c.id " +
                      "JOIN Produtos pr ON p.produto_id = pr.id " +
-                     "LEFT JOIN Funcionarios f ON p.funcionario_id = f.id " + // LEFT JOIN
+                     "LEFT JOIN Funcionarios f ON p.funcionario_id = f.id " +
+                     "WHERE date(p.data_hora) = ? " + // Filtra pela data
                      "ORDER BY p.data_hora DESC";
 
-        ObservableList<Pedido> listaPedidos = FXCollections.observableArrayList();
+        ObservableList<Pedido> pedidosFeitos = FXCollections.observableArrayList();
+        ObservableList<Pedido> pedidosNaRua = FXCollections.observableArrayList();
+        ObservableList<Pedido> pedidosEntregues = FXCollections.observableArrayList();
 
         try (Connection conn = Database.connect();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, dataStr);
+            ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                listaPedidos.add(new Pedido(
+                Pedido pedido = new Pedido(
                     rs.getInt("id"),
-                    rs.getString("cliente"), // COALESCEd
+                    rs.getString("cliente"),
                     rs.getString("produto"),
                     rs.getInt("quantidade"),
-                    rs.getString("funcionario"), // COALESCEd
+                    rs.getString("funcionario"),
                     rs.getString("status"),
-                    rs.getString("data_hora"),
+                    rs.getString("hora"),
+                    rs.getString("endereco"),
                     rs.getDouble("total")
-                ));
+                );
+                
+                // Separa os pedidos por status em diferentes tabelas
+                String status = rs.getString("status");
+                switch (status) {
+                    case "Feito":
+                        pedidosFeitos.add(pedido);
+                        break;
+                    case "Saiu p/ Entrega":
+                        pedidosNaRua.add(pedido);
+                        break;
+                    case "Entregue":
+                        pedidosEntregues.add(pedido);
+                        break;
+                    // Cancelado não aparece em nenhuma tabela
+                }
             }
-            pedidosTable.setItems(listaPedidos);
+            
+            tablePedidosFeitos.setItems(pedidosFeitos);
+            tablePedidosNaRua.setItems(pedidosNaRua);
+            tablePedidosEntregues.setItems(pedidosEntregues);
 
         } catch (SQLException e) {
             System.out.println("Erro ao carregar pedidos: " + e.getMessage());
@@ -453,5 +549,136 @@ public class PrimaryController {
     @FXML
     private void switchToSecondary() throws IOException {
         App.setRoot("secondary");
+    }
+
+    @FXML
+    private void handleMarcarSaiu() {
+        // Pega o pedido selecionado na tabela FEITOS
+        Pedido pedidoSelecionado = tablePedidosFeitos.getSelectionModel().getSelectedItem();
+        
+        if (pedidoSelecionado == null) {
+            new Alert(AlertType.WARNING, "Selecione um pedido na tabela 'Feitos' primeiro!").show();
+            return;
+        }
+
+        // Carrega a lista de funcionários disponíveis
+        ObservableList<Funcionario> funcionarios = FXCollections.observableArrayList();
+        String sqlFunc = "SELECT id, nome FROM Funcionarios";
+        
+        try (Connection conn = Database.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sqlFunc)) {
+            
+            while (rs.next()) {
+                funcionarios.add(new Funcionario(rs.getInt("id"), rs.getString("nome")));
+            }
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao carregar funcionários: " + e.getMessage()).show();
+            return;
+        }
+
+        if (funcionarios.isEmpty()) {
+            new Alert(AlertType.WARNING, "Nenhum funcionário cadastrado!").show();
+            return;
+        }
+
+        // Abre um ChoiceDialog para escolher o funcionário
+        ChoiceDialog<Funcionario> dialog = new ChoiceDialog<>(funcionarios.get(0), funcionarios);
+        dialog.setTitle("Escolher Funcionário");
+        dialog.setHeaderText("Marcar pedido como 'Saiu p/ Entrega'");
+        dialog.setContentText("Escolha o funcionário:");
+        
+        dialog.showAndWait().ifPresent(funcionarioEscolhido -> {
+            // Atualiza o pedido no banco
+            String sqlUpdate = "UPDATE Pedidos SET status = ?, funcionario_id = ?, data_hora_saiu = ? WHERE id = ?";
+            String dataHoraAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
+                
+                pstmt.setString(1, "Saiu p/ Entrega");
+                pstmt.setInt(2, funcionarioEscolhido.getId());
+                pstmt.setString(3, dataHoraAgora);
+                pstmt.setInt(4, pedidoSelecionado.getId());
+                
+                pstmt.executeUpdate();
+                
+                // Recarrega as tabelas
+                loadPedidosPorData();
+                
+            } catch (SQLException e) {
+                new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+            }
+        });
+    }
+
+    @FXML
+    private void handleMarcarEntregue() {
+        // Pega o pedido selecionado na tabela NA RUA
+        Pedido pedidoSelecionado = tablePedidosNaRua.getSelectionModel().getSelectedItem();
+        
+        if (pedidoSelecionado == null) {
+            new Alert(AlertType.WARNING, "Selecione um pedido na tabela 'Na Rua' primeiro!").show();
+            return;
+        }
+
+        // Atualiza o pedido no banco
+        String sqlUpdate = "UPDATE Pedidos SET status = ?, data_hora_entregue = ? WHERE id = ?";
+        String dataHoraAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
+            
+            pstmt.setString(1, "Entregue");
+            pstmt.setString(2, dataHoraAgora);
+            pstmt.setInt(3, pedidoSelecionado.getId());
+            
+            pstmt.executeUpdate();
+            new Alert(AlertType.INFORMATION, "Pedido marcado como 'Entregue'!").show();
+            
+            // Recarrega as tabelas
+            loadPedidosPorData();
+            
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+        }
+    }
+
+    @FXML
+    private void handleCancelarPedido() {
+        // Pega o pedido selecionado de qualquer uma das 3 tabelas
+        Pedido pedidoSelecionado = tablePedidosFeitos.getSelectionModel().getSelectedItem();
+        
+        if (pedidoSelecionado == null) {
+            pedidoSelecionado = tablePedidosNaRua.getSelectionModel().getSelectedItem();
+        }
+        
+        if (pedidoSelecionado == null) {
+            pedidoSelecionado = tablePedidosEntregues.getSelectionModel().getSelectedItem();
+        }
+        
+        if (pedidoSelecionado == null) {
+            new Alert(AlertType.WARNING, "Selecione um pedido em qualquer uma das tabelas primeiro!").show();
+            return;
+        }
+
+        // Atualiza o pedido no banco
+        String sqlUpdate = "UPDATE Pedidos SET status = ? WHERE id = ?";
+        
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
+            
+            pstmt.setString(1, "Cancelado");
+            pstmt.setInt(2, pedidoSelecionado.getId());
+            
+            pstmt.executeUpdate();
+            new Alert(AlertType.INFORMATION, "Pedido cancelado!").show();
+            
+            // Recarrega as tabelas
+            loadPedidosPorData();
+            
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao cancelar pedido: " + e.getMessage()).show();
+        }
     }
 }
