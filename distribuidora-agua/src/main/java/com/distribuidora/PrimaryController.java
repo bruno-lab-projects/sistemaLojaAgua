@@ -50,8 +50,9 @@ public class PrimaryController {
     // Componentes da aba Pedidos
     @FXML private ComboBox<Cliente> pedidoClienteCombo;
     @FXML private ComboBox<Produto> pedidoProdutoCombo;
-    @FXML private ComboBox<Funcionario> pedidoFuncionarioCombo;
     @FXML private TextField pedidoQtdField;
+    @FXML private TextField pedidoNomeAvulsoField;
+    @FXML private TextField pedidoEnderecoAvulsoField;
     @FXML private Button criarPedidoButton;
     @FXML private TableView<Pedido> pedidosTable;
     @FXML private TableColumn<Pedido, String> colPedidoCliente;
@@ -102,7 +103,9 @@ public class PrimaryController {
         // Popula os ComboBoxes da aba Pedidos com as listas das outras tabelas
         pedidoClienteCombo.setItems(clientesTable.getItems());
         pedidoProdutoCombo.setItems(produtosTable.getItems());
-        pedidoFuncionarioCombo.setItems(funcionariosTable.getItems());
+
+        // Define a quantidade padrão como 1
+        pedidoQtdField.setText("1");
 
         // Configura as colunas da tabela de pedidos
         colPedidoCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
@@ -309,82 +312,87 @@ public class PrimaryController {
 
     @FXML
     private void handleCriarPedido() {
-        // 1. Pegue os objetos selecionados nos ComboBoxes
+        // 1. Pegue todos os valores
         Cliente cliente = pedidoClienteCombo.getValue();
         Produto produto = pedidoProdutoCombo.getValue();
-        Funcionario func = pedidoFuncionarioCombo.getValue();
         String qtdStr = pedidoQtdField.getText();
+        String nomeAvulso = pedidoNomeAvulsoField.getText();
+        String enderecoAvulso = pedidoEnderecoAvulsoField.getText();
 
-        // 2. Valide os dados
-        if (cliente == null) {
-            new Alert(AlertType.ERROR, "Por favor, selecione um cliente.").show();
-            return;
-        }
+        // 2. Validações
         if (produto == null) {
-            new Alert(AlertType.ERROR, "Por favor, selecione um produto.").show();
+            new Alert(AlertType.ERROR, "Selecione um Produto.").show();
             return;
         }
-        if (func == null) {
-            new Alert(AlertType.ERROR, "Por favor, selecione um funcionário.").show();
-            return;
-        }
-
         int quantidade;
         try {
             quantidade = Integer.parseInt(qtdStr);
-            if (quantidade <= 0) {
-                new Alert(AlertType.ERROR, "Quantidade deve ser maior que zero.").show();
-                return;
-            }
         } catch (NumberFormatException e) {
-            new Alert(AlertType.ERROR, "Quantidade inválida. Use apenas números inteiros.").show();
+            new Alert(AlertType.ERROR, "Quantidade inválida.").show();
+            return;
+        }
+        // Validação principal: Ou tem cliente, ou tem nome avulso.
+        if (cliente == null && nomeAvulso.isBlank()) {
+            new Alert(AlertType.ERROR, "Selecione um Cliente ou preencha o Nome Avulso.").show();
             return;
         }
 
-        // 3. Prepare os dados para salvar
+        // 3. Prepare o SQL (sem funcionario_id)
+        String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
         String dataAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String statusInicial = "Feito";
 
-        String sql = "INSERT INTO Pedidos (cliente_id, funcionario_id, produto_id, status, data_hora, quantidade) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)";
-
-        // 4. Salve no banco
+        // 4. Conecte e execute com lógica condicional
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, cliente.getId());
-            pstmt.setInt(2, func.getId());
-            pstmt.setInt(3, produto.getId());
-            pstmt.setString(4, statusInicial);
-            pstmt.setString(5, dataAgora);
-            pstmt.setInt(6, quantidade);
+            // Lógica do Cliente (se for cadastrado ou avulso)
+            if (cliente != null) {
+                pstmt.setInt(1, cliente.getId());
+                pstmt.setNull(6, java.sql.Types.VARCHAR); // nome_avulso
+                pstmt.setNull(7, java.sql.Types.VARCHAR); // endereco_avulso
+            } else {
+                pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
+                pstmt.setString(6, nomeAvulso);
+                pstmt.setString(7, enderecoAvulso);
+            }
+
+            // Resto dos dados
+            pstmt.setInt(2, produto.getId());
+            pstmt.setString(3, statusInicial);
+            pstmt.setString(4, dataAgora);
+            pstmt.setInt(5, quantidade);
+
             pstmt.executeUpdate();
-
-            // 5. Mostre mensagem de sucesso
             new Alert(AlertType.INFORMATION, "Pedido criado com sucesso!").show();
-
-            // Limpe os campos
-            pedidoClienteCombo.setValue(null);
-            pedidoProdutoCombo.setValue(null);
-            pedidoFuncionarioCombo.setValue(null);
-            pedidoQtdField.clear();
 
         } catch (SQLException e) {
             new Alert(AlertType.ERROR, "Erro ao criar pedido: " + e.getMessage()).show();
         }
 
-        // 6. Recarregue a tabela de pedidos
+        // 5. Limpe os campos
+        pedidoClienteCombo.setValue(null);
+        pedidoProdutoCombo.setValue(null);
+        pedidoNomeAvulsoField.clear();
+        pedidoEnderecoAvulsoField.clear();
+        pedidoQtdField.setText("1"); // Reseta para o padrão
+
+        // 6. Recarregue a tabela
         loadPedidosDaTabela();
     }
 
     private void loadPedidosDaTabela() {
-        // SQL com JOINs para pegar os nomes de todas as tabelas relacionadas
-        String sql = "SELECT p.id, c.nome as cliente, pr.nome as produto, p.quantidade, " +
-                     "f.nome as funcionario, p.status, p.data_hora, (pr.preco * p.quantidade) as total " +
+        // Este novo SQL usa LEFT JOIN e COALESCE
+        String sql = "SELECT p.id, " +
+                     "COALESCE(c.nome, p.nome_avulso) as cliente, " + // Pega o nome do cliente OU o nome avulso
+                     "pr.nome as produto, p.quantidade, " +
+                     "COALESCE(f.nome, 'Aguardando') as funcionario, " + // Pega o nome do func. OU 'Aguardando'
+                     "p.status, p.data_hora, (pr.preco * p.quantidade) as total " +
                      "FROM Pedidos p " +
-                     "JOIN Clientes c ON p.cliente_id = c.id " +
+                     "LEFT JOIN Clientes c ON p.cliente_id = c.id " + // LEFT JOIN
                      "JOIN Produtos pr ON p.produto_id = pr.id " +
-                     "JOIN Funcionarios f ON p.funcionario_id = f.id " +
+                     "LEFT JOIN Funcionarios f ON p.funcionario_id = f.id " + // LEFT JOIN
                      "ORDER BY p.data_hora DESC";
 
         ObservableList<Pedido> listaPedidos = FXCollections.observableArrayList();
@@ -394,19 +402,17 @@ public class PrimaryController {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                Pedido pedido = new Pedido(
+                listaPedidos.add(new Pedido(
                     rs.getInt("id"),
-                    rs.getString("cliente"),
+                    rs.getString("cliente"), // COALESCEd
                     rs.getString("produto"),
                     rs.getInt("quantidade"),
-                    rs.getString("funcionario"),
+                    rs.getString("funcionario"), // COALESCEd
                     rs.getString("status"),
                     rs.getString("data_hora"),
                     rs.getDouble("total")
-                );
-                listaPedidos.add(pedido);
+                ));
             }
-
             pedidosTable.setItems(listaPedidos);
 
         } catch (SQLException e) {
