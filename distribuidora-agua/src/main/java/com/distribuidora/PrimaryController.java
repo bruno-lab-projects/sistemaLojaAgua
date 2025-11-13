@@ -268,6 +268,9 @@ public class PrimaryController {
             // Atualiza a tabela com os dados
             clientesTable.setItems(clientesData);
 
+            // Atualiza o ComboBox de pedidos com a lista atualizada
+            pedidoClienteCombo.setItems(clientesData);
+
         } catch (SQLException e) {
             System.err.println("Erro ao carregar clientes: " + e.getMessage());
         }
@@ -480,6 +483,9 @@ public class PrimaryController {
             }
             produtosTable.setItems(listaProdutos);
 
+            // Atualiza o ComboBox de pedidos com a lista atualizada
+            pedidoProdutoCombo.setItems(listaProdutos);
+
             // Define o produto padrão no ComboBox
             setProdutoPadrao();
 
@@ -491,13 +497,19 @@ public class PrimaryController {
     private void setProdutoPadrao() {
         Produto produtoPadrao = null;
 
-        // Use 'produtosTable.getItems()' para pegar a lista atual de produtos
+        // Procura pelo produto com ID = 2 (Água Maiorca original, mesmo que tenha mudado de nome)
         for (Produto p : produtosTable.getItems()) {
-            if (p.getNome().equalsIgnoreCase("Água Maiorca")) {
+            if (p.getId() == 2) {
                 produtoPadrao = p;
                 break;
             }
         }
+
+        // Fallback: se não encontrar o ID 2, pega o primeiro produto da lista (mais barato)
+        if (produtoPadrao == null && !produtosTable.getItems().isEmpty()) {
+            produtoPadrao = produtosTable.getItems().get(0);
+        }
+
         // Define o valor no ComboBox
         pedidoProdutoCombo.setValue(produtoPadrao);
     }
