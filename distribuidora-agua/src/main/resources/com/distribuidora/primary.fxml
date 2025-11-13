@@ -375,7 +375,7 @@
             </Tab>
         </tabs>
       </TabPane>
-      <Button fx:id="primaryButton" onAction="#switchToSecondary" text="ignore esse botão por enquanto" />
+      <Button fx:id="primaryButton" onAction="#switchToSecondary" text="Ir para o painel administrativo" />
    </children>
    <padding>
       <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />

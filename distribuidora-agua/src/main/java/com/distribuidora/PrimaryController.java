@@ -25,6 +25,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class PrimaryController {
@@ -742,7 +743,28 @@ public class PrimaryController {
 
     @FXML
     private void switchToSecondary() throws IOException {
-        App.setRoot("secondary");
+        // Cria o diálogo de senha
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Acesso Restrito");
+        dialog.setHeaderText("Área Administrativa");
+        dialog.setContentText("Digite a senha de administrador:");
+
+        // Mostra o diálogo e espera a resposta
+        dialog.showAndWait().ifPresent(senha -> {
+            // Verifica se a senha está correta
+            if (senha.equals("admin123")) {
+                // Senha correta - troca para a tela secundária
+                try {
+                    App.setRoot("secondary");
+                } catch (IOException e) {
+                    new Alert(AlertType.ERROR, "Erro ao carregar tela: " + e.getMessage()).show();
+                }
+            } else {
+                // Senha incorreta - mostra erro
+                new Alert(AlertType.ERROR, "Senha incorreta!").show();
+            }
+        });
+        // Se o usuário cancelar (ifPresent não executa), não faz nada
     }
 
     @FXML
