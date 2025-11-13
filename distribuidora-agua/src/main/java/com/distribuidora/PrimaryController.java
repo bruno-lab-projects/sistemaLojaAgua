@@ -44,8 +44,11 @@ public class PrimaryController {
     @FXML private TableColumn<Cliente, String> colObservacoes;
 
     // Componentes da aba Produtos
+    @FXML private TextField produtoNomeField;
     @FXML private TextField produtoPrecoField;
-    @FXML private Button salvarPrecoButton;
+    @FXML private Button salvarProdutoButton;
+    @FXML private Button excluirProdutoButton;
+    @FXML private Button limparProdutoButton;
     @FXML private TableView<Produto> produtosTable;
     @FXML private TableColumn<Produto, String> colProdutoNome;
     @FXML private TableColumn<Produto, Double> colProdutoPreco;
@@ -106,6 +109,7 @@ public class PrimaryController {
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
     private Cliente clienteSelecionado = null;
     private Funcionario funcionarioSelecionado = null;
+    private Produto produtoSelecionado = null;
 
     @FXML
     private void initialize() {
@@ -139,13 +143,13 @@ public class PrimaryController {
         colProdutoNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colProdutoPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
 
-        // Adiciona listener para saber qual produto foi clicado
+        // Adiciona listener para selecionar produto
         produtosTable.getSelectionModel().selectedItemProperty().addListener(
-            (obs, oldSelection, newSelection) -> {
-                if (newSelection != null) {
-                    // Quando o usuário clicar em um produto,
-                    // preenche o campo de texto com o preço atual
-                    produtoPrecoField.setText(String.valueOf(newSelection.getPreco()));
+            (obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    produtoSelecionado = newVal;
+                    produtoNomeField.setText(newVal.getNome());
+                    produtoPrecoField.setText(String.valueOf(newVal.getPreco()));
                 }
             }
         );
@@ -365,45 +369,96 @@ public class PrimaryController {
     }
 
     @FXML
-    private void handleSalvarPreco() {
-        // 1. Pegue o produto que está selecionado na tabela
-        Produto produtoSelecionado = produtosTable.getSelectionModel().getSelectedItem();
-        // 2. Pegue o novo preço do campo de texto
+    private void handleSalvarProduto() {
+        String nome = produtoNomeField.getText();
         String precoStr = produtoPrecoField.getText();
 
-        // 3. Verificações de erro
-        if (produtoSelecionado == null) {
-            new Alert(Alert.AlertType.ERROR, "Por favor, selecione um produto na tabela primeiro.").show();
+        // Validações
+        if (nome.isBlank()) {
+            new Alert(AlertType.ERROR, "O nome é obrigatório.").show();
             return;
         }
-        double novoPreco;
+
+        double preco;
         try {
-            novoPreco = Double.parseDouble(precoStr);
+            preco = Double.parseDouble(precoStr);
         } catch (NumberFormatException e) {
-            new Alert(Alert.AlertType.ERROR, "Preço inválido. Use apenas números (ex: 19.50).").show();
+            new Alert(AlertType.ERROR, "Preço inválido. Use apenas números (ex: 19.50).").show();
             return;
         }
 
-        // 4. Crie o SQL de UPDATE:
-        String sql = "UPDATE Produtos SET preco = ? WHERE id = ?";
+        if (produtoSelecionado == null) {
+            // MODO 1: CRIAR NOVO (INSERT)
+            String sql = "INSERT INTO Produtos (nome, preco) VALUES (?, ?)";
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, nome);
+                pstmt.setDouble(2, preco);
+                pstmt.executeUpdate();
+                new Alert(AlertType.INFORMATION, "Produto salvo com sucesso!").show();
+            } catch (SQLException e) {
+                new Alert(AlertType.ERROR, "Erro ao salvar: " + e.getMessage()).show();
+            }
 
-        // 5. Use 'Database.connect()' e 'PreparedStatement' para salvar o novo preço.
-        try (Connection conn = Database.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setDouble(1, novoPreco);
-            pstmt.setInt(2, produtoSelecionado.getId());
-            pstmt.executeUpdate();
-
-            new Alert(Alert.AlertType.INFORMATION, "Preço atualizado com sucesso!").show();
-
-        } catch (SQLException e) {
-            new Alert(Alert.AlertType.ERROR, "Erro ao atualizar o preço: " + e.getMessage()).show();
+        } else {
+            // MODO 2: ATUALIZAR EXISTENTE (UPDATE)
+            String sql = "UPDATE Produtos SET nome = ?, preco = ? WHERE id = ?";
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, nome);
+                pstmt.setDouble(2, preco);
+                pstmt.setInt(3, produtoSelecionado.getId());
+                pstmt.executeUpdate();
+                new Alert(AlertType.INFORMATION, "Produto atualizado com sucesso!").show();
+            } catch (SQLException e) {
+                new Alert(AlertType.ERROR, "Erro ao atualizar: " + e.getMessage()).show();
+            }
         }
 
-        // 6. Limpe o campo e recarregue a tabela
-        produtoPrecoField.clear();
+        // No final, recarregue a tabela e limpe o formulário
         loadProdutosDaTabela();
+        handleLimparProduto();
+    }
+
+    @FXML
+    private void handleLimparProduto() {
+        produtoSelecionado = null;
+        produtosTable.getSelectionModel().clearSelection();
+        produtoNomeField.clear();
+        produtoPrecoField.clear();
+    }
+
+    @FXML
+    private void handleExcluirProduto() {
+        if (produtoSelecionado == null) {
+            new Alert(AlertType.ERROR, "Selecione um produto na tabela para excluir.").show();
+            return;
+        }
+
+        // Crie um Alerta de Confirmação
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Confirmar Exclusão");
+        alert.setHeaderText("Excluir " + produtoSelecionado.getNome() + "?");
+        alert.setContentText("Tem certeza? Esta ação não pode ser desfeita.");
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                // Usuário confirmou
+                String sql = "DELETE FROM Produtos WHERE id = ?";
+                try (Connection conn = Database.connect();
+                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setInt(1, produtoSelecionado.getId());
+                    pstmt.executeUpdate();
+                    new Alert(AlertType.INFORMATION, "Produto excluído.").show();
+                } catch (SQLException e) {
+                    new Alert(AlertType.ERROR, "Erro ao excluir: " + e.getMessage()).show();
+                }
+
+                // Recarregue e limpe
+                loadProdutosDaTabela();
+                handleLimparProduto();
+            }
+        });
     }
 
     private void loadProdutosDaTabela() {
