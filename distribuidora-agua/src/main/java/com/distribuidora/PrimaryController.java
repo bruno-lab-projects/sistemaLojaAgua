@@ -25,6 +25,7 @@ import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class PrimaryController {
@@ -46,6 +47,11 @@ public class PrimaryController {
     @FXML private Button criarPedidoButton;
     @FXML private DatePicker pedidoDatePicker;
     @FXML private TabPane statusTabPane;
+
+    // Labels de título com contagem
+    @FXML private Label lblTituloPendentes;
+    @FXML private Label lblTituloSairam;
+    @FXML private Label lblTituloEntregues;
 
     // Botões de Ação
     @FXML private Button marcarSaiuButton;
@@ -384,6 +390,11 @@ public class PrimaryController {
             tablePedidosFeitos.setItems(pedidosFeitos);
             tablePedidosNaRua.setItems(pedidosNaRua);
             tablePedidosEntregues.setItems(pedidosEntregues);
+
+            // Atualiza os Labels com as contagens
+            lblTituloPendentes.setText(String.format("PENDENTES (%d)", pedidosFeitos.size()));
+            lblTituloSairam.setText(String.format("SAÍRAM PARA ENTREGA (%d)", pedidosNaRua.size()));
+            lblTituloEntregues.setText(String.format("ENTREGUES (%d)", pedidosEntregues.size()));
 
         } catch (SQLException e) {
             System.out.println("Erro ao carregar pedidos: " + e.getMessage());
