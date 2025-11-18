@@ -199,15 +199,15 @@
                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                              </rowConstraints>
                                              <children>
-                                                <Button fx:id="marcarSaiuButton" mnemonicParsing="false" onAction="#handleMarcarSaiu" text="MARCAR COMO &quot;SAIU PARA ENTREGA&quot;" textFill="#d79b05" GridPane.halignment="CENTER">
+                                                <Button fx:id="marcarSaiuButton" mnemonicParsing="false" onAction="#handleMarcarSaiu" style="-fx-background-color: orange;" text="MARCAR COMO &quot;SAIU PARA ENTREGA&quot;" GridPane.halignment="CENTER">
                                                    <font>
                                                       <Font name="System Bold" size="13.0" />
                                                    </font></Button>
-                                                <Button fx:id="marcarEntregueButton" mnemonicParsing="false" onAction="#handleMarcarEntregue" text="MARCAR COMO &quot;ENTREGUE&quot;" textFill="#08a415" GridPane.columnIndex="1" GridPane.halignment="CENTER">
+                                                <Button fx:id="marcarEntregueButton" mnemonicParsing="false" onAction="#handleMarcarEntregue" style="-fx-background-color: #1cb52b;" text="MARCAR COMO &quot;ENTREGUE&quot;" GridPane.columnIndex="1" GridPane.halignment="CENTER">
                                                    <font>
                                                       <Font name="System Bold" size="13.0" />
                                                    </font></Button>
-                                                <Button fx:id="cancelarPedidoButton" mnemonicParsing="false" onAction="#handleCancelarPedido" text="CANCELAR PEDIDO" textFill="RED" GridPane.columnIndex="2" GridPane.halignment="CENTER">
+                                                <Button fx:id="cancelarPedidoButton" mnemonicParsing="false" onAction="#handleCancelarPedido" style="-fx-background-color: red;" text="CANCELAR PEDIDO" GridPane.columnIndex="2" GridPane.halignment="CENTER">
                                                    <font>
                                                       <Font name="System Bold" size="13.0" />
                                                    </font></Button>
