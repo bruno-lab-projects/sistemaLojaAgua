@@ -21,6 +21,20 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 public class SecondaryController {
 
+    // Injeções FXML para Clientes
+    @FXML private TextField nomeField;
+    @FXML private TextField telefoneField;
+    @FXML private TextField enderecoField;
+    @FXML private TextField observacoesField;
+    @FXML private Button salvarButton;
+    @FXML private Button excluirClienteButton;
+    @FXML private Button limparClienteButton;
+    @FXML private TableView<Cliente> clientesTable;
+    @FXML private TableColumn<Cliente, String> colNome;
+    @FXML private TableColumn<Cliente, String> colTelefone;
+    @FXML private TableColumn<Cliente, String> colEndereco;
+    @FXML private TableColumn<Cliente, String> colObservacoes;
+
     // Injeções FXML para Produtos
     @FXML private TextField produtoNomeField;
     @FXML private TextField produtoPrecoField;
@@ -39,11 +53,39 @@ public class SecondaryController {
     @FXML private TableView<Funcionario> funcionariosTable;
     @FXML private TableColumn<Funcionario, String> colFuncionarioNome;
 
+    private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
+    private Cliente clienteSelecionado = null;
     private Funcionario funcionarioSelecionado = null;
     private Produto produtoSelecionado = null;
 
     @FXML
     private void initialize() {
+        // Configura as colunas da tabela de clientes
+        colNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
+        colTelefone.setCellValueFactory(cellData -> cellData.getValue().telefoneProperty());
+        colEndereco.setCellValueFactory(cellData -> cellData.getValue().enderecoProperty());
+        colObservacoes.setCellValueFactory(cellData -> cellData.getValue().observacoesProperty());
+
+        // Adiciona listener para a tabela de clientes
+        clientesTable.getSelectionModel().selectedItemProperty().addListener(
+            (obs, oldSelection, newSelection) -> {
+                if (newSelection != null) {
+                    // Se o usuário clicou em um cliente:
+                    // 1. Preencha o formulário com os dados
+                    nomeField.setText(newSelection.getNome());
+                    telefoneField.setText(newSelection.getTelefone());
+                    enderecoField.setText(newSelection.getEndereco());
+                    observacoesField.setText(newSelection.getObservacoes());
+
+                    // 2. Armazene o cliente selecionado
+                    clienteSelecionado = newSelection;
+                }
+            }
+        );
+
+        // Carrega os clientes do banco
+        loadClientesDaTabela();
+
         // Configura as colunas da tabela de produtos
         colProdutoNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colProdutoPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
@@ -78,6 +120,132 @@ public class SecondaryController {
         // Carrega os funcionários do banco
         loadFuncionariosDaTabela();
     }
+
+    // ==================== MÉTODOS DE CLIENTES ====================
+
+    private void loadClientesDaTabela() {
+        clientesData.clear();
+        String sql = "SELECT id, nome, telefone, endereco, observacoes FROM Clientes";
+
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Cliente cliente = new Cliente(
+                    rs.getInt("id"),
+                    rs.getString("nome"),
+                    rs.getString("telefone"),
+                    rs.getString("endereco"),
+                    rs.getString("observacoes")
+                );
+                clientesData.add(cliente);
+            }
+
+            // Atualiza a tabela com os dados
+            clientesTable.setItems(clientesData);
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao carregar clientes: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleSalvarCliente() {
+        String nome = nomeField.getText();
+        String telefone = telefoneField.getText();
+        String endereco = enderecoField.getText();
+        String observacoes = observacoesField.getText();
+
+        if (nome.isBlank()) {
+            new Alert(AlertType.ERROR, "O nome é obrigatório.").show();
+            return;
+        }
+
+        if (clienteSelecionado == null) {
+            // MODO 1: CRIAR NOVO (INSERT)
+            String sql = "INSERT INTO Clientes (nome, telefone, endereco, observacoes) VALUES (?, ?, ?, ?)";
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, nome);
+                pstmt.setString(2, telefone);
+                pstmt.setString(3, endereco);
+                pstmt.setString(4, observacoes);
+                pstmt.executeUpdate();
+                new Alert(AlertType.INFORMATION, "Cliente salvo com sucesso!").show();
+            } catch (SQLException e) {
+                new Alert(AlertType.ERROR, "Erro ao salvar: " + e.getMessage()).show();
+            }
+
+        } else {
+            // MODO 2: ATUALIZAR EXISTENTE (UPDATE)
+            String sql = "UPDATE Clientes SET nome = ?, telefone = ?, endereco = ?, observacoes = ? WHERE id = ?";
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setString(1, nome);
+                pstmt.setString(2, telefone);
+                pstmt.setString(3, endereco);
+                pstmt.setString(4, observacoes);
+                pstmt.setInt(5, clienteSelecionado.getId());
+                pstmt.executeUpdate();
+                new Alert(AlertType.INFORMATION, "Cliente atualizado com sucesso!").show();
+            } catch (SQLException e) {
+                new Alert(AlertType.ERROR, "Erro ao atualizar: " + e.getMessage()).show();
+            }
+        }
+
+        // No final, recarregue a tabela e limpe o formulário
+        loadClientesDaTabela();
+        handleLimparCliente();
+    }
+
+    @FXML
+    private void handleLimparCliente() {
+        // 1. Limpe a seleção
+        clienteSelecionado = null;
+        clientesTable.getSelectionModel().clearSelection();
+
+        // 2. Limpe os campos do formulário
+        nomeField.clear();
+        telefoneField.clear();
+        enderecoField.clear();
+        observacoesField.clear();
+    }
+
+    @FXML
+    private void handleExcluirCliente() {
+        if (clienteSelecionado == null) {
+            new Alert(AlertType.ERROR, "Selecione um cliente na tabela para excluir.").show();
+            return;
+        }
+
+        // Crie um Alerta de Confirmação
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Confirmar Exclusão");
+        alert.setHeaderText("Excluir " + clienteSelecionado.getNome() + "?");
+        alert.setContentText("Tem certeza? Esta ação não pode ser desfeita.");
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                // Usuário confirmou
+                String sql = "DELETE FROM Clientes WHERE id = ?";
+                try (Connection conn = Database.connect();
+                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                    pstmt.setInt(1, clienteSelecionado.getId());
+                    pstmt.executeUpdate();
+                    new Alert(AlertType.INFORMATION, "Cliente excluído.").show();
+                } catch (SQLException e) {
+                    new Alert(AlertType.ERROR, "Erro ao excluir: " + e.getMessage()).show();
+                }
+
+                // Recarregue e limpe
+                loadClientesDaTabela();
+                handleLimparCliente();
+            }
+        });
+    }
+
+    // ==================== MÉTODOS DE PRODUTOS ====================
 
     @FXML
     private void handleSalvarProduto() {

@@ -21,7 +21,6 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TabPane;
@@ -36,13 +35,7 @@ public class PrimaryController {
     @FXML private TextField enderecoField;
     @FXML private TextField observacoesField;
     @FXML private Button salvarButton;
-    @FXML private Button excluirClienteButton;
     @FXML private Button limparClienteButton;
-    @FXML private TableView<Cliente> clientesTable;
-    @FXML private TableColumn<Cliente, String> colNome;
-    @FXML private TableColumn<Cliente, String> colTelefone;
-    @FXML private TableColumn<Cliente, String> colEndereco;
-    @FXML private TableColumn<Cliente, String> colObservacoes;
 
     // Componentes da aba Pedidos
     @FXML private ComboBox<Cliente> pedidoClienteCombo;
@@ -89,39 +82,10 @@ public class PrimaryController {
     @FXML private TableColumn<Pedido, Double> colEntreguesTotal;
     @FXML private TableColumn<Pedido, String> colEntreguesFuncionario;
 
-    private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
-    private Cliente clienteSelecionado = null;
-
     @FXML
     private void initialize() {
-        // Configura as colunas da tabela de clientes
-        colNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
-        colTelefone.setCellValueFactory(cellData -> cellData.getValue().telefoneProperty());
-        colEndereco.setCellValueFactory(cellData -> cellData.getValue().enderecoProperty());
-        colObservacoes.setCellValueFactory(cellData -> cellData.getValue().observacoesProperty());
-
-        // Adiciona listener para a tabela de clientes
-        clientesTable.getSelectionModel().selectedItemProperty().addListener(
-            (obs, oldSelection, newSelection) -> {
-                if (newSelection != null) {
-                    // Se o usuário clicou em um cliente:
-                    // 1. Preencha o formulário com os dados
-                    nomeField.setText(newSelection.getNome());
-                    telefoneField.setText(newSelection.getTelefone());
-                    enderecoField.setText(newSelection.getEndereco());
-                    observacoesField.setText(newSelection.getObservacoes());
-
-                    // 2. Armazene o cliente selecionado
-                    clienteSelecionado = newSelection;
-                }
-            }
-        );
-
-        // Carrega os clientes do banco
+        // Carrega clientes para o ComboBox de pedidos
         carregarClientes();
-
-        // Popula os ComboBoxes da aba Pedidos com as listas das outras tabelas
-        pedidoClienteCombo.setItems(clientesTable.getItems());
         
         // Carrega produtos para o ComboBox de pedidos
         carregarProdutosParaCombo();
@@ -197,7 +161,7 @@ public class PrimaryController {
     }
 
     private void carregarClientes() {
-        clientesData.clear();
+        ObservableList<Cliente> listaClientes = FXCollections.observableArrayList();
         String sql = "SELECT id, nome, telefone, endereco, observacoes FROM Clientes";
 
         try (Connection conn = Database.connect();
@@ -212,14 +176,11 @@ public class PrimaryController {
                     rs.getString("endereco"),
                     rs.getString("observacoes")
                 );
-                clientesData.add(cliente);
+                listaClientes.add(cliente);
             }
 
-            // Atualiza a tabela com os dados
-            clientesTable.setItems(clientesData);
-
             // Atualiza o ComboBox de pedidos com a lista atualizada
-            pedidoClienteCombo.setItems(clientesData);
+            pedidoClienteCombo.setItems(listaClientes);
 
         } catch (SQLException e) {
             System.err.println("Erro ao carregar clientes: " + e.getMessage());
@@ -238,87 +199,32 @@ public class PrimaryController {
             return;
         }
 
-        if (clienteSelecionado == null) {
-            // MODO 1: CRIAR NOVO (INSERT)
-            String sql = "INSERT INTO Clientes (nome, telefone, endereco, observacoes) VALUES (?, ?, ?, ?)";
-            try (Connection conn = Database.connect();
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, nome);
-                pstmt.setString(2, telefone);
-                pstmt.setString(3, endereco);
-                pstmt.setString(4, observacoes);
-                pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Cliente salvo com sucesso!").show();
-            } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao salvar: " + e.getMessage()).show();
-            }
-
-        } else {
-            // MODO 2: ATUALIZAR EXISTENTE (UPDATE)
-            String sql = "UPDATE Clientes SET nome = ?, telefone = ?, endereco = ?, observacoes = ? WHERE id = ?";
-            try (Connection conn = Database.connect();
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, nome);
-                pstmt.setString(2, telefone);
-                pstmt.setString(3, endereco);
-                pstmt.setString(4, observacoes);
-                pstmt.setInt(5, clienteSelecionado.getId());
-                pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Cliente atualizado com sucesso!").show();
-            } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao atualizar: " + e.getMessage()).show();
-            }
+        // Cria novo cliente (INSERT)
+        String sql = "INSERT INTO Clientes (nome, telefone, endereco, observacoes) VALUES (?, ?, ?, ?)";
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, nome);
+            pstmt.setString(2, telefone);
+            pstmt.setString(3, endereco);
+            pstmt.setString(4, observacoes);
+            pstmt.executeUpdate();
+            new Alert(AlertType.INFORMATION, "Cliente salvo com sucesso!").show();
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao salvar: " + e.getMessage()).show();
         }
 
-        // No final, recarregue a tabela e limpe o formulário
+        // Recarrega lista de clientes e limpa o formulário
         carregarClientes();
         handleLimparCliente();
     }
 
     @FXML
     private void handleLimparCliente() {
-        // 1. Limpe a seleção
-        clienteSelecionado = null;
-        clientesTable.getSelectionModel().clearSelection();
-
-        // 2. Limpe os campos do formulário
+        // Limpa os campos do formulário
         nomeField.clear();
         telefoneField.clear();
         enderecoField.clear();
         observacoesField.clear();
-    }
-
-    @FXML
-    private void handleExcluirCliente() {
-        if (clienteSelecionado == null) {
-            new Alert(AlertType.ERROR, "Selecione um cliente na tabela para excluir.").show();
-            return;
-        }
-
-        // Crie um Alerta de Confirmação
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar Exclusão");
-        alert.setHeaderText("Excluir " + clienteSelecionado.getNome() + "?");
-        alert.setContentText("Tem certeza? Esta ação não pode ser desfeita.");
-
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                // Usuário confirmou
-                String sql = "DELETE FROM Clientes WHERE id = ?";
-                try (Connection conn = Database.connect();
-                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                    pstmt.setInt(1, clienteSelecionado.getId());
-                    pstmt.executeUpdate();
-                    new Alert(AlertType.INFORMATION, "Cliente excluído.").show();
-                } catch (SQLException e) {
-                    new Alert(AlertType.ERROR, "Erro ao excluir: " + e.getMessage()).show();
-                }
-
-                // Recarregue e limpe
-                carregarClientes();
-                handleLimparCliente();
-            }
-        });
     }
 
     private void carregarProdutosParaCombo() {
