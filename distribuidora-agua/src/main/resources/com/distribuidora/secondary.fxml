@@ -63,6 +63,18 @@
                                              </font>
                                           </Label>
                                           <TextField fx:id="enderecoField" />
+                                          <Label text="Prédio / Casa">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                          <TextField fx:id="predioCasaField" />
+                                          <Label text="Número">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                          <TextField fx:id="blocoNumeroField" />
                                           <Label text="Observações">
                                              <font>
                                                 <Font size="18.0" />
@@ -100,6 +112,8 @@
                                           <TableColumn fx:id="colNome" prefWidth="115.0" text="Nome" />
                                           <TableColumn fx:id="colTelefone" prefWidth="122.0" text="Telefone" />
                                           <TableColumn fx:id="colEndereco" prefWidth="124.0" text="Endereco" />
+                                          <TableColumn fx:id="colClientePredioCasa" prefWidth="150.0" text="Prédio / Casa" />
+                                          <TableColumn fx:id="colClienteNumero" prefWidth="150.0" text="Bloco - Número" />
                                           <TableColumn fx:id="colObservacoes" prefWidth="150.0" text="Observações" />
                                        </columns>
                                     </TableView>

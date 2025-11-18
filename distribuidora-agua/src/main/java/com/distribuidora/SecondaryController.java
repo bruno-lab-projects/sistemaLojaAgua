@@ -17,7 +17,9 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.PropertyValueFactory;
+import java.util.function.UnaryOperator;
 
 public class SecondaryController {
 
@@ -25,6 +27,8 @@ public class SecondaryController {
     @FXML private TextField nomeField;
     @FXML private TextField telefoneField;
     @FXML private TextField enderecoField;
+    @FXML private TextField predioCasaField;
+    @FXML private TextField blocoNumeroField;
     @FXML private TextField observacoesField;
     @FXML private Button salvarButton;
     @FXML private Button excluirClienteButton;
@@ -33,6 +37,8 @@ public class SecondaryController {
     @FXML private TableColumn<Cliente, String> colNome;
     @FXML private TableColumn<Cliente, String> colTelefone;
     @FXML private TableColumn<Cliente, String> colEndereco;
+    @FXML private TableColumn<Cliente, String> colClientePredioCasa;
+    @FXML private TableColumn<Cliente, String> colClienteNumero;
     @FXML private TableColumn<Cliente, String> colObservacoes;
 
     // Injeções FXML para Produtos
@@ -60,10 +66,15 @@ public class SecondaryController {
 
     @FXML
     private void initialize() {
+        // Configura máscara de telefone
+        configurarMascaraTelefone();
+        
         // Configura as colunas da tabela de clientes
         colNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
         colTelefone.setCellValueFactory(cellData -> cellData.getValue().telefoneProperty());
         colEndereco.setCellValueFactory(cellData -> cellData.getValue().enderecoProperty());
+        colClientePredioCasa.setCellValueFactory(new PropertyValueFactory<>("predioCasa"));
+        colClienteNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
         colObservacoes.setCellValueFactory(cellData -> cellData.getValue().observacoesProperty());
 
         // Adiciona listener para a tabela de clientes
@@ -75,6 +86,8 @@ public class SecondaryController {
                     nomeField.setText(newSelection.getNome());
                     telefoneField.setText(newSelection.getTelefone());
                     enderecoField.setText(newSelection.getEndereco());
+                    predioCasaField.setText(newSelection.getPredioCasa());
+                    blocoNumeroField.setText(newSelection.getNumero());
                     observacoesField.setText(newSelection.getObservacoes());
 
                     // 2. Armazene o cliente selecionado
@@ -125,7 +138,7 @@ public class SecondaryController {
 
     private void loadClientesDaTabela() {
         clientesData.clear();
-        String sql = "SELECT id, nome, telefone, endereco, observacoes FROM Clientes";
+        String sql = "SELECT id, nome, telefone, endereco, predio_casa, numero, observacoes FROM Clientes";
 
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -137,6 +150,8 @@ public class SecondaryController {
                     rs.getString("nome"),
                     rs.getString("telefone"),
                     rs.getString("endereco"),
+                    rs.getString("predio_casa"),
+                    rs.getString("numero"),
                     rs.getString("observacoes")
                 );
                 clientesData.add(cliente);
@@ -150,11 +165,92 @@ public class SecondaryController {
         }
     }
 
+    private void configurarMascaraTelefone() {
+        // Cria um TextFormatter que formata automaticamente
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String newText = change.getControlNewText();
+            
+            // Remove tudo que não é dígito
+            String apenasNumeros = newText.replaceAll("[^0-9]", "");
+            
+            // Se apagou tudo, permite campo vazio
+            if (apenasNumeros.isEmpty()) {
+                change.setText("");
+                change.setRange(0, change.getControlText().length());
+                return change;
+            }
+            
+            // Limita a 11 dígitos
+            if (apenasNumeros.length() > 11) {
+                return null; // Rejeita a mudança
+            }
+            
+            // Formata o telefone
+            String formatted = formatarTelefone(apenasNumeros);
+            
+            // Atualiza o change com o texto formatado
+            change.setText(formatted);
+            change.setRange(0, change.getControlText().length());
+            
+            // Ajusta a posição do cursor
+            int newCaretPos = formatted.length();
+            change.setCaretPosition(newCaretPos);
+            change.setAnchor(newCaretPos);
+            
+            return change;
+        };
+        
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        telefoneField.setTextFormatter(textFormatter);
+        
+        // Define o texto inicial como "(71) 9"
+        telefoneField.setText("(71) 9");
+        
+        // Ao focar no campo vazio, preenche com o padrão (71) 9
+        telefoneField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused && telefoneField.getText().isEmpty()) {
+                telefoneField.setText("(71) 9");
+                telefoneField.positionCaret(telefoneField.getText().length());
+            }
+        });
+    }
+    
+    private String formatarTelefone(String numeros) {
+        // Formata: (DD) 9 9999-9999
+        StringBuilder formatted = new StringBuilder();
+        
+        int length = numeros.length();
+        
+        if (length <= 2) {
+            // Apenas DDD: (71
+            formatted.append("(").append(numeros);
+        } else if (length == 3) {
+            // DDD completo + primeiro dígito: (71) 9
+            formatted.append("(").append(numeros.substring(0, 2))
+                     .append(") ").append(numeros.substring(2));
+        } else if (length <= 7) {
+            // DDD + primeiros dígitos: (71) 9 1234
+            formatted.append("(").append(numeros.substring(0, 2))
+                     .append(") ").append(numeros.substring(2, 3))
+                     .append(" ").append(numeros.substring(3));
+        } else {
+            // Formato completo: (71) 9 1234-5678
+            formatted.append("(").append(numeros.substring(0, 2))
+                     .append(") ").append(numeros.substring(2, 3))
+                     .append(" ").append(numeros.substring(3, 7))
+                     .append("-").append(numeros.substring(7));
+        }
+        
+        return formatted.toString();
+    }
+
     @FXML
     private void handleSalvarCliente() {
         String nome = nomeField.getText();
         String telefone = telefoneField.getText();
         String endereco = enderecoField.getText();
+        String predioCasa = predioCasaField.getText();
+        String blocoNumero = blocoNumeroField.getText();
         String observacoes = observacoesField.getText();
 
         if (nome.isBlank()) {
@@ -164,13 +260,15 @@ public class SecondaryController {
 
         if (clienteSelecionado == null) {
             // MODO 1: CRIAR NOVO (INSERT)
-            String sql = "INSERT INTO Clientes (nome, telefone, endereco, observacoes) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO Clientes (nome, telefone, endereco, predio_casa, numero, observacoes) VALUES (?, ?, ?, ?, ?, ?)";
             try (Connection conn = Database.connect();
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, nome);
                 pstmt.setString(2, telefone);
                 pstmt.setString(3, endereco);
-                pstmt.setString(4, observacoes);
+                pstmt.setString(4, predioCasa);
+                pstmt.setString(5, blocoNumero);
+                pstmt.setString(6, observacoes);
                 pstmt.executeUpdate();
                 new Alert(AlertType.INFORMATION, "Cliente salvo com sucesso!").show();
             } catch (SQLException e) {
@@ -179,14 +277,16 @@ public class SecondaryController {
 
         } else {
             // MODO 2: ATUALIZAR EXISTENTE (UPDATE)
-            String sql = "UPDATE Clientes SET nome = ?, telefone = ?, endereco = ?, observacoes = ? WHERE id = ?";
+            String sql = "UPDATE Clientes SET nome = ?, telefone = ?, endereco = ?, predio_casa = ?, numero = ?, observacoes = ? WHERE id = ?";
             try (Connection conn = Database.connect();
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, nome);
                 pstmt.setString(2, telefone);
                 pstmt.setString(3, endereco);
-                pstmt.setString(4, observacoes);
-                pstmt.setInt(5, clienteSelecionado.getId());
+                pstmt.setString(4, predioCasa);
+                pstmt.setString(5, blocoNumero);
+                pstmt.setString(6, observacoes);
+                pstmt.setInt(7, clienteSelecionado.getId());
                 pstmt.executeUpdate();
                 new Alert(AlertType.INFORMATION, "Cliente atualizado com sucesso!").show();
             } catch (SQLException e) {
@@ -207,8 +307,10 @@ public class SecondaryController {
 
         // 2. Limpe os campos do formulário
         nomeField.clear();
-        telefoneField.clear();
+        telefoneField.setText("(71) 9"); // Reseta para o padrão
         enderecoField.clear();
+        predioCasaField.clear();
+        blocoNumeroField.clear();
         observacoesField.clear();
     }
 

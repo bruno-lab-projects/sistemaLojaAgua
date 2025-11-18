@@ -37,6 +37,8 @@ public class PrimaryController {
     @FXML private TextField nomeField;
     @FXML private TextField telefoneField;
     @FXML private TextField enderecoField;
+    @FXML private TextField predioCasaField;
+    @FXML private TextField blocoNumeroField;
     @FXML private TextField observacoesField;
     @FXML private Button salvarButton;
     @FXML private Button limparClienteButton;
@@ -174,7 +176,7 @@ public class PrimaryController {
 
     private void carregarClientes() {
         ObservableList<Cliente> listaClientes = FXCollections.observableArrayList();
-        String sql = "SELECT id, nome, telefone, endereco, observacoes FROM Clientes";
+        String sql = "SELECT id, nome, telefone, endereco, predio_casa, numero, observacoes FROM Clientes";
 
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -186,6 +188,8 @@ public class PrimaryController {
                     rs.getString("nome"),
                     rs.getString("telefone"),
                     rs.getString("endereco"),
+                    rs.getString("predio_casa"),
+                    rs.getString("numero"),
                     rs.getString("observacoes")
                 );
                 listaClientes.add(cliente);
@@ -283,6 +287,8 @@ public class PrimaryController {
         String nome = nomeField.getText();
         String telefone = telefoneField.getText();
         String endereco = enderecoField.getText();
+        String predioCasa = predioCasaField.getText();
+        String blocoNumero = blocoNumeroField.getText();
         String observacoes = observacoesField.getText();
 
         if (nome.isBlank()) {
@@ -291,13 +297,15 @@ public class PrimaryController {
         }
 
         // Cria novo cliente (INSERT)
-        String sql = "INSERT INTO Clientes (nome, telefone, endereco, observacoes) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Clientes (nome, telefone, endereco, predio_casa, numero, observacoes) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, nome);
             pstmt.setString(2, telefone);
             pstmt.setString(3, endereco);
-            pstmt.setString(4, observacoes);
+            pstmt.setString(4, predioCasa);
+            pstmt.setString(5, blocoNumero);
+            pstmt.setString(6, observacoes);
             pstmt.executeUpdate();
             new Alert(AlertType.INFORMATION, "Cliente salvo com sucesso!").show();
         } catch (SQLException e) {
@@ -315,6 +323,8 @@ public class PrimaryController {
         nomeField.clear();
         telefoneField.setText("(71) 9"); // Reseta para o padrão
         enderecoField.clear();
+        predioCasaField.clear();
+        blocoNumeroField.clear();
         observacoesField.clear();
     }
 

@@ -25,6 +25,8 @@ public class Database {
                 + "nome TEXT NOT NULL,"
                 + "telefone TEXT,"
                 + "endereco TEXT,"
+                + "predio_casa TEXT,"
+                + "numero TEXT,"
                 + "observacoes TEXT"
                 + ");";
 

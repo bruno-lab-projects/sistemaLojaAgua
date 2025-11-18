@@ -9,14 +9,18 @@ public class Cliente {
     private SimpleStringProperty nome;
     private SimpleStringProperty telefone;
     private SimpleStringProperty endereco;
+    private SimpleStringProperty predioCasa;
+    private SimpleStringProperty numero;
     private SimpleStringProperty observacoes;
 
     // Construtor
-    public Cliente(int id, String nome, String telefone, String endereco, String observacoes) {
+    public Cliente(int id, String nome, String telefone, String endereco, String predioCasa, String numero, String observacoes) {
         this.id = new SimpleIntegerProperty(id);
         this.nome = new SimpleStringProperty(nome);
         this.telefone = new SimpleStringProperty(telefone);
         this.endereco = new SimpleStringProperty(endereco);
+        this.predioCasa = new SimpleStringProperty(predioCasa);
+        this.numero = new SimpleStringProperty(numero);
         this.observacoes = new SimpleStringProperty(observacoes);
     }
 
@@ -70,6 +74,32 @@ public class Cliente {
 
     public SimpleStringProperty enderecoProperty() {
         return endereco;
+    }
+
+    // Getters e Setters para Predio/Casa
+    public String getPredioCasa() {
+        return predioCasa.get();
+    }
+
+    public void setPredioCasa(String predioCasa) {
+        this.predioCasa.set(predioCasa);
+    }
+
+    public SimpleStringProperty predioCasaProperty() {
+        return predioCasa;
+    }
+
+    // Getters e Setters para Numero
+    public String getNumero() {
+        return numero.get();
+    }
+
+    public void setNumero(String numero) {
+        this.numero.set(numero);
+    }
+
+    public SimpleStringProperty numeroProperty() {
+        return numero;
     }
 
     // Getters e Setters para Observacoes
