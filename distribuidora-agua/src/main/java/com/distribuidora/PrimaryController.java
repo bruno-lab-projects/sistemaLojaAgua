@@ -21,6 +21,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TabPane;
@@ -536,6 +537,19 @@ public class PrimaryController {
         if (pedidoSelecionado == null) {
             new Alert(AlertType.WARNING, "Selecione um pedido em qualquer uma das tabelas primeiro!").show();
             return;
+        }
+
+        // Diálogo de confirmação
+        Alert confirmacao = new Alert(AlertType.CONFIRMATION);
+        confirmacao.setTitle("Confirmar Cancelamento");
+        confirmacao.setHeaderText("Tem certeza que deseja cancelar este pedido?");
+        confirmacao.setContentText("Cliente: " + pedidoSelecionado.getClienteNome() + "\n" +
+                                   "Produto: " + pedidoSelecionado.getProdutoNome() + "\n" +
+                                   "Quantidade: " + pedidoSelecionado.getQuantidade());
+        
+        // Aguarda a resposta do usuário
+        if (confirmacao.showAndWait().get() != ButtonType.OK) {
+            return; // Usuário cancelou a operação
         }
 
         // Atualiza o pedido no banco
