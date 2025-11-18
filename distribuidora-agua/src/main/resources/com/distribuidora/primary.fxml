@@ -204,12 +204,6 @@
                                              </font>
                                           </Button>
                                           <Separator prefHeight="65.0" prefWidth="350.0" />
-                                          <Button fx:id="excluirClienteButton" mnemonicParsing="false" onAction="#handleExcluirCliente" text="Excluir cliente">
-                                             <font>
-                                                <Font size="18.0" />
-                                             </font>
-                                          </Button>
-                                          <Separator prefHeight="65.0" prefWidth="350.0" />
                                           <Button fx:id="limparClienteButton" mnemonicParsing="false" onAction="#handleLimparCliente" text="Limpar formulário">
                                              <font>
                                                 <Font size="18.0" />
@@ -222,18 +216,7 @@
                                     </VBox>
                                  </children>
                               </AnchorPane>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                                 <children>
-                                    <TableView fx:id="clientesTable" prefHeight="338.0" prefWidth="298.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                       <columns>
-                                          <TableColumn fx:id="colNome" prefWidth="115.0" text="Nome" />
-                                          <TableColumn fx:id="colTelefone" prefWidth="122.0" text="Telefone" />
-                                          <TableColumn fx:id="colEndereco" prefWidth="124.0" text="Endereco" />
-                                          <TableColumn fx:id="colObservacoes" prefWidth="150.0" text="Observações" />
-                                       </columns>
-                                    </TableView>
-                                 </children>
-                              </AnchorPane>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0" />
                           </items>
                         </SplitPane>
                      </children>
