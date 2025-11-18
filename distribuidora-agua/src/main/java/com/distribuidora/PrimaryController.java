@@ -347,23 +347,10 @@ public class PrimaryController {
     }
 
     private void setProdutoPadrao(ObservableList<Produto> listaProdutos) {
-        Produto produtoPadrao = null;
-
-        // Procura pelo produto com ID = 2 (Água Maiorca original, mesmo que tenha mudado de nome)
-        for (Produto p : listaProdutos) {
-            if (p.getId() == 2) {
-                produtoPadrao = p;
-                break;
-            }
+        // Define o produto mais barato (primeiro da lista) como padrão
+        if (!listaProdutos.isEmpty()) {
+            pedidoProdutoCombo.setValue(listaProdutos.get(0));
         }
-
-        // Fallback: se não encontrar o ID 2, pega o primeiro produto da lista (mais barato)
-        if (produtoPadrao == null && !listaProdutos.isEmpty()) {
-            produtoPadrao = listaProdutos.get(0);
-        }
-
-        // Define o valor no ComboBox
-        pedidoProdutoCombo.setValue(produtoPadrao);
     }
 
     @FXML
