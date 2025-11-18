@@ -27,7 +27,9 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.PropertyValueFactory;
+import java.util.function.UnaryOperator;
 
 public class PrimaryController {
 
@@ -91,6 +93,9 @@ public class PrimaryController {
 
     @FXML
     private void initialize() {
+        // Configura máscara de telefone
+        configurarMascaraTelefone();
+        
         // Carrega clientes para o ComboBox de pedidos
         carregarClientes();
         
@@ -194,6 +199,85 @@ public class PrimaryController {
         }
     }
 
+    private void configurarMascaraTelefone() {
+        // Cria um TextFormatter que formata automaticamente
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String newText = change.getControlNewText();
+            
+            // Remove tudo que não é dígito
+            String apenasNumeros = newText.replaceAll("[^0-9]", "");
+            
+            // Se apagou tudo, permite campo vazio
+            if (apenasNumeros.isEmpty()) {
+                change.setText("");
+                change.setRange(0, change.getControlText().length());
+                return change;
+            }
+            
+            // Limita a 11 dígitos
+            if (apenasNumeros.length() > 11) {
+                return null; // Rejeita a mudança
+            }
+            
+            // Formata o telefone
+            String formatted = formatarTelefone(apenasNumeros);
+            
+            // Atualiza o change com o texto formatado
+            change.setText(formatted);
+            change.setRange(0, change.getControlText().length());
+            
+            // Ajusta a posição do cursor
+            int newCaretPos = formatted.length();
+            change.setCaretPosition(newCaretPos);
+            change.setAnchor(newCaretPos);
+            
+            return change;
+        };
+        
+        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
+        telefoneField.setTextFormatter(textFormatter);
+        
+        // Define o texto inicial como "(71) 9"
+        telefoneField.setText("(71) 9");
+        
+        // Ao focar no campo vazio, preenche com o padrão (71) 9
+        telefoneField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (isNowFocused && telefoneField.getText().isEmpty()) {
+                telefoneField.setText("(71) 9");
+                telefoneField.positionCaret(telefoneField.getText().length());
+            }
+        });
+    }
+    
+    private String formatarTelefone(String numeros) {
+        // Formata: (DD) 9 9999-9999
+        StringBuilder formatted = new StringBuilder();
+        
+        int length = numeros.length();
+        
+        if (length <= 2) {
+            // Apenas DDD: (71
+            formatted.append("(").append(numeros);
+        } else if (length == 3) {
+            // DDD completo + primeiro dígito: (71) 9
+            formatted.append("(").append(numeros.substring(0, 2))
+                     .append(") ").append(numeros.substring(2));
+        } else if (length <= 7) {
+            // DDD + primeiros dígitos: (71) 9 1234
+            formatted.append("(").append(numeros.substring(0, 2))
+                     .append(") ").append(numeros.substring(2, 3))
+                     .append(" ").append(numeros.substring(3));
+        } else {
+            // Formato completo: (71) 9 1234-5678
+            formatted.append("(").append(numeros.substring(0, 2))
+                     .append(") ").append(numeros.substring(2, 3))
+                     .append(" ").append(numeros.substring(3, 7))
+                     .append("-").append(numeros.substring(7));
+        }
+        
+        return formatted.toString();
+    }
+
     @FXML
     private void handleSalvarCliente() {
         String nome = nomeField.getText();
@@ -229,7 +313,7 @@ public class PrimaryController {
     private void handleLimparCliente() {
         // Limpa os campos do formulário
         nomeField.clear();
-        telefoneField.clear();
+        telefoneField.setText("(71) 9"); // Reseta para o padrão
         enderecoField.clear();
         observacoesField.clear();
     }
