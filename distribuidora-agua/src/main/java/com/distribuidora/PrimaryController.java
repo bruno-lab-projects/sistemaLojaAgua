@@ -54,6 +54,7 @@ public class PrimaryController {
     @FXML private TextField pedidoAvulsoNumeroField; // (Número)
     @FXML private TextField pedidoAvulsoRuaField;    // (Logradouro)
     @FXML private Button criarPedidoButton;
+    @FXML private Button limparPedidoButton;
     @FXML private DatePicker pedidoDatePicker;
     @FXML private TabPane statusTabPane;
 
@@ -387,6 +388,14 @@ public class PrimaryController {
         }
     }
 
+    private void setProdutoPadrao() {
+        // Versão sem parâmetros - pega a lista atual do ComboBox
+        ObservableList<Produto> listaProdutos = pedidoProdutoCombo.getItems();
+        if (!listaProdutos.isEmpty()) {
+            pedidoProdutoCombo.setValue(listaProdutos.get(0));
+        }
+    }
+
     @FXML
     private void handleCriarPedido() {
         // 1. Pegue todos os valores
@@ -462,6 +471,31 @@ public class PrimaryController {
 
         // 6. Recarregue a tabela
         loadPedidosPorData();
+    }
+
+    @FXML
+    private void handleLimparPedido() {
+        // 1. Resete o Cliente (isso vai disparar o listener que limpa/habilita os campos avulsos automaticamente!)
+        pedidoClienteCombo.setValue(null);
+
+        // 2. Por segurança, garanta a limpeza e habilitação dos campos avulsos explicitamente:
+        pedidoNomeAvulsoField.clear();
+        pedidoAvulsoTipoField.clear();
+        pedidoAvulsoNumeroField.clear();
+        pedidoAvulsoRuaField.clear();
+        pedidoNomeAvulsoField.setDisable(false);
+        pedidoAvulsoTipoField.setDisable(false);
+        pedidoAvulsoNumeroField.setDisable(false);
+        pedidoAvulsoRuaField.setDisable(false);
+
+        // 3. Resete o Produto para o padrão (use o helper que criamos)
+        setProdutoPadrao();
+
+        // 4. Resete a Quantidade para 1
+        pedidoQtdSpinner.getValueFactory().setValue(1);
+
+        // 5. Limpe a Forma de Pagamento
+        pedidoPagamentoCombo.setValue(null);
     }
 
     private void loadPedidosPorData() {

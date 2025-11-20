@@ -105,6 +105,11 @@
                                                       <Insets left="3.0" right="3.0" />
                                                    </GridPane.margin>
                                                 </TextField>
+                                                <Button fx:id="limparPedidoButton" mnemonicParsing="false" onAction="#handleLimparPedido" text="Limpar formulário" GridPane.columnIndex="2" GridPane.rowIndex="5">
+                                                   <font>
+                                                      <Font size="18.0" />
+                                                   </font>
+                                                </Button>
                                              </children>
                                              <padding>
                                                 <Insets left="15.0" />
