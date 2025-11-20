@@ -38,6 +38,9 @@ import java.util.function.UnaryOperator;
 
 public class PrimaryController {
 
+    // Variável de controle para modo de edição
+    private Pedido pedidoEmEdicao = null;
+
     // Componentes da aba Clientes
     @FXML private TextField nomeField;
     @FXML private TextField telefoneField;
@@ -59,6 +62,7 @@ public class PrimaryController {
     @FXML private TextField pedidoAvulsoRuaField;    // (Logradouro)
     @FXML private Button criarPedidoButton;
     @FXML private Button limparPedidoButton;
+    @FXML private Button editarPedidoButton;
     @FXML private DatePicker pedidoDatePicker;
     @FXML private TabPane statusTabPane;
 
@@ -418,52 +422,102 @@ public class PrimaryController {
             return;
         }
 
-        // 3. Prepare o SQL (sem funcionario_id)
-        String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso, predio_casa_avulso, numero_avulso, forma_pagamento) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        String dataAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        String statusInicial = "Feito";
+        if (pedidoEmEdicao == null) {
+            // ========== MODO: CRIAR NOVO PEDIDO ==========
+            String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso, predio_casa_avulso, numero_avulso, forma_pagamento) " +
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String dataAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String statusInicial = "Feito";
 
-        // 4. Conecte e execute com lógica condicional
-        try (Connection conn = Database.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Lógica do Cliente (se for cadastrado ou avulso)
-            if (cliente != null) {
-                pstmt.setInt(1, cliente.getId());
-                pstmt.setNull(6, java.sql.Types.VARCHAR); // nome_avulso
-                pstmt.setNull(7, java.sql.Types.VARCHAR); // endereco_avulso
-                pstmt.setNull(8, java.sql.Types.VARCHAR); // predio_casa_avulso
-                pstmt.setNull(9, java.sql.Types.VARCHAR); // numero_avulso
-            } else {
-                pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
-                pstmt.setString(6, nomeAvulso);
-                pstmt.setString(7, ruaAvulso);
-                pstmt.setString(8, tipoAvulso);
-                pstmt.setString(9, numeroAvulso);
+                // Lógica do Cliente (se for cadastrado ou avulso)
+                if (cliente != null) {
+                    pstmt.setInt(1, cliente.getId());
+                    pstmt.setNull(6, java.sql.Types.VARCHAR); // nome_avulso
+                    pstmt.setNull(7, java.sql.Types.VARCHAR); // endereco_avulso
+                    pstmt.setNull(8, java.sql.Types.VARCHAR); // predio_casa_avulso
+                    pstmt.setNull(9, java.sql.Types.VARCHAR); // numero_avulso
+                } else {
+                    pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
+                    pstmt.setString(6, nomeAvulso);
+                    pstmt.setString(7, ruaAvulso);
+                    pstmt.setString(8, tipoAvulso);
+                    pstmt.setString(9, numeroAvulso);
+                }
+
+                // Resto dos dados
+                pstmt.setInt(2, produto.getId());
+                pstmt.setString(3, statusInicial);
+                pstmt.setString(4, dataAgora);
+                pstmt.setInt(5, quantidade);
+
+                // Forma de pagamento
+                if (pagamento != null) {
+                    pstmt.setString(10, pagamento.name());
+                } else {
+                    pstmt.setNull(10, java.sql.Types.VARCHAR);
+                }
+
+                pstmt.executeUpdate();
+                new Alert(AlertType.INFORMATION, "Pedido criado com sucesso!").show();
+
+            } catch (SQLException e) {
+                new Alert(AlertType.ERROR, "Erro ao criar pedido: " + e.getMessage()).show();
             }
 
-            // Resto dos dados
-            pstmt.setInt(2, produto.getId());
-            pstmt.setString(3, statusInicial);
-            pstmt.setString(4, dataAgora);
-            pstmt.setInt(5, quantidade);
+        } else {
+            // ========== MODO: EDITAR PEDIDO EXISTENTE ==========
+            String sql = "UPDATE Pedidos SET cliente_id = ?, produto_id = ?, quantidade = ?, " +
+                         "nome_avulso = ?, endereco_avulso = ?, predio_casa_avulso = ?, numero_avulso = ?, " +
+                         "forma_pagamento = ? WHERE id = ?";
 
-            // Forma de pagamento
-            if (pagamento != null) {
-                pstmt.setString(10, pagamento.name());
-            } else {
-                pstmt.setNull(10, java.sql.Types.VARCHAR);
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                // Lógica do Cliente (se for cadastrado ou avulso)
+                if (cliente != null) {
+                    pstmt.setInt(1, cliente.getId());
+                    pstmt.setNull(4, java.sql.Types.VARCHAR); // nome_avulso
+                    pstmt.setNull(5, java.sql.Types.VARCHAR); // endereco_avulso
+                    pstmt.setNull(6, java.sql.Types.VARCHAR); // predio_casa_avulso
+                    pstmt.setNull(7, java.sql.Types.VARCHAR); // numero_avulso
+                } else {
+                    pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
+                    pstmt.setString(4, nomeAvulso);
+                    pstmt.setString(5, ruaAvulso);
+                    pstmt.setString(6, tipoAvulso);
+                    pstmt.setString(7, numeroAvulso);
+                }
+
+                // Resto dos dados
+                pstmt.setInt(2, produto.getId());
+                pstmt.setInt(3, quantidade);
+
+                // Forma de pagamento
+                if (pagamento != null) {
+                    pstmt.setString(8, pagamento.name());
+                } else {
+                    pstmt.setNull(8, java.sql.Types.VARCHAR);
+                }
+
+                pstmt.setInt(9, pedidoEmEdicao.getId());
+
+                pstmt.executeUpdate();
+                new Alert(AlertType.INFORMATION, "Pedido atualizado com sucesso!").show();
+
+            } catch (SQLException e) {
+                new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
             }
-
-            pstmt.executeUpdate();
-            new Alert(AlertType.INFORMATION, "Pedido criado com sucesso!").show();
-
-        } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao criar pedido: " + e.getMessage()).show();
         }
 
-        // 5. Limpe os campos
+        // Sai do modo de edição e reseta o botão
+        pedidoEmEdicao = null;
+        criarPedidoButton.setText("Criar Pedido");
+        criarPedidoButton.setStyle("");
+
+        // Limpe os campos
         pedidoClienteCombo.setValue(null);
         carregarProdutosParaCombo(); // Recarrega produtos e define o padrão
         pedidoNomeAvulsoField.clear();
@@ -473,12 +527,17 @@ public class PrimaryController {
         pedidoQtdSpinner.getValueFactory().setValue(1); // Reseta para o padrão
         pedidoPagamentoCombo.setValue(null);
 
-        // 6. Recarregue a tabela
+        // Recarregue a tabela
         loadPedidosPorData();
     }
 
     @FXML
     private void handleLimparPedido() {
+        // Cancela o modo de edição se estiver ativo
+        pedidoEmEdicao = null;
+        criarPedidoButton.setText("Criar Pedido");
+        criarPedidoButton.setStyle("");
+
         // 1. Resete o Cliente (isso vai disparar o listener que limpa/habilita os campos avulsos automaticamente!)
         pedidoClienteCombo.setValue(null);
 
@@ -500,6 +559,70 @@ public class PrimaryController {
 
         // 5. Limpe a Forma de Pagamento
         pedidoPagamentoCombo.setValue(null);
+    }
+
+    @FXML
+    private void handleEditarPedido() {
+        // Tenta pegar o pedido selecionado de qualquer uma das 3 tabelas
+        Pedido pedido = tablePedidosFeitos.getSelectionModel().getSelectedItem();
+        if (pedido == null) pedido = tablePedidosNaRua.getSelectionModel().getSelectedItem();
+        if (pedido == null) pedido = tablePedidosEntregues.getSelectionModel().getSelectedItem();
+
+        if (pedido == null) {
+            new Alert(AlertType.ERROR, "Selecione um pedido para editar.").show();
+            return;
+        }
+
+        // Entra no "Modo de Edição"
+        pedidoEmEdicao = pedido;
+        criarPedidoButton.setText("Salvar Alterações");
+        criarPedidoButton.setStyle("-fx-base: #ffd700;"); // Muda cor para amarelo
+
+        // PREENCHE O FORMULÁRIO COM OS DADOS DO PEDIDO
+        pedidoQtdSpinner.getValueFactory().setValue(pedido.getQuantidade());
+
+        // Preenche Forma de Pagamento
+        if (pedido.getFormaPagamento() != null) {
+            pedidoPagamentoCombo.setValue(pedido.getFormaPagamento());
+        } else {
+            pedidoPagamentoCombo.setValue(null);
+        }
+
+        // Preenche Produto - busca o produto na lista do combo pelo nome
+        for (Produto p : pedidoProdutoCombo.getItems()) {
+            if (p.getNome().equals(pedido.getProdutoNome())) {
+                pedidoProdutoCombo.setValue(p);
+                break;
+            }
+        }
+
+        // Lógica para Cliente ou Avulso
+        // Primeiro, verifica se é um pedido com cliente cadastrado
+        boolean isClienteCadastrado = false;
+        for (Cliente c : pedidoClienteCombo.getItems()) {
+            if (c.getNome().equals(pedido.getClienteNome())) {
+                pedidoClienteCombo.setValue(c);
+                isClienteCadastrado = true;
+                break;
+            }
+        }
+
+        // Se não encontrou cliente cadastrado, é avulso
+        if (!isClienteCadastrado) {
+            pedidoClienteCombo.setValue(null);
+            pedidoNomeAvulsoField.setText(pedido.getClienteNome());
+            
+            // Extrai endereço do formato "Prédio/Casa, Número, Rua"
+            String endereco = pedido.getEndereco();
+            if (endereco != null && !endereco.isEmpty()) {
+                String[] partes = endereco.split(", ", 3);
+                if (partes.length >= 3) {
+                    pedidoAvulsoTipoField.setText(partes[0]);
+                    pedidoAvulsoNumeroField.setText(partes[1]);
+                    pedidoAvulsoRuaField.setText(partes[2]);
+                }
+            }
+        }
     }
 
     private void loadPedidosPorData() {
