@@ -51,6 +51,8 @@ public class Database {
                 + "quantidade INTEGER NOT NULL DEFAULT 1,"
                 + "nome_avulso TEXT NULL,"
                 + "endereco_avulso TEXT NULL,"
+                + "predio_casa_avulso TEXT NULL,"
+                + "numero_avulso TEXT NULL,"
                 + "data_hora_saiu TEXT NULL,"
                 + "data_hora_entregue TEXT NULL,"
                 + "forma_pagamento TEXT NULL,"

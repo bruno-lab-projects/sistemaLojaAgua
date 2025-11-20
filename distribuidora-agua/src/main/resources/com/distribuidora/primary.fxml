@@ -33,10 +33,11 @@
                           <items>
                             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="150.0" prefWidth="1242.0">
                                  <children>
-                                    <SplitPane dividerPositions="0.5" prefHeight="239.0" prefWidth="1242.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <SplitPane dividerPositions="0.5338709677419354" prefHeight="239.0" prefWidth="1242.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <items>
                                           <GridPane prefHeight="152.0" prefWidth="526.0">
                                             <columnConstraints>
+                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="133.0" minWidth="10.0" prefWidth="100.0" />
                                               <ColumnConstraints hgrow="SOMETIMES" maxWidth="133.0" minWidth="10.0" prefWidth="92.0" />
                                               <ColumnConstraints hgrow="SOMETIMES" maxWidth="182.0" minWidth="10.0" prefWidth="182.0" />
                                                 <ColumnConstraints hgrow="SOMETIMES" maxWidth="182.0" minWidth="10.0" prefWidth="182.0" />
@@ -67,7 +68,10 @@
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <ComboBox fx:id="pedidoClienteCombo" editable="false" prefWidth="150.0" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" GridPane.halignment="CENTER" />
+                                                <ComboBox fx:id="pedidoClienteCombo" editable="false" prefWidth="150.0" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" GridPane.halignment="CENTER">
+                                                   <GridPane.margin>
+                                                      <Insets left="3.0" right="3.0" />
+                                                   </GridPane.margin></ComboBox>
                                                 <Label text="Cliente">
                                                    <font>
                                                       <Font size="18.0" />
@@ -79,7 +83,6 @@
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <TextField fx:id="pedidoEnderecoAvulsoField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                 <Spinner fx:id="pedidoQtdSpinner" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                                 <Label text="Forma de pagamento" GridPane.rowIndex="4">
                                                    <font>
@@ -87,6 +90,21 @@
                                                    </font>
                                                 </Label>
                                                 <ComboBox fx:id="pedidoPagamentoCombo" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                <TextField fx:id="pedidoAvulsoRuaField" promptText="Rua/Av/Bairro" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                                                   <GridPane.margin>
+                                                      <Insets left="3.0" right="3.0" />
+                                                   </GridPane.margin>
+                                                </TextField>
+                                                <TextField fx:id="pedidoAvulsoTipoField" prefHeight="25.0" prefWidth="234.0" promptText="Nome do prédio ou casa" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                                   <GridPane.margin>
+                                                      <Insets left="3.0" right="3.0" />
+                                                   </GridPane.margin>
+                                                </TextField>
+                                                <TextField fx:id="pedidoAvulsoNumeroField" promptText="Bloco / Apto / Número" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                                   <GridPane.margin>
+                                                      <Insets left="3.0" right="3.0" />
+                                                   </GridPane.margin>
+                                                </TextField>
                                              </children>
                                              <padding>
                                                 <Insets left="15.0" />
@@ -143,13 +161,13 @@
                                                       </Label>
                                                       <TableView fx:id="tablePedidosFeitos" prefHeight="200.0" prefWidth="408.0" VBox.vgrow="ALWAYS">
                                                          <columns>
-                                                            <TableColumn fx:id="colFeitosCliente" prefWidth="100.0" text="Cliente" />
-                                                            <TableColumn fx:id="colFeitosEndereco" prefWidth="31.0" text="Endereço" />
+                                                            <TableColumn fx:id="colFeitosCliente" prefWidth="58.0" text="Cliente" />
+                                                            <TableColumn fx:id="colFeitosEndereco" prefWidth="73.0" text="Endereço" />
                                                             <TableColumn fx:id="colFeitosProduto" prefWidth="75.0" text="Produto" />
-                                                            <TableColumn fx:id="colFeitosQtd" prefWidth="39.0" text="Qtd" />
-                                                            <TableColumn fx:id="colFeitosHora" prefWidth="165.0" text="Hora" />
-                                                            <TableColumn fx:id="colFeitosTotal" prefWidth="70.0" text="Total" />
-                                                            <TableColumn fx:id="colFeitosPagamento" prefWidth="100.0" text="Pagamento" />
+                                                            <TableColumn fx:id="colFeitosQtd" prefWidth="56.0" text="Qtd" />
+                                                            <TableColumn fx:id="colFeitosHora" prefWidth="148.0" text="Hora" />
+                                                            <TableColumn fx:id="colFeitosTotal" minWidth="0.0" prefWidth="26.0" text="Total" />
+                                                            <TableColumn fx:id="colFeitosPagamento" prefWidth="144.0" text="Pagamento" />
                                                          </columns>
                                                       </TableView>
                                                    </children>
@@ -268,7 +286,7 @@
                                              </font>
                                           </Label>
                                           <TextField fx:id="predioCasaField" />
-                                          <Label layoutX="145.0" layoutY="219.0" text="Bloco - Número">
+                                          <Label layoutX="145.0" layoutY="219.0" text="Bloco / Apto / Número">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>

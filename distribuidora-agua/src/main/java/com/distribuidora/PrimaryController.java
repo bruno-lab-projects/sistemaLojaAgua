@@ -50,7 +50,9 @@ public class PrimaryController {
     @FXML private ComboBox<FormaPagamento> pedidoPagamentoCombo;
     @FXML private Spinner<Integer> pedidoQtdSpinner;
     @FXML private TextField pedidoNomeAvulsoField;
-    @FXML private TextField pedidoEnderecoAvulsoField;
+    @FXML private TextField pedidoAvulsoTipoField;   // (Casa/Prédio)
+    @FXML private TextField pedidoAvulsoNumeroField; // (Número)
+    @FXML private TextField pedidoAvulsoRuaField;    // (Logradouro)
     @FXML private Button criarPedidoButton;
     @FXML private DatePicker pedidoDatePicker;
     @FXML private TabPane statusTabPane;
@@ -121,18 +123,26 @@ public class PrimaryController {
                     // Se o usuário ESCOLHEU um cliente:
                     // 1. Preencha os campos avulsos com os dados do cliente
                     pedidoNomeAvulsoField.setText(newSelection.getNome());
-                    pedidoEnderecoAvulsoField.setText(newSelection.getEndereco());
+                    pedidoAvulsoTipoField.setText(newSelection.getPredioCasa());
+                    pedidoAvulsoNumeroField.setText(newSelection.getNumero());
+                    pedidoAvulsoRuaField.setText(newSelection.getEndereco());
                     // 2. Desabilite os campos avulsos
                     pedidoNomeAvulsoField.setDisable(true);
-                    pedidoEnderecoAvulsoField.setDisable(true);
+                    pedidoAvulsoTipoField.setDisable(true);
+                    pedidoAvulsoNumeroField.setDisable(true);
+                    pedidoAvulsoRuaField.setDisable(true);
                 } else {
                     // Se o usuário LIMPOU o ComboBox:
                     // 1. Limpe os campos avulsos
                     pedidoNomeAvulsoField.clear();
-                    pedidoEnderecoAvulsoField.clear();
+                    pedidoAvulsoTipoField.clear();
+                    pedidoAvulsoNumeroField.clear();
+                    pedidoAvulsoRuaField.clear();
                     // 2. Re-abilite os campos
                     pedidoNomeAvulsoField.setDisable(false);
-                    pedidoEnderecoAvulsoField.setDisable(false);
+                    pedidoAvulsoTipoField.setDisable(false);
+                    pedidoAvulsoNumeroField.setDisable(false);
+                    pedidoAvulsoRuaField.setDisable(false);
                 }
             }
         );
@@ -384,7 +394,9 @@ public class PrimaryController {
         Produto produto = pedidoProdutoCombo.getValue();
         int quantidade = pedidoQtdSpinner.getValue();
         String nomeAvulso = pedidoNomeAvulsoField.getText();
-        String enderecoAvulso = pedidoEnderecoAvulsoField.getText();
+        String tipoAvulso = pedidoAvulsoTipoField.getText();
+        String numeroAvulso = pedidoAvulsoNumeroField.getText();
+        String ruaAvulso = pedidoAvulsoRuaField.getText();
         FormaPagamento pagamento = pedidoPagamentoCombo.getValue();
 
         // 2. Validações
@@ -394,8 +406,8 @@ public class PrimaryController {
         }
 
         // 3. Prepare o SQL (sem funcionario_id)
-        String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso, forma_pagamento) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso, predio_casa_avulso, numero_avulso, forma_pagamento) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String dataAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String statusInicial = "Feito";
 
@@ -408,10 +420,14 @@ public class PrimaryController {
                 pstmt.setInt(1, cliente.getId());
                 pstmt.setNull(6, java.sql.Types.VARCHAR); // nome_avulso
                 pstmt.setNull(7, java.sql.Types.VARCHAR); // endereco_avulso
+                pstmt.setNull(8, java.sql.Types.VARCHAR); // predio_casa_avulso
+                pstmt.setNull(9, java.sql.Types.VARCHAR); // numero_avulso
             } else {
                 pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
                 pstmt.setString(6, nomeAvulso);
-                pstmt.setString(7, enderecoAvulso);
+                pstmt.setString(7, ruaAvulso);
+                pstmt.setString(8, tipoAvulso);
+                pstmt.setString(9, numeroAvulso);
             }
 
             // Resto dos dados
@@ -422,9 +438,9 @@ public class PrimaryController {
 
             // Forma de pagamento
             if (pagamento != null) {
-                pstmt.setString(8, pagamento.name());
+                pstmt.setString(10, pagamento.name());
             } else {
-                pstmt.setNull(8, java.sql.Types.VARCHAR);
+                pstmt.setNull(10, java.sql.Types.VARCHAR);
             }
 
             pstmt.executeUpdate();
@@ -438,7 +454,9 @@ public class PrimaryController {
         pedidoClienteCombo.setValue(null);
         carregarProdutosParaCombo(); // Recarrega produtos e define o padrão
         pedidoNomeAvulsoField.clear();
-        pedidoEnderecoAvulsoField.clear();
+        pedidoAvulsoTipoField.clear();
+        pedidoAvulsoNumeroField.clear();
+        pedidoAvulsoRuaField.clear();
         pedidoQtdSpinner.getValueFactory().setValue(1); // Reseta para o padrão
         pedidoPagamentoCombo.setValue(null);
 
@@ -460,7 +478,12 @@ public class PrimaryController {
                      "pr.nome as produto, p.quantidade, " +
                      "COALESCE(f.nome, 'Aguardando') as funcionario, " +
                      "p.status, strftime('%H:%M', p.data_hora) as hora, " +
-                     "COALESCE(c.endereco, p.endereco_avulso) as endereco, " +
+                     "CASE " +
+                     "  WHEN p.cliente_id IS NOT NULL THEN " +
+                     "    c.predio_casa || ', ' || c.numero || ', ' || c.endereco " +
+                     "  ELSE " +
+                     "    p.predio_casa_avulso || ', ' || p.numero_avulso || ', ' || p.endereco_avulso " +
+                     "END as endereco_completo, " +
                      "(pr.preco * p.quantidade) as total, " +
                      "p.forma_pagamento " +
                      "FROM Pedidos p " +
@@ -500,7 +523,7 @@ public class PrimaryController {
                     rs.getString("funcionario"),
                     rs.getString("status"),
                     rs.getString("hora"),
-                    rs.getString("endereco"),
+                    rs.getString("endereco_completo"),
                     rs.getDouble("total"),
                     formaPagamento
                 );
