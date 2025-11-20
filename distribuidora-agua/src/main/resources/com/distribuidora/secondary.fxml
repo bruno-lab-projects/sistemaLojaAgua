@@ -252,9 +252,9 @@
             </Tab>
         </tabs>
       </TabPane>
-        <Button fx:id="secondaryButton" onAction="#switchToPrimary" text="Voltar">
+        <Button fx:id="secondaryButton" onAction="#switchToPrimary" text="VOLTAR">
          <font>
-            <Font name="System Bold" size="24.0" />
+            <Font name="System Bold" size="16.0" />
          </font></Button>
     </children>
     <padding>
