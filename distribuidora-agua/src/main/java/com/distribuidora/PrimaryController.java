@@ -72,7 +72,7 @@ public class PrimaryController {
     @FXML private TableColumn<Pedido, String> colFeitosProduto;
     @FXML private TableColumn<Pedido, Integer> colFeitosQtd;
     @FXML private TableColumn<Pedido, String> colFeitosHora;
-    @FXML private TableColumn<Pedido, Double> colFeitosTotal;
+    @FXML private TableColumn<Pedido, String> colFeitosTotal;
     @FXML private TableColumn<Pedido, String> colFeitosPagamento;
 
     // Tabela 2: Na Rua
@@ -82,7 +82,7 @@ public class PrimaryController {
     @FXML private TableColumn<Pedido, String> colNaRuaProduto;
     @FXML private TableColumn<Pedido, Integer> colNaRuaQtd;
     @FXML private TableColumn<Pedido, String> colNaRuaHora;
-    @FXML private TableColumn<Pedido, Double> colNaRuaTotal;
+    @FXML private TableColumn<Pedido, String> colNaRuaTotal;
     @FXML private TableColumn<Pedido, String> colNaRuaFuncionario;
 
     // Tabela 3: Entregues
@@ -92,7 +92,7 @@ public class PrimaryController {
     @FXML private TableColumn<Pedido, String> colEntreguesProduto;
     @FXML private TableColumn<Pedido, Integer> colEntreguesQtd;
     @FXML private TableColumn<Pedido, String> colEntreguesHora;
-    @FXML private TableColumn<Pedido, Double> colEntreguesTotal;
+    @FXML private TableColumn<Pedido, String> colEntreguesTotal;
     @FXML private TableColumn<Pedido, String> colEntreguesFuncionario;
 
     @FXML
@@ -153,7 +153,10 @@ public class PrimaryController {
         colFeitosProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
         colFeitosQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
         colFeitosHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
-        colFeitosTotal.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
+        colFeitosTotal.setCellValueFactory(cellData -> {
+            double valor = cellData.getValue().getPrecoTotal();
+            return new SimpleStringProperty(String.format("R$ %.2f", valor));
+        });
         colFeitosPagamento.setCellValueFactory(cellData -> {
             // Converte o Enum para String para exibir na tabela
             var pgto = cellData.getValue().getFormaPagamento();
@@ -166,7 +169,10 @@ public class PrimaryController {
         colNaRuaProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
         colNaRuaQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
         colNaRuaHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
-        colNaRuaTotal.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
+        colNaRuaTotal.setCellValueFactory(cellData -> {
+            double valor = cellData.getValue().getPrecoTotal();
+            return new SimpleStringProperty(String.format("R$ %.2f", valor));
+        });
         colNaRuaFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
 
         // Configura as colunas da tabela de pedidos ENTREGUES
@@ -175,7 +181,10 @@ public class PrimaryController {
         colEntreguesProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
         colEntreguesQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
         colEntreguesHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
-        colEntreguesTotal.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
+        colEntreguesTotal.setCellValueFactory(cellData -> {
+            double valor = cellData.getValue().getPrecoTotal();
+            return new SimpleStringProperty(String.format("R$ %.2f", valor));
+        });
         colEntreguesFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
 
         // Carrega os pedidos do banco
