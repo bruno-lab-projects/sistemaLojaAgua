@@ -26,9 +26,9 @@ public class SecondaryController {
     // Injeções FXML para Clientes
     @FXML private TextField nomeField;
     @FXML private TextField telefoneField;
-    @FXML private TextField enderecoField;
-    @FXML private TextField predioCasaField;
-    @FXML private TextField blocoNumeroField;
+    @FXML private TextField clientePredioField;
+    @FXML private TextField clienteNumeroField;
+    @FXML private TextField clienteRuaField;
     @FXML private TextField observacoesField;
     @FXML private Button salvarButton;
     @FXML private Button excluirClienteButton;
@@ -37,8 +37,6 @@ public class SecondaryController {
     @FXML private TableColumn<Cliente, String> colNome;
     @FXML private TableColumn<Cliente, String> colTelefone;
     @FXML private TableColumn<Cliente, String> colEndereco;
-    @FXML private TableColumn<Cliente, String> colClientePredioCasa;
-    @FXML private TableColumn<Cliente, String> colClienteNumero;
     @FXML private TableColumn<Cliente, String> colObservacoes;
 
     // Injeções FXML para Produtos
@@ -73,8 +71,6 @@ public class SecondaryController {
         colNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
         colTelefone.setCellValueFactory(cellData -> cellData.getValue().telefoneProperty());
         colEndereco.setCellValueFactory(cellData -> cellData.getValue().enderecoProperty());
-        colClientePredioCasa.setCellValueFactory(new PropertyValueFactory<>("predioCasa"));
-        colClienteNumero.setCellValueFactory(new PropertyValueFactory<>("numero"));
         colObservacoes.setCellValueFactory(cellData -> cellData.getValue().observacoesProperty());
 
         // Adiciona listener para a tabela de clientes
@@ -85,9 +81,9 @@ public class SecondaryController {
                     // 1. Preencha o formulário com os dados
                     nomeField.setText(newSelection.getNome());
                     telefoneField.setText(newSelection.getTelefone());
-                    enderecoField.setText(newSelection.getEndereco());
-                    predioCasaField.setText(newSelection.getPredioCasa());
-                    blocoNumeroField.setText(newSelection.getNumero());
+                    clientePredioField.setText(newSelection.getPredioCasa());
+                    clienteNumeroField.setText(newSelection.getNumero());
+                    clienteRuaField.setText(newSelection.getEndereco());
                     observacoesField.setText(newSelection.getObservacoes());
 
                     // 2. Armazene o cliente selecionado
@@ -138,7 +134,10 @@ public class SecondaryController {
 
     private void loadClientesDaTabela() {
         clientesData.clear();
-        String sql = "SELECT id, nome, telefone, endereco, predio_casa, numero, observacoes FROM Clientes";
+        String sql = "SELECT id, nome, telefone, " +
+                     "(predio_casa || ', ' || numero || ', ' || endereco) as endereco_completo, " +
+                     "predio_casa, numero, endereco, observacoes " +
+                     "FROM Clientes";
 
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -149,7 +148,7 @@ public class SecondaryController {
                     rs.getInt("id"),
                     rs.getString("nome"),
                     rs.getString("telefone"),
-                    rs.getString("endereco"),
+                    rs.getString("endereco_completo"),
                     rs.getString("predio_casa"),
                     rs.getString("numero"),
                     rs.getString("observacoes")
@@ -248,9 +247,9 @@ public class SecondaryController {
     private void handleSalvarCliente() {
         String nome = nomeField.getText();
         String telefone = telefoneField.getText();
-        String endereco = enderecoField.getText();
-        String predioCasa = predioCasaField.getText();
-        String blocoNumero = blocoNumeroField.getText();
+        String predioCasa = clientePredioField.getText();
+        String numero = clienteNumeroField.getText();
+        String endereco = clienteRuaField.getText();
         String observacoes = observacoesField.getText();
 
         if (nome.isBlank()) {
@@ -267,7 +266,7 @@ public class SecondaryController {
                 pstmt.setString(2, telefone);
                 pstmt.setString(3, endereco);
                 pstmt.setString(4, predioCasa);
-                pstmt.setString(5, blocoNumero);
+                pstmt.setString(5, numero);
                 pstmt.setString(6, observacoes);
                 pstmt.executeUpdate();
                 new Alert(AlertType.INFORMATION, "Cliente salvo com sucesso!").show();
@@ -284,7 +283,7 @@ public class SecondaryController {
                 pstmt.setString(2, telefone);
                 pstmt.setString(3, endereco);
                 pstmt.setString(4, predioCasa);
-                pstmt.setString(5, blocoNumero);
+                pstmt.setString(5, numero);
                 pstmt.setString(6, observacoes);
                 pstmt.setInt(7, clienteSelecionado.getId());
                 pstmt.executeUpdate();
@@ -308,9 +307,9 @@ public class SecondaryController {
         // 2. Limpe os campos do formulário
         nomeField.clear();
         telefoneField.setText("(71) 9"); // Reseta para o padrão
-        enderecoField.clear();
-        predioCasaField.clear();
-        blocoNumeroField.clear();
+        clientePredioField.clear();
+        clienteNumeroField.clear();
+        clienteRuaField.clear();
         observacoesField.clear();
     }
 

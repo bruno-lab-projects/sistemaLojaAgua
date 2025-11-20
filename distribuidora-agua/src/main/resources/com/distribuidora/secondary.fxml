@@ -35,7 +35,7 @@
                            <items>
                               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="449.0" prefWidth="253.0">
                                  <children>
-                                    <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <VBox alignment="TOP_CENTER" prefHeight="721.5" prefWidth="379.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
                                           <Label text="Adicionar Cliente">
                                              <VBox.margin>
@@ -57,24 +57,24 @@
                                              </font>
                                           </Label>
                                           <TextField fx:id="telefoneField" />
-                                          <Label text="Endereço">
-                                             <font>
-                                                <Font size="18.0" />
-                                             </font>
-                                          </Label>
-                                          <TextField fx:id="enderecoField" />
                                           <Label text="Prédio / Casa">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
-                                          <TextField fx:id="predioCasaField" />
-                                          <Label text="Número">
+                                          <TextField fx:id="clientePredioField" />
+                                          <Label layoutX="145.0" layoutY="219.0" text="Bloco / Apto / Número">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
-                                          <TextField fx:id="blocoNumeroField" />
+                                          <TextField fx:id="clienteNumeroField" />
+                                          <Label text="Endereço">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                          <TextField fx:id="clienteRuaField" />
                                           <Label text="Observações">
                                              <font>
                                                 <Font size="18.0" />
@@ -82,12 +82,6 @@
                                           </Label>
                                           <TextField fx:id="observacoesField" layoutX="20.0" layoutY="252.0" />
                                           <Button fx:id="salvarButton" mnemonicParsing="false" onAction="#handleSalvarCliente" text="Salvar cliente">
-                                             <font>
-                                                <Font size="18.0" />
-                                             </font>
-                                          </Button>
-                                          <Separator prefHeight="65.0" prefWidth="350.0" />
-                                          <Button fx:id="excluirClienteButton" mnemonicParsing="false" onAction="#handleExcluirCliente" text="Excluir cliente">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -111,10 +105,8 @@
                                        <columns>
                                           <TableColumn fx:id="colNome" prefWidth="115.0" text="Nome" />
                                           <TableColumn fx:id="colTelefone" prefWidth="122.0" text="Telefone" />
-                                          <TableColumn fx:id="colEndereco" prefWidth="124.0" text="Endereco" />
-                                          <TableColumn fx:id="colClientePredioCasa" prefWidth="150.0" text="Prédio / Casa" />
-                                          <TableColumn fx:id="colClienteNumero" prefWidth="150.0" text="Bloco - Número" />
-                                          <TableColumn fx:id="colObservacoes" prefWidth="150.0" text="Observações" />
+                                          <TableColumn fx:id="colEndereco" prefWidth="304.0" text="Endereco" />
+                                          <TableColumn fx:id="colObservacoes" prefWidth="120.0" text="Observações" />
                                        </columns>
                                     </TableView>
                                  </children>
