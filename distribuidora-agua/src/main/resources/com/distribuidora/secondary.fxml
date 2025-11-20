@@ -27,6 +27,76 @@
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
             </content>
           </Tab>
+            <Tab text="Pendências">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <SplitPane dividerPositions="0.5" prefHeight="737.5" prefWidth="1278.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <items>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                 <children>
+                                    <VBox layoutX="138.0" layoutY="89.0" prefHeight="735.5" prefWidth="635.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                       <children>
+                                          <Label text="Pendências Financeiras">
+                                             <font>
+                                                <Font name="System Bold" size="18.0" />
+                                             </font>
+                                             <VBox.margin>
+                                                <Insets bottom="10.0" top="10.0" />
+                                             </VBox.margin>
+                                          </Label>
+                                          <TableView fx:id="tabelaPendenciaFinanceira" prefHeight="640.0" prefWidth="635.0" VBox.vgrow="ALWAYS">
+                                            <columns>
+                                              <TableColumn fx:id="colFinCliente" prefWidth="150.0" text="Cliente" />
+                                              <TableColumn fx:id="colFinEndereco" prefWidth="200.0" text="Endereço" />
+                                              <TableColumn fx:id="colFinData" prefWidth="100.0" text="Data" />
+                                              <TableColumn fx:id="colFinValor" prefWidth="120.0" text="Valor" />
+                                            </columns>
+                                          </TableView>
+                                          <Button fx:id="btnBaixarFinanceiro" mnemonicParsing="false" onAction="#handleBaixarFinanceiro" text="Confirmar Pagamento">
+                                             <VBox.margin>
+                                                <Insets top="10.0" />
+                                             </VBox.margin>
+                                          </Button>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </AnchorPane>
+                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                                 <children>
+                                    <VBox layoutX="14.0" layoutY="75.0" prefHeight="735.5" prefWidth="634.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                       <children>
+                                          <Label text="Pendências de Garrafão">
+                                             <font>
+                                                <Font name="System Bold" size="18.0" />
+                                             </font>
+                                             <VBox.margin>
+                                                <Insets bottom="10.0" top="10.0" />
+                                             </VBox.margin>
+                                          </Label>
+                                          <TableView fx:id="tabelaPendenciaGarrafao" prefHeight="640.0" prefWidth="634.0" VBox.vgrow="ALWAYS">
+                                            <columns>
+                                              <TableColumn fx:id="colGarCliente" prefWidth="130.0" text="Cliente" />
+                                              <TableColumn fx:id="colGarProduto" prefWidth="140.0" text="Produto" />
+                                              <TableColumn fx:id="colGarEndereco" prefWidth="230.0" text="Endereço" />
+                                              <TableColumn fx:id="colGarData" prefWidth="100.0" text="Data" />
+                                            </columns>
+                                          </TableView>
+                                          <Button fx:id="btnBaixarGarrafao" mnemonicParsing="false" onAction="#handleBaixarGarrafao" text="Confirmar Devolução">
+                                             <VBox.margin>
+                                                <Insets top="10.0" />
+                                             </VBox.margin>
+                                          </Button>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </AnchorPane>
+                          </items>
+                        </SplitPane>
+                     </children>
+                  </AnchorPane>
+              </content>
+            </Tab>
             <Tab text="Gerenciar clientes">
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">

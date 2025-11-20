@@ -56,6 +56,8 @@ public class Database {
                 + "data_hora_saiu TEXT NULL,"
                 + "data_hora_entregue TEXT NULL,"
                 + "forma_pagamento TEXT NULL,"
+                + "pendencia_pagamento INTEGER DEFAULT 0,"
+                + "pendencia_garrafao INTEGER DEFAULT 0,"
                 + "FOREIGN KEY (cliente_id) REFERENCES Clientes(id),"
                 + "FOREIGN KEY (funcionario_id) REFERENCES Funcionarios(id),"
                 + "FOREIGN KEY (produto_id) REFERENCES Produtos(id)"

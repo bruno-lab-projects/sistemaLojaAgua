@@ -29,7 +29,11 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
+import javafx.geometry.Insets;
 import java.util.function.UnaryOperator;
 
 public class PrimaryController {
@@ -689,26 +693,57 @@ public class PrimaryController {
             return;
         }
 
-        // Atualiza o pedido no banco
-        String sqlUpdate = "UPDATE Pedidos SET status = ?, data_hora_entregue = ? WHERE id = ?";
-        String dataHoraAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        // Cria o Dialog de confirmação
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Confirmar Entrega");
+        dialog.setHeaderText("Marcar pedido como 'Entregue'");
         
-        try (Connection conn = Database.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
-            
-            pstmt.setString(1, "Entregue");
-            pstmt.setString(2, dataHoraAgora);
-            pstmt.setInt(3, pedidoSelecionado.getId());
-            
-            pstmt.executeUpdate();
-            new Alert(AlertType.INFORMATION, "Pedido marcado como 'Entregue'!").show();
-            
-            // Recarrega as tabelas
-            loadPedidosPorData();
-            
-        } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
-        }
+        // Cria os CheckBoxes
+        CheckBox chkPagou = new CheckBox("Pagamento Recebido?");
+        chkPagou.setSelected(true); // Marcado por padrão
+        
+        CheckBox chkGarrafao = new CheckBox("Garrafão Devolvido?");
+        chkGarrafao.setSelected(true); // Marcado por padrão
+        
+        // Cria o VBox com os CheckBoxes
+        VBox vbox = new VBox(10);
+        vbox.setPadding(new Insets(10));
+        vbox.getChildren().addAll(chkPagou, chkGarrafao);
+        
+        dialog.getDialogPane().setContent(vbox);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        
+        // Mostra o dialog e espera a resposta
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                // Verifica os CheckBoxes para determinar as pendências
+                int pendenciaPagamento = chkPagou.isSelected() ? 0 : 1;
+                int pendenciaGarrafao = chkGarrafao.isSelected() ? 0 : 1;
+                
+                // Atualiza o pedido no banco
+                String sqlUpdate = "UPDATE Pedidos SET status = ?, data_hora_entregue = ?, pendencia_pagamento = ?, pendencia_garrafao = ? WHERE id = ?";
+                String dataHoraAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                
+                try (Connection conn = Database.connect();
+                     PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
+                    
+                    pstmt.setString(1, "Entregue");
+                    pstmt.setString(2, dataHoraAgora);
+                    pstmt.setInt(3, pendenciaPagamento);
+                    pstmt.setInt(4, pendenciaGarrafao);
+                    pstmt.setInt(5, pedidoSelecionado.getId());
+                    
+                    pstmt.executeUpdate();
+                    new Alert(AlertType.INFORMATION, "Pedido marcado como 'Entregue'!").show();
+                    
+                    // Recarrega as tabelas
+                    loadPedidosPorData();
+                    
+                } catch (SQLException e) {
+                    new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+                }
+            }
+        });
     }
 
     @FXML

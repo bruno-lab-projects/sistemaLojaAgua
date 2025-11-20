@@ -90,7 +90,7 @@
                                                    </font>
                                                 </Label>
                                                 <ComboBox fx:id="pedidoPagamentoCombo" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                                <TextField fx:id="pedidoAvulsoRuaField" promptText="Rua/Av/Bairro" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                                                <TextField fx:id="pedidoAvulsoRuaField" promptText="Rua / Av / Bairro" GridPane.columnIndex="3" GridPane.rowIndex="1">
                                                    <GridPane.margin>
                                                       <Insets left="3.0" right="3.0" />
                                                    </GridPane.margin>

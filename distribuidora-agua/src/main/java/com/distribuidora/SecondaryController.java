@@ -14,6 +14,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -57,7 +58,25 @@ public class SecondaryController {
     @FXML private TableView<Funcionario> funcionariosTable;
     @FXML private TableColumn<Funcionario, String> colFuncionarioNome;
 
+    // Injeções FXML para Pendências Financeiras
+    @FXML private TableView<Pedido> tabelaPendenciaFinanceira;
+    @FXML private TableColumn<Pedido, String> colFinCliente;
+    @FXML private TableColumn<Pedido, String> colFinEndereco;
+    @FXML private TableColumn<Pedido, String> colFinData;
+    @FXML private TableColumn<Pedido, Double> colFinValor;
+    @FXML private Button btnBaixarFinanceiro;
+
+    // Injeções FXML para Pendências de Garrafão
+    @FXML private TableView<Pedido> tabelaPendenciaGarrafao;
+    @FXML private TableColumn<Pedido, String> colGarCliente;
+    @FXML private TableColumn<Pedido, String> colGarProduto;
+    @FXML private TableColumn<Pedido, String> colGarEndereco;
+    @FXML private TableColumn<Pedido, String> colGarData;
+    @FXML private Button btnBaixarGarrafao;
+
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
+    private ObservableList<Pedido> pendenciasFinanceiraData = FXCollections.observableArrayList();
+    private ObservableList<Pedido> pendenciasGarrafaoData = FXCollections.observableArrayList();
     private Cliente clienteSelecionado = null;
     private Funcionario funcionarioSelecionado = null;
     private Produto produtoSelecionado = null;
@@ -128,6 +147,32 @@ public class SecondaryController {
 
         // Carrega os funcionários do banco
         loadFuncionariosDaTabela();
+
+        // Configura as colunas da tabela de pendências financeiras
+        colFinCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
+        colFinEndereco.setCellValueFactory(new PropertyValueFactory<>("endereco"));
+        colFinData.setCellValueFactory(new PropertyValueFactory<>("hora"));
+        colFinValor.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
+        colFinValor.setCellFactory(column -> new TableCell<Pedido, Double>() {
+            @Override
+            protected void updateItem(Double valor, boolean empty) {
+                super.updateItem(valor, empty);
+                if (empty || valor == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("R$ %.2f", valor));
+                }
+            }
+        });
+
+        // Configura as colunas da tabela de pendências de garrafão
+        colGarCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
+        colGarProduto.setCellValueFactory(new PropertyValueFactory<>("produtoNome"));
+        colGarEndereco.setCellValueFactory(new PropertyValueFactory<>("endereco"));
+        colGarData.setCellValueFactory(new PropertyValueFactory<>("hora"));
+
+        // Carrega as pendências do banco
+        loadPendencias();
     }
 
     // ==================== MÉTODOS DE CLIENTES ====================
@@ -555,6 +600,122 @@ public class SecondaryController {
             funcionariosTable.setItems(lista);
         } catch (SQLException e) {
             System.out.println("Erro ao carregar funcionários: " + e.getMessage());
+        }
+    }
+
+    // ==================== MÉTODOS DE PENDÊNCIAS ====================
+
+    private void loadPendencias() {
+        pendenciasFinanceiraData.clear();
+        pendenciasGarrafaoData.clear();
+        
+        String sql = "SELECT p.id, " +
+                     "COALESCE(c.nome, p.nome_avulso) as cliente, " +
+                     "CASE " +
+                     "  WHEN p.cliente_id IS NOT NULL THEN " +
+                     "    c.predio_casa || ', ' || c.numero || ', ' || c.endereco " +
+                     "  ELSE " +
+                     "    p.predio_casa_avulso || ', ' || p.numero_avulso || ', ' || p.endereco_avulso " +
+                     "END as endereco_completo, " +
+                     "strftime('%d/%m/%Y', p.data_hora_entregue) as data_entrega, " +
+                     "p.pendencia_pagamento, " +
+                     "p.pendencia_garrafao, " +
+                     "pr.nome as produto, " +
+                     "(pr.preco * p.quantidade) as total " +
+                     "FROM Pedidos p " +
+                     "LEFT JOIN Clientes c ON p.cliente_id = c.id " +
+                     "JOIN Produtos pr ON p.produto_id = pr.id " +
+                     "WHERE p.pendencia_pagamento = 1 OR p.pendencia_garrafao = 1 " +
+                     "ORDER BY p.data_hora_entregue DESC";
+
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                int pendPagamento = rs.getInt("pendencia_pagamento");
+                int pendGarrafao = rs.getInt("pendencia_garrafao");
+                
+                // Cria um Pedido temporário para exibição
+                Pedido pedido = new Pedido(
+                    rs.getInt("id"),
+                    rs.getString("cliente"),
+                    rs.getString("produto"),
+                    0, // quantidade não é importante aqui
+                    "", // funcionario não é importante aqui
+                    "", // status não é importante aqui
+                    rs.getString("data_entrega"),
+                    rs.getString("endereco_completo"),
+                    rs.getDouble("total"),
+                    null // forma_pagamento não é importante aqui
+                );
+                
+                // Adiciona à tabela financeira se tem pendência de pagamento
+                if (pendPagamento == 1) {
+                    pendenciasFinanceiraData.add(pedido);
+                }
+                
+                // Adiciona à tabela de garrafão se tem pendência de garrafão
+                if (pendGarrafao == 1) {
+                    pendenciasGarrafaoData.add(pedido);
+                }
+            }
+
+            tabelaPendenciaFinanceira.setItems(pendenciasFinanceiraData);
+            tabelaPendenciaGarrafao.setItems(pendenciasGarrafaoData);
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao carregar pendências: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleBaixarFinanceiro() {
+        Pedido pedidoSelecionado = tabelaPendenciaFinanceira.getSelectionModel().getSelectedItem();
+        
+        if (pedidoSelecionado == null) {
+            new Alert(AlertType.WARNING, "Selecione uma pendência financeira na tabela primeiro!").show();
+            return;
+        }
+
+        String sql = "UPDATE Pedidos SET pendencia_pagamento = 0 WHERE id = ?";
+        
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, pedidoSelecionado.getId());
+            pstmt.executeUpdate();
+            
+            new Alert(AlertType.INFORMATION, "Pendência financeira baixada com sucesso!").show();
+            loadPendencias(); // Recarrega as tabelas
+            
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao baixar pendência: " + e.getMessage()).show();
+        }
+    }
+
+    @FXML
+    private void handleBaixarGarrafao() {
+        Pedido pedidoSelecionado = tabelaPendenciaGarrafao.getSelectionModel().getSelectedItem();
+        
+        if (pedidoSelecionado == null) {
+            new Alert(AlertType.WARNING, "Selecione uma pendência de garrafão na tabela primeiro!").show();
+            return;
+        }
+
+        String sql = "UPDATE Pedidos SET pendencia_garrafao = 0 WHERE id = ?";
+        
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, pedidoSelecionado.getId());
+            pstmt.executeUpdate();
+            
+            new Alert(AlertType.INFORMATION, "Pendência de garrafão baixada com sucesso!").show();
+            loadPendencias(); // Recarrega as tabelas
+            
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao baixar pendência: " + e.getMessage()).show();
         }
     }
 
