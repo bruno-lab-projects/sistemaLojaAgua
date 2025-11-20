@@ -144,12 +144,12 @@
                                                       <TableView fx:id="tablePedidosFeitos" prefHeight="200.0" prefWidth="408.0" VBox.vgrow="ALWAYS">
                                                          <columns>
                                                             <TableColumn fx:id="colFeitosCliente" prefWidth="100.0" text="Cliente" />
-                                                            <TableColumn fx:id="colFeitosEndereco" prefWidth="120.0" text="Endereço" />
-                                                            <TableColumn fx:id="colFeitosProduto" prefWidth="80.0" text="Produto" />
-                                                            <TableColumn fx:id="colFeitosQtd" prefWidth="50.0" text="Qtd" />
-                                                            <TableColumn fx:id="colFeitosHora" prefWidth="60.0" text="Hora" />
+                                                            <TableColumn fx:id="colFeitosEndereco" prefWidth="31.0" text="Endereço" />
+                                                            <TableColumn fx:id="colFeitosProduto" prefWidth="75.0" text="Produto" />
+                                                            <TableColumn fx:id="colFeitosQtd" prefWidth="39.0" text="Qtd" />
+                                                            <TableColumn fx:id="colFeitosHora" prefWidth="165.0" text="Hora" />
                                                             <TableColumn fx:id="colFeitosTotal" prefWidth="70.0" text="Total" />
-                                                            <TableColumn fx:id="colFeitosFuncionario" prefWidth="100.0" text="Funcionário" />
+                                                            <TableColumn fx:id="colFeitosPagamento" prefWidth="100.0" text="Pagamento" />
                                                          </columns>
                                                       </TableView>
                                                    </children>
@@ -313,7 +313,7 @@
           </Tab>
         </tabs>
       </TabPane>
-      <Button fx:id="primaryButton" onAction="#switchToSecondary" text="IR PARA O PAINEL ADMINISTRATIVO">
+      <Button fx:id="primaryButton" onAction="#switchToSecondary" text="PAINEL ADMINISTRATIVO">
          <font>
             <Font size="14.0" />
          </font></Button>

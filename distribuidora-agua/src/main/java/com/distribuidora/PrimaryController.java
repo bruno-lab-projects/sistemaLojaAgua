@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
@@ -72,7 +73,7 @@ public class PrimaryController {
     @FXML private TableColumn<Pedido, Integer> colFeitosQtd;
     @FXML private TableColumn<Pedido, String> colFeitosHora;
     @FXML private TableColumn<Pedido, Double> colFeitosTotal;
-    @FXML private TableColumn<Pedido, String> colFeitosFuncionario;
+    @FXML private TableColumn<Pedido, String> colFeitosPagamento;
 
     // Tabela 2: Na Rua
     @FXML private TableView<Pedido> tablePedidosNaRua;
@@ -153,7 +154,11 @@ public class PrimaryController {
         colFeitosQtd.setCellValueFactory(new PropertyValueFactory<>("quantidade"));
         colFeitosHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
         colFeitosTotal.setCellValueFactory(new PropertyValueFactory<>("precoTotal"));
-        colFeitosFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
+        colFeitosPagamento.setCellValueFactory(cellData -> {
+            // Converte o Enum para String para exibir na tabela
+            var pgto = cellData.getValue().getFormaPagamento();
+            return new SimpleStringProperty(pgto != null ? pgto.toString() : "-");
+        });
 
         // Configura as colunas da tabela de pedidos NA RUA
         colNaRuaCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
