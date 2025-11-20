@@ -46,6 +46,7 @@ public class PrimaryController {
     // Componentes da aba Pedidos
     @FXML private ComboBox<Cliente> pedidoClienteCombo;
     @FXML private ComboBox<Produto> pedidoProdutoCombo;
+    @FXML private ComboBox<FormaPagamento> pedidoPagamentoCombo;
     @FXML private Spinner<Integer> pedidoQtdSpinner;
     @FXML private TextField pedidoNomeAvulsoField;
     @FXML private TextField pedidoEnderecoAvulsoField;
@@ -104,6 +105,8 @@ public class PrimaryController {
         // Carrega produtos para o ComboBox de pedidos
         carregarProdutosParaCombo();
 
+        // Popula o ComboBox de Forma de Pagamento
+        pedidoPagamentoCombo.getItems().setAll(FormaPagamento.values());
 
         // Configura o Spinner de quantidade com valores de 1 a 99, padrão 1
         SpinnerValueFactory<Integer> valueFactory =
@@ -368,6 +371,7 @@ public class PrimaryController {
         int quantidade = pedidoQtdSpinner.getValue();
         String nomeAvulso = pedidoNomeAvulsoField.getText();
         String enderecoAvulso = pedidoEnderecoAvulsoField.getText();
+        FormaPagamento pagamento = pedidoPagamentoCombo.getValue();
 
         // 2. Validações
         if (produto == null) {
@@ -376,8 +380,8 @@ public class PrimaryController {
         }
 
         // 3. Prepare o SQL (sem funcionario_id)
-        String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso, forma_pagamento) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         String dataAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String statusInicial = "Feito";
 
@@ -402,6 +406,13 @@ public class PrimaryController {
             pstmt.setString(4, dataAgora);
             pstmt.setInt(5, quantidade);
 
+            // Forma de pagamento
+            if (pagamento != null) {
+                pstmt.setString(8, pagamento.name());
+            } else {
+                pstmt.setNull(8, java.sql.Types.VARCHAR);
+            }
+
             pstmt.executeUpdate();
             new Alert(AlertType.INFORMATION, "Pedido criado com sucesso!").show();
 
@@ -415,6 +426,7 @@ public class PrimaryController {
         pedidoNomeAvulsoField.clear();
         pedidoEnderecoAvulsoField.clear();
         pedidoQtdSpinner.getValueFactory().setValue(1); // Reseta para o padrão
+        pedidoPagamentoCombo.setValue(null);
 
         // 6. Recarregue a tabela
         loadPedidosPorData();
@@ -435,7 +447,8 @@ public class PrimaryController {
                      "COALESCE(f.nome, 'Aguardando') as funcionario, " +
                      "p.status, strftime('%H:%M', p.data_hora) as hora, " +
                      "COALESCE(c.endereco, p.endereco_avulso) as endereco, " +
-                     "(pr.preco * p.quantidade) as total " +
+                     "(pr.preco * p.quantidade) as total, " +
+                     "p.forma_pagamento " +
                      "FROM Pedidos p " +
                      "LEFT JOIN Clientes c ON p.cliente_id = c.id " +
                      "JOIN Produtos pr ON p.produto_id = pr.id " +
@@ -454,6 +467,17 @@ public class PrimaryController {
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
+                // Recupera e converte a forma de pagamento
+                String formaPagamentoStr = rs.getString("forma_pagamento");
+                FormaPagamento formaPagamento = null;
+                if (formaPagamentoStr != null && !formaPagamentoStr.isEmpty()) {
+                    try {
+                        formaPagamento = FormaPagamento.valueOf(formaPagamentoStr);
+                    } catch (IllegalArgumentException e) {
+                        // Se o valor não for válido, mantém null
+                    }
+                }
+                
                 Pedido pedido = new Pedido(
                     rs.getInt("id"),
                     rs.getString("cliente"),
@@ -463,7 +487,8 @@ public class PrimaryController {
                     rs.getString("status"),
                     rs.getString("hora"),
                     rs.getString("endereco"),
-                    rs.getDouble("total")
+                    rs.getDouble("total"),
+                    formaPagamento
                 );
                 
                 // Separa os pedidos por status em diferentes tabelas
@@ -528,7 +553,7 @@ public class PrimaryController {
         Pedido pedidoSelecionado = tablePedidosFeitos.getSelectionModel().getSelectedItem();
         
         if (pedidoSelecionado == null) {
-            new Alert(AlertType.WARNING, "Selecione um pedido na tabela 'Feitos' primeiro!").show();
+            new Alert(AlertType.WARNING, "Selecione um pedido na tabela 'Pendentes' primeiro!").show();
             return;
         }
 
@@ -589,7 +614,7 @@ public class PrimaryController {
         Pedido pedidoSelecionado = tablePedidosNaRua.getSelectionModel().getSelectedItem();
         
         if (pedidoSelecionado == null) {
-            new Alert(AlertType.WARNING, "Selecione um pedido na tabela 'Na Rua' primeiro!").show();
+            new Alert(AlertType.WARNING, "Selecione um pedido na tabela 'Saíram para entrega' primeiro!").show();
             return;
         }
 

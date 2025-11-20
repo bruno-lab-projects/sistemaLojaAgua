@@ -3,6 +3,8 @@ package com.distribuidora;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 public class Pedido {
 
@@ -15,10 +17,12 @@ public class Pedido {
     private SimpleStringProperty hora;
     private SimpleStringProperty endereco;
     private SimpleDoubleProperty precoTotal;
+    private ObjectProperty<FormaPagamento> formaPagamento;
 
     // Construtor
     public Pedido(int id, String clienteNome, String produtoNome, int quantidade,
-                  String funcionarioNome, String status, String hora, String endereco, double precoTotal) {
+                  String funcionarioNome, String status, String hora, String endereco, double precoTotal,
+                  FormaPagamento pagamento) {
         this.id = new SimpleIntegerProperty(id);
         this.clienteNome = new SimpleStringProperty(clienteNome);
         this.produtoNome = new SimpleStringProperty(produtoNome);
@@ -28,6 +32,7 @@ public class Pedido {
         this.hora = new SimpleStringProperty(hora);
         this.endereco = new SimpleStringProperty(endereco);
         this.precoTotal = new SimpleDoubleProperty(precoTotal);
+        this.formaPagamento = new SimpleObjectProperty<>(pagamento);
     }
 
     // Getters e Setters para ID
@@ -145,5 +150,18 @@ public class Pedido {
 
     public SimpleDoubleProperty precoTotalProperty() {
         return precoTotal;
+    }
+
+    // Getters e Setters para FormaPagamento
+    public FormaPagamento getFormaPagamento() {
+        return formaPagamento.get();
+    }
+
+    public void setFormaPagamento(FormaPagamento formaPagamento) {
+        this.formaPagamento.set(formaPagamento);
+    }
+
+    public ObjectProperty<FormaPagamento> formaPagamentoProperty() {
+        return formaPagamento;
     }
 }

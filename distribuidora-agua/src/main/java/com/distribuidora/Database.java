@@ -53,6 +53,7 @@ public class Database {
                 + "endereco_avulso TEXT NULL,"
                 + "data_hora_saiu TEXT NULL,"
                 + "data_hora_entregue TEXT NULL,"
+                + "forma_pagamento TEXT NULL,"
                 + "FOREIGN KEY (cliente_id) REFERENCES Clientes(id),"
                 + "FOREIGN KEY (funcionario_id) REFERENCES Funcionarios(id),"
                 + "FOREIGN KEY (produto_id) REFERENCES Produtos(id)"

@@ -47,10 +47,11 @@
                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                             </rowConstraints>
                                              <children>
-                                                <Button fx:id="criarPedidoButton" mnemonicParsing="false" onAction="#handleCriarPedido" text="Criar pedido" GridPane.rowIndex="4">
+                                                <Button fx:id="criarPedidoButton" mnemonicParsing="false" onAction="#handleCriarPedido" text="Criar pedido" GridPane.rowIndex="5">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
@@ -60,19 +61,19 @@
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <ComboBox fx:id="pedidoProdutoCombo" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                <ComboBox fx:id="pedidoProdutoCombo" prefWidth="150.0" promptText="Selecionar água" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                                 <Label text="Água" GridPane.rowIndex="2">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <ComboBox fx:id="pedidoClienteCombo" editable="false" prefWidth="150.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" />
+                                                <ComboBox fx:id="pedidoClienteCombo" editable="false" prefWidth="150.0" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" GridPane.halignment="CENTER" />
                                                 <Label text="Cliente">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <TextField fx:id="pedidoNomeAvulsoField" GridPane.columnIndex="1" />
+                                                <TextField fx:id="pedidoNomeAvulsoField" promptText="Digite o nome do cliente OU" GridPane.columnIndex="1" />
                                                 <Label text="Endereço" GridPane.rowIndex="1">
                                                    <font>
                                                       <Font size="18.0" />
@@ -80,6 +81,12 @@
                                                 </Label>
                                                 <TextField fx:id="pedidoEnderecoAvulsoField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                 <Spinner fx:id="pedidoQtdSpinner" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                <Label text="Forma de pagamento" GridPane.rowIndex="4">
+                                                   <font>
+                                                      <Font size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <ComboBox fx:id="pedidoPagamentoCombo" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
                                              </children>
                                              <padding>
                                                 <Insets left="15.0" />
