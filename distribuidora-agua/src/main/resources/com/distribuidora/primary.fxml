@@ -13,6 +13,10 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -134,7 +138,7 @@
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <DatePicker fx:id="pedidoDatePicker" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
+                                                <DatePicker fx:id="pedidoDatePicker" editable="false" prefWidth="200.0" showWeekNumbers="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
                                              </children>
                                              <opaqueInsets>
                                                 <Insets right="15.0" />

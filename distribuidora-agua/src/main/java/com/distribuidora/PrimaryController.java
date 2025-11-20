@@ -157,14 +157,16 @@ public class PrimaryController {
         );
 
         // Configura o DatePicker com a data de hoje
-        pedidoDatePicker.setValue(LocalDate.now());
-        
-        // Adiciona listener para carregar pedidos quando a data mudar
-        pedidoDatePicker.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                loadPedidosPorData();
-            }
-        });
+        if (pedidoDatePicker != null) {
+            pedidoDatePicker.setValue(LocalDate.now());
+            
+            // Adiciona listener para carregar pedidos quando a data mudar
+            pedidoDatePicker.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    loadPedidosPorData();
+                }
+            });
+        }
 
         // Configura as colunas da tabela de pedidos FEITOS
         colFeitosCliente.setCellValueFactory(new PropertyValueFactory<>("clienteNome"));
