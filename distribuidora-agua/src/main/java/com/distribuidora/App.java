@@ -19,8 +19,8 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         scene = new Scene(loadFXML("primary"), 640, 480);
         stage.setScene(scene);
-        stage.setMinWidth(1280);
-        stage.setMinHeight(720);
+        stage.setMinWidth(1000);
+        stage.setMinHeight(650);
         stage.setMaximized(true);
         stage.setTitle("Distribuidora de Agua");
         stage.show();
