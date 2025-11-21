@@ -35,11 +35,18 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import java.util.function.UnaryOperator;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.control.TableRow;
 
 public class PrimaryController {
 
     // Variável de controle para modo de edição
     private Pedido pedidoEmEdicao = null;
+    
+    // Variável para armazenar o pedido sendo arrastado
+    private Pedido pedidoSendoArrastado = null;
 
     // Componentes da aba Clientes
     @FXML private TextField nomeField;
@@ -210,6 +217,356 @@ public class PrimaryController {
 
         // Carrega os pedidos do banco
         loadPedidosPorData();
+        
+        // Configura Drag-and-Drop entre as tabelas
+        configurarDragAndDrop();
+    }
+
+    /**
+     * Configura o sistema de Drag-and-Drop entre as tabelas.
+     * Suporta 4 cenários:
+     * 1. Feitos -> Na Rua (Marcar Saiu)
+     * 2. Na Rua -> Entregues (Marcar Entregue)
+     * 3. Feitos -> Entregues (Pulo - Funcionário + Entrega)
+     * 4. Na Rua -> Feitos (Retorno - Resetar pedido)
+     */
+    private void configurarDragAndDrop() {
+        // ========== CONFIGURAÇÃO DAS ORIGENS (Row Factories) ==========
+        
+        // Configura tablePedidosFeitos como ORIGEM
+        tablePedidosFeitos.setRowFactory(tv -> {
+            TableRow<Pedido> row = new TableRow<>();
+            
+            row.setOnDragDetected(event -> {
+                if (!row.isEmpty()) {
+                    Pedido pedido = row.getItem();
+                    pedidoSendoArrastado = pedido;
+                    
+                    Dragboard dragboard = row.startDragAndDrop(TransferMode.MOVE);
+                    ClipboardContent content = new ClipboardContent();
+                    content.putString("FEITOS:" + pedido.getId());
+                    dragboard.setContent(content);
+                    
+                    event.consume();
+                }
+            });
+            
+            row.setOnDragDone(event -> {
+                pedidoSendoArrastado = null;
+                event.consume();
+            });
+            
+            return row;
+        });
+        
+        // Configura tablePedidosNaRua como ORIGEM
+        tablePedidosNaRua.setRowFactory(tv -> {
+            TableRow<Pedido> row = new TableRow<>();
+            
+            row.setOnDragDetected(event -> {
+                if (!row.isEmpty()) {
+                    Pedido pedido = row.getItem();
+                    pedidoSendoArrastado = pedido;
+                    
+                    Dragboard dragboard = row.startDragAndDrop(TransferMode.MOVE);
+                    ClipboardContent content = new ClipboardContent();
+                    content.putString("NARUA:" + pedido.getId());
+                    dragboard.setContent(content);
+                    
+                    event.consume();
+                }
+            });
+            
+            row.setOnDragDone(event -> {
+                pedidoSendoArrastado = null;
+                event.consume();
+            });
+            
+            return row;
+        });
+        
+        // ========== CONFIGURAÇÃO DOS DESTINOS ==========
+        
+        // ===== tablePedidosFeitos como DESTINO (CENÁRIO 4: Na Rua -> Feitos) =====
+        tablePedidosFeitos.setOnDragOver(event -> {
+            if (event.getGestureSource() != tablePedidosFeitos && event.getDragboard().hasString()) {
+                String content = event.getDragboard().getString();
+                // Só aceita se vier de "Na Rua"
+                if (content.startsWith("NARUA:")) {
+                    event.acceptTransferModes(TransferMode.MOVE);
+                }
+            }
+            event.consume();
+        });
+        
+        tablePedidosFeitos.setOnDragDropped(event -> {
+            Dragboard dragboard = event.getDragboard();
+            boolean success = false;
+            
+            if (dragboard.hasString() && pedidoSendoArrastado != null) {
+                String content = dragboard.getString();
+                
+                // CENÁRIO 4: Na Rua -> Feitos (Retorno/Reset)
+                if (content.startsWith("NARUA:")) {
+                    success = handleRetornoParaFeitos(pedidoSendoArrastado);
+                }
+            }
+            
+            event.setDropCompleted(success);
+            event.consume();
+        });
+        
+        tablePedidosFeitos.setOnDragEntered(event -> {
+            if (event.getGestureSource() != tablePedidosFeitos && event.getDragboard().hasString()) {
+                String content = event.getDragboard().getString();
+                if (content.startsWith("NARUA:")) {
+                    tablePedidosFeitos.setStyle("-fx-border-color: #FF9800; -fx-border-width: 2px;");
+                }
+            }
+            event.consume();
+        });
+        
+        tablePedidosFeitos.setOnDragExited(event -> {
+            tablePedidosFeitos.setStyle("");
+            event.consume();
+        });
+        
+        // ===== tablePedidosNaRua como DESTINO (CENÁRIO 1: Feitos -> Na Rua) =====
+        tablePedidosNaRua.setOnDragOver(event -> {
+            if (event.getGestureSource() != tablePedidosNaRua && event.getDragboard().hasString()) {
+                String content = event.getDragboard().getString();
+                // Só aceita se vier de "Feitos"
+                if (content.startsWith("FEITOS:")) {
+                    event.acceptTransferModes(TransferMode.MOVE);
+                }
+            }
+            event.consume();
+        });
+        
+        tablePedidosNaRua.setOnDragDropped(event -> {
+            Dragboard dragboard = event.getDragboard();
+            boolean success = false;
+            
+            if (dragboard.hasString() && pedidoSendoArrastado != null) {
+                String content = dragboard.getString();
+                
+                // CENÁRIO 1: Feitos -> Na Rua
+                if (content.startsWith("FEITOS:")) {
+                    tablePedidosFeitos.getSelectionModel().select(pedidoSendoArrastado);
+                    handleMarcarSaiu();
+                    success = true;
+                }
+            }
+            
+            event.setDropCompleted(success);
+            event.consume();
+        });
+        
+        tablePedidosNaRua.setOnDragEntered(event -> {
+            if (event.getGestureSource() != tablePedidosNaRua && event.getDragboard().hasString()) {
+                String content = event.getDragboard().getString();
+                if (content.startsWith("FEITOS:")) {
+                    tablePedidosNaRua.setStyle("-fx-border-color: #4CAF50; -fx-border-width: 2px;");
+                }
+            }
+            event.consume();
+        });
+        
+        tablePedidosNaRua.setOnDragExited(event -> {
+            tablePedidosNaRua.setStyle("");
+            event.consume();
+        });
+        
+        // ===== tablePedidosEntregues como DESTINO (CENÁRIOS 2 e 3) =====
+        tablePedidosEntregues.setOnDragOver(event -> {
+            if (event.getGestureSource() != tablePedidosEntregues && event.getDragboard().hasString()) {
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+            event.consume();
+        });
+        
+        tablePedidosEntregues.setOnDragDropped(event -> {
+            Dragboard dragboard = event.getDragboard();
+            boolean success = false;
+            
+            if (dragboard.hasString() && pedidoSendoArrastado != null) {
+                String content = dragboard.getString();
+                
+                // CENÁRIO 2: Na Rua -> Entregues
+                if (content.startsWith("NARUA:")) {
+                    tablePedidosNaRua.getSelectionModel().select(pedidoSendoArrastado);
+                    handleMarcarEntregue();
+                    success = true;
+                }
+                // CENÁRIO 3: Feitos -> Entregues (Pulo)
+                else if (content.startsWith("FEITOS:")) {
+                    success = handlePuloParaEntregues(pedidoSendoArrastado);
+                }
+            }
+            
+            event.setDropCompleted(success);
+            event.consume();
+        });
+        
+        tablePedidosEntregues.setOnDragEntered(event -> {
+            if (event.getGestureSource() != tablePedidosEntregues && event.getDragboard().hasString()) {
+                tablePedidosEntregues.setStyle("-fx-border-color: #2196F3; -fx-border-width: 2px;");
+            }
+            event.consume();
+        });
+        
+        tablePedidosEntregues.setOnDragExited(event -> {
+            tablePedidosEntregues.setStyle("");
+            event.consume();
+        });
+    }
+    
+    /**
+     * CENÁRIO 3: Pulo de Feitos -> Entregues
+     * Abre diálogo de funcionário, depois diálogo de pagamento/garrafão,
+     * e atualiza o pedido diretamente para Entregue.
+     */
+    private boolean handlePuloParaEntregues(Pedido pedido) {
+        // 1. Carrega funcionários
+        ObservableList<Funcionario> funcionarios = FXCollections.observableArrayList();
+        String sqlFunc = "SELECT id, nome FROM Funcionarios";
+        
+        try (Connection conn = Database.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sqlFunc)) {
+            
+            while (rs.next()) {
+                funcionarios.add(new Funcionario(rs.getInt("id"), rs.getString("nome")));
+            }
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao carregar funcionários: " + e.getMessage()).show();
+            return false;
+        }
+
+        if (funcionarios.isEmpty()) {
+            new Alert(AlertType.WARNING, "Nenhum funcionário cadastrado!").show();
+            return false;
+        }
+
+        // 2. Escolhe o funcionário
+        ChoiceDialog<Funcionario> dialogFunc = new ChoiceDialog<>(funcionarios.get(0), funcionarios);
+        dialogFunc.setTitle("Escolher Funcionário");
+        dialogFunc.setHeaderText("Pulo para Entregue");
+        dialogFunc.setContentText("Escolha o funcionário que fez a entrega:");
+        
+        final Funcionario[] funcionarioEscolhido = {null};
+        dialogFunc.showAndWait().ifPresent(func -> funcionarioEscolhido[0] = func);
+        
+        if (funcionarioEscolhido[0] == null) {
+            return false; // Usuário cancelou
+        }
+        
+        // 3. Abre dialog de pagamento/garrafão
+        Dialog<ButtonType> dialogEntrega = new Dialog<>();
+        dialogEntrega.setTitle("Confirmar Entrega");
+        dialogEntrega.setHeaderText("Marcar como Entregue");
+        
+        CheckBox chkPagou = new CheckBox("Pagamento Recebido?");
+        chkPagou.setSelected(true);
+        
+        CheckBox chkGarrafao = new CheckBox("Garrafão Devolvido?");
+        chkGarrafao.setSelected(true);
+        
+        VBox vbox = new VBox(10);
+        vbox.setPadding(new Insets(10));
+        vbox.getChildren().addAll(chkPagou, chkGarrafao);
+        
+        dialogEntrega.getDialogPane().setContent(vbox);
+        dialogEntrega.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        
+        final boolean[] confirmed = {false};
+        dialogEntrega.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                confirmed[0] = true;
+            }
+        });
+        
+        if (!confirmed[0]) {
+            return false; // Usuário cancelou
+        }
+        
+        // 4. Atualiza o pedido no banco
+        int pendenciaPagamento = chkPagou.isSelected() ? 0 : 1;
+        int pendenciaGarrafao = chkGarrafao.isSelected() ? 0 : 1;
+        
+        String sqlUpdate = "UPDATE Pedidos SET status = ?, funcionario_id = ?, " +
+                           "data_hora_saiu = ?, data_hora_entregue = ?, " +
+                           "pendencia_pagamento = ?, pendencia_garrafao = ? WHERE id = ?";
+        String dataHoraAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
+            
+            pstmt.setString(1, "Entregue");
+            pstmt.setInt(2, funcionarioEscolhido[0].getId());
+            pstmt.setString(3, dataHoraAgora);
+            pstmt.setString(4, dataHoraAgora);
+            pstmt.setInt(5, pendenciaPagamento);
+            pstmt.setInt(6, pendenciaGarrafao);
+            pstmt.setInt(7, pedido.getId());
+            
+            pstmt.executeUpdate();
+            
+            // Recarrega as tabelas
+            loadPedidosPorData();
+            
+            new Alert(AlertType.INFORMATION, "Pedido marcado como Entregue!").show();
+            return true;
+            
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+            return false;
+        }
+    }
+    
+    /**
+     * CENÁRIO 4: Retorno de Na Rua -> Feitos
+     * Reseta o pedido para o status inicial, removendo funcionário e datas.
+     */
+    private boolean handleRetornoParaFeitos(Pedido pedido) {
+        // Confirma a ação
+        Alert confirmacao = new Alert(AlertType.CONFIRMATION);
+        confirmacao.setTitle("Confirmar Retorno");
+        confirmacao.setHeaderText("Retornar pedido para Pendentes");
+        confirmacao.setContentText("Isso irá resetar o pedido, removendo funcionário e horário de saída. Confirmar?");
+        
+        final boolean[] confirmed = {false};
+        confirmacao.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                confirmed[0] = true;
+            }
+        });
+        
+        if (!confirmed[0]) {
+            return false;
+        }
+        
+        // Reseta o pedido no banco
+        String sqlUpdate = "UPDATE Pedidos SET status = ?, funcionario_id = NULL, data_hora_saiu = NULL WHERE id = ?";
+        
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
+            
+            pstmt.setString(1, "Feito");
+            pstmt.setInt(2, pedido.getId());
+            
+            pstmt.executeUpdate();
+            
+            // Recarrega as tabelas
+            loadPedidosPorData();
+            
+            new Alert(AlertType.INFORMATION, "Pedido retornado para Pendentes!").show();
+            return true;
+            
+        } catch (SQLException e) {
+            new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+            return false;
+        }
     }
 
     private void carregarClientes() {
