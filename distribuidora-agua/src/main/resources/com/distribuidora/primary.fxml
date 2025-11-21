@@ -24,7 +24,7 @@
 
 <AnchorPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.distribuidora.PrimaryController">
    <children>
-      <VBox alignment="CENTER" prefHeight="924.0" prefWidth="1284.0" spacing="20.0" stylesheets="@styles.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <VBox alignment="CENTER" prefHeight="924.0" prefWidth="1284.0" spacing="10.0" stylesheets="@styles.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <TabPane prefHeight="482.0" prefWidth="376.0" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
               <tabs>
@@ -64,13 +64,13 @@
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <ComboBox fx:id="pedidoProdutoCombo" prefHeight="38.0" prefWidth="142.0" promptText="SELECIONE" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                <ComboBox fx:id="pedidoProdutoCombo" prefHeight="38.0" prefWidth="168.0" promptText="SELECIONE" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                                 <Label text="ÁGUA" GridPane.rowIndex="2">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <ComboBox fx:id="pedidoClienteCombo" editable="true" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" />
+                                                <ComboBox fx:id="pedidoClienteCombo" editable="true" prefHeight="42.0" prefWidth="244.0" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" />
                                                 <Label text="CLIENTE">
                                                    <font>
                                                       <Font size="18.0" />
@@ -125,16 +125,19 @@
                                                          <font>
                                                             <Font name="System Bold" size="18.0" />
                                                          </font>
+                                                         <VBox.margin>
+                                                            <Insets left="3.0" />
+                                                         </VBox.margin>
                                                       </Label>
                                                       <TableView fx:id="tablePedidosFeitos" prefHeight="200.0" prefWidth="408.0" VBox.vgrow="ALWAYS">
                                                          <columns>
-                                                            <TableColumn fx:id="colFeitosCliente" prefWidth="75.0" text="Cliente" />
-                                                            <TableColumn fx:id="colFeitosEndereco" prefWidth="200.0" text="Endereço" />
-                                                            <TableColumn fx:id="colFeitosProduto" prefWidth="60.0" text="Produto" />
-                                                            <TableColumn fx:id="colFeitosQtd" prefWidth="38.0" text="Qtd" />
+                                                            <TableColumn fx:id="colFeitosCliente" prefWidth="85.0" text="Cliente" />
+                                                            <TableColumn fx:id="colFeitosEndereco" prefWidth="150.0" text="Endereço" />
+                                                            <TableColumn fx:id="colFeitosProduto" prefWidth="65.0" text="Produto" />
+                                                            <TableColumn fx:id="colFeitosQtd" prefWidth="40.0" text="Qtd" />
                                                             <TableColumn fx:id="colFeitosHora" prefWidth="50.0" text="Hora" />
-                                                            <TableColumn fx:id="colFeitosTotal" minWidth="0.0" prefWidth="70.0" text="Total" />
-                                                            <TableColumn fx:id="colFeitosPagamento" text="Pagamento" />
+                                                            <TableColumn fx:id="colFeitosTotal" minWidth="0.0" prefWidth="60.0" text="Total" />
+                                                            <TableColumn fx:id="colFeitosPagamento" prefWidth="90.0" text="Pagamento" />
                                                          </columns>
                                                       </TableView>
                                                    </children>
@@ -145,16 +148,19 @@
                                                          <font>
                                                             <Font name="System Bold" size="18.0" />
                                                          </font>
+                                                         <VBox.margin>
+                                                            <Insets left="3.0" />
+                                                         </VBox.margin>
                                                       </Label>
-                                                      <TableView fx:id="tablePedidosNaRua" prefHeight="200.0" prefWidth="758.0" VBox.vgrow="ALWAYS">
+                                                      <TableView fx:id="tablePedidosNaRua" prefHeight="200.0" prefWidth="40.0" VBox.vgrow="ALWAYS">
                                                          <columns>
-                                                            <TableColumn fx:id="colNaRuaCliente" prefWidth="75.0" text="Cliente" />
-                                                            <TableColumn fx:id="colNaRuaEndereco" prefWidth="190.0" text="Endereço" />
-                                                            <TableColumn fx:id="colNaRuaProduto" prefWidth="60.0" text="Produto" />
-                                                            <TableColumn fx:id="colNaRuaQtd" prefWidth="38.0" text="Qtd" />
+                                                            <TableColumn fx:id="colNaRuaCliente" prefWidth="80.0" text="Cliente" />
+                                                            <TableColumn fx:id="colNaRuaEndereco" prefWidth="140.0" text="Endereço" />
+                                                            <TableColumn fx:id="colNaRuaProduto" prefWidth="65.0" text="Produto" />
+                                                            <TableColumn fx:id="colNaRuaQtd" prefWidth="40.0" text="Qtd" />
                                                             <TableColumn fx:id="colNaRuaHora" prefWidth="50.0" text="Hora" />
-                                                            <TableColumn fx:id="colNaRuaTotal" prefWidth="70.0" text="Total" />
-                                                            <TableColumn fx:id="colNaRuaFuncionario" text="Funcionário" />
+                                                            <TableColumn fx:id="colNaRuaTotal" prefWidth="60.0" text="Total" />
+                                                            <TableColumn fx:id="colNaRuaFuncionario" prefWidth="105.0" text="Funcionário" />
                                                          </columns>
                                                       </TableView>
                                                    </children>
@@ -165,16 +171,19 @@
                                                          <font>
                                                             <Font name="System Bold" size="18.0" />
                                                          </font>
+                                                         <VBox.margin>
+                                                            <Insets left="3.0" />
+                                                         </VBox.margin>
                                                       </Label>
-                                                      <TableView fx:id="tablePedidosEntregues" prefHeight="200.0" prefWidth="758.0" VBox.vgrow="ALWAYS">
+                                                      <TableView fx:id="tablePedidosEntregues" prefHeight="200.0" prefWidth="387.0" VBox.vgrow="ALWAYS">
                                                          <columns>
-                                                            <TableColumn fx:id="colEntreguesCliente" prefWidth="75.0" text="Cliente" />
-                                                            <TableColumn fx:id="colEntreguesEndereco" prefWidth="190.0" text="Endereço" />
-                                                            <TableColumn fx:id="colEntreguesProduto" prefWidth="60.0" text="Produto" />
-                                                            <TableColumn fx:id="colEntreguesQtd" prefWidth="38.0" text="Qtd" />
+                                                            <TableColumn fx:id="colEntreguesCliente" prefWidth="80.0" text="Cliente" />
+                                                            <TableColumn fx:id="colEntreguesEndereco" prefWidth="140.0" text="Endereço" />
+                                                            <TableColumn fx:id="colEntreguesProduto" prefWidth="65.0" text="Produto" />
+                                                            <TableColumn fx:id="colEntreguesQtd" prefWidth="40.0" text="Qtd" />
                                                             <TableColumn fx:id="colEntreguesHora" prefWidth="50.0" text="Hora" />
-                                                            <TableColumn fx:id="colEntreguesTotal" prefWidth="70.0" text="Total" />
-                                                            <TableColumn fx:id="colEntreguesFuncionario" text="Funcionário" />
+                                                            <TableColumn fx:id="colEntreguesTotal" prefWidth="60.0" text="Total" />
+                                                            <TableColumn fx:id="colEntreguesFuncionario" prefWidth="105.0" text="Funcionário" />
                                                          </columns>
                                                       </TableView>
                                                    </children>
@@ -317,7 +326,7 @@
             </Button>
          </children>
          <padding>
-            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </padding>
       </VBox>
    </children>
