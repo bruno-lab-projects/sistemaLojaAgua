@@ -324,9 +324,33 @@ public class SecondaryController {
         return formatted.toString();
     }
 
+    /**
+     * Método utilitário que capitaliza cada palavra de um nome.
+     * Exemplo: "BRUNO SANTOS" ou "bruno santos" → "Bruno Santos"
+     */
+    private String capitalizarNome(String nome) {
+        if (nome == null || nome.isBlank()) {
+            return nome;
+        }
+        
+        String[] palavras = nome.trim().toLowerCase().split("\\s+");
+        StringBuilder resultado = new StringBuilder();
+        
+        for (String palavra : palavras) {
+            if (!palavra.isEmpty()) {
+                // Capitaliza a primeira letra e mantém o resto em minúsculo
+                resultado.append(Character.toUpperCase(palavra.charAt(0)))
+                         .append(palavra.substring(1))
+                         .append(" ");
+            }
+        }
+        
+        return resultado.toString().trim();
+    }
+
     @FXML
     private void handleSalvarCliente() {
-        String nome = nomeField.getText();
+        String nome = capitalizarNome(nomeField.getText());
         String telefone = telefoneField.getText();
         String predioCasa = clientePredioField.getText();
         String numero = clienteNumeroField.getText();
@@ -431,7 +455,7 @@ public class SecondaryController {
 
     @FXML
     private void handleSalvarProduto() {
-        String nome = produtoNomeField.getText();
+        String nome = capitalizarNome(produtoNomeField.getText());
         String precoStr = produtoPrecoField.getText();
 
         // Validações
@@ -546,7 +570,7 @@ public class SecondaryController {
 
     @FXML
     private void handleSalvarFuncionario() {
-        String nome = funcionarioNomeField.getText();
+        String nome = capitalizarNome(funcionarioNomeField.getText());
         if (nome.isBlank()) {
             new Alert(AlertType.ERROR, "O nome é obrigatório.").show();
             return;

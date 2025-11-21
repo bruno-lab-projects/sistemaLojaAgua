@@ -68,7 +68,7 @@
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <ComboBox fx:id="pedidoClienteCombo" editable="false" prefWidth="150.0" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" GridPane.halignment="CENTER">
+                                                <ComboBox fx:id="pedidoClienteCombo" editable="true" prefWidth="150.0" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" GridPane.halignment="CENTER">
                                                    <GridPane.margin>
                                                       <Insets left="3.0" right="3.0" />
                                                    </GridPane.margin></ComboBox>

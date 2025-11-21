@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.util.StringConverter;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
@@ -47,6 +49,12 @@ public class PrimaryController {
     
     // Variável para armazenar o pedido sendo arrastado
     private Pedido pedidoSendoArrastado = null;
+    
+    // Lista mestra de clientes para autocomplete
+    private ObservableList<Cliente> clientesMestra = FXCollections.observableArrayList();
+    
+    // Flag para evitar loop infinito no autocomplete
+    private boolean ignorarMudancaTexto = false;
 
     // Componentes da aba Clientes
     @FXML private TextField nomeField;
@@ -118,8 +126,8 @@ public class PrimaryController {
         // Configura máscara de telefone
         configurarMascaraTelefone();
         
-        // Carrega clientes para o ComboBox de pedidos
-        carregarClientes();
+        // Configura autocomplete para o ComboBox de clientes
+        configurarAutocompleteClientes();
         
         // Carrega produtos para o ComboBox de pedidos
         carregarProdutosParaCombo();
@@ -131,37 +139,6 @@ public class PrimaryController {
         SpinnerValueFactory<Integer> valueFactory =
             new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 99, 1); // (min, max, padrão)
         pedidoQtdSpinner.setValueFactory(valueFactory);
-
-        // Adiciona listener para preencher campos avulsos automaticamente
-        pedidoClienteCombo.getSelectionModel().selectedItemProperty().addListener(
-            (obs, oldSelection, newSelection) -> {
-                if (newSelection != null) {
-                    // Se o usuário ESCOLHEU um cliente:
-                    // 1. Preencha os campos avulsos com os dados do cliente
-                    pedidoNomeAvulsoField.setText(newSelection.getNome());
-                    pedidoAvulsoTipoField.setText(newSelection.getPredioCasa());
-                    pedidoAvulsoNumeroField.setText(newSelection.getNumero());
-                    pedidoAvulsoRuaField.setText(newSelection.getEndereco());
-                    // 2. Desabilite os campos avulsos
-                    pedidoNomeAvulsoField.setDisable(true);
-                    pedidoAvulsoTipoField.setDisable(true);
-                    pedidoAvulsoNumeroField.setDisable(true);
-                    pedidoAvulsoRuaField.setDisable(true);
-                } else {
-                    // Se o usuário LIMPOU o ComboBox:
-                    // 1. Limpe os campos avulsos
-                    pedidoNomeAvulsoField.clear();
-                    pedidoAvulsoTipoField.clear();
-                    pedidoAvulsoNumeroField.clear();
-                    pedidoAvulsoRuaField.clear();
-                    // 2. Re-abilite os campos
-                    pedidoNomeAvulsoField.setDisable(false);
-                    pedidoAvulsoTipoField.setDisable(false);
-                    pedidoAvulsoNumeroField.setDisable(false);
-                    pedidoAvulsoRuaField.setDisable(false);
-                }
-            }
-        );
 
         // Configura o DatePicker com a data de hoje
         if (pedidoDatePicker != null) {
@@ -569,9 +546,131 @@ public class PrimaryController {
         }
     }
 
-    private void carregarClientes() {
-        ObservableList<Cliente> listaClientes = FXCollections.observableArrayList();
-        String sql = "SELECT id, nome, telefone, endereco, predio_casa, numero, observacoes FROM Clientes";
+    /**
+     * Configura o sistema de autocomplete para o ComboBox de clientes.
+     * Permite pesquisa/filtro em tempo real enquanto o usuário digita.
+     */
+    private void configurarAutocompleteClientes() {
+        // 1. Carrega a lista mestra do banco de dados
+        carregarClientesDoBanco();
+        
+        // 2. Cria a lista filtrada baseada na lista mestra
+        FilteredList<Cliente> listaFiltrada = new FilteredList<>(clientesMestra, p -> true);
+        pedidoClienteCombo.setItems(listaFiltrada);
+        
+        // 3. Configura como o Cliente aparece no texto (StringConverter)
+        pedidoClienteCombo.setConverter(new StringConverter<Cliente>() {
+            @Override
+            public String toString(Cliente cliente) {
+                return (cliente != null) ? cliente.getNome() : "";
+            }
+            
+            @Override
+            public Cliente fromString(String string) {
+                if (string == null || string.isEmpty()) {
+                    return null;
+                }
+                return clientesMestra.stream()
+                        .filter(c -> c.getNome().equalsIgnoreCase(string))
+                        .findFirst().orElse(null);
+            }
+        });
+        
+        // 4. Listener de seleção - preenche campos quando cliente é selecionado
+        pedidoClienteCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (ignorarMudancaTexto) {
+                return; // Ignora se estamos em processo de atualização
+            }
+            
+            if (newVal != null) {
+                // Cliente selecionado - preenche campos
+                pedidoNomeAvulsoField.setText(newVal.getNome());
+                pedidoAvulsoTipoField.setText(newVal.getPredioCasa());
+                pedidoAvulsoNumeroField.setText(newVal.getNumero());
+                pedidoAvulsoRuaField.setText(newVal.getEndereco());
+                
+                pedidoNomeAvulsoField.setDisable(true);
+                pedidoAvulsoTipoField.setDisable(true);
+                pedidoAvulsoNumeroField.setDisable(true);
+                pedidoAvulsoRuaField.setDisable(true);
+            } else {
+                // Seleção limpa - habilita campos
+                pedidoNomeAvulsoField.clear();
+                pedidoAvulsoTipoField.clear();
+                pedidoAvulsoNumeroField.clear();
+                pedidoAvulsoRuaField.clear();
+                
+                pedidoNomeAvulsoField.setDisable(false);
+                pedidoAvulsoTipoField.setDisable(false);
+                pedidoAvulsoNumeroField.setDisable(false);
+                pedidoAvulsoRuaField.setDisable(false);
+            }
+        });
+        
+        // 5. Listener de texto - filtra a lista enquanto usuário digita
+        pedidoClienteCombo.getEditor().textProperty().addListener((obs, oldText, newText) -> {
+            if (ignorarMudancaTexto) {
+                return; // Ignora se for mudança programática
+            }
+            
+            final Cliente currentValue = pedidoClienteCombo.getValue();
+            
+            // Se o texto for apagado completamente
+            if (newText == null || newText.isEmpty()) {
+                listaFiltrada.setPredicate(c -> true);
+                
+                // Só limpa o valor se já não estiver null
+                if (currentValue != null) {
+                    ignorarMudancaTexto = true;
+                    pedidoClienteCombo.setValue(null);
+                    ignorarMudancaTexto = false;
+                }
+                return;
+            }
+            
+            // Se o texto for igual ao nome do cliente atual, não faz nada
+            if (currentValue != null && currentValue.getNome().equals(newText)) {
+                return;
+            }
+            
+            // Limpa seleção se o texto não corresponder mais ao cliente selecionado
+            if (currentValue != null && !currentValue.getNome().equalsIgnoreCase(newText)) {
+                ignorarMudancaTexto = true;
+                pedidoClienteCombo.setValue(null);
+                ignorarMudancaTexto = false;
+            }
+            
+            // Filtra a lista baseado no texto digitado
+            final String lowerText = newText.toLowerCase();
+            listaFiltrada.setPredicate(c -> c.getNome().toLowerCase().contains(lowerText));
+            
+            // Se houver resultados, abre o dropdown
+            if (!listaFiltrada.isEmpty()) {
+                if (!pedidoClienteCombo.isShowing()) {
+                    pedidoClienteCombo.show();
+                }
+            }
+        });
+        
+        // 6. Listener para fechar dropdown ao selecionar
+        pedidoClienteCombo.setOnAction(event -> {
+            Cliente selecionado = pedidoClienteCombo.getValue();
+            if (selecionado != null) {
+                ignorarMudancaTexto = true;
+                pedidoClienteCombo.getEditor().setText(selecionado.getNome());
+                ignorarMudancaTexto = false;
+                pedidoClienteCombo.hide();
+            }
+        });
+    }
+    
+    /**
+     * Carrega os clientes do banco de dados para a lista mestra.
+     * Este método é chamado apenas uma vez na inicialização e quando há atualizações.
+     */
+    private void carregarClientesDoBanco() {
+        clientesMestra.clear();
+        String sql = "SELECT id, nome, telefone, endereco, predio_casa, numero, observacoes FROM Clientes ORDER BY nome ASC";
 
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -587,15 +686,41 @@ public class PrimaryController {
                     rs.getString("numero"),
                     rs.getString("observacoes")
                 );
-                listaClientes.add(cliente);
+                clientesMestra.add(cliente);
             }
-
-            // Atualiza o ComboBox de pedidos com a lista atualizada
-            pedidoClienteCombo.setItems(listaClientes);
 
         } catch (SQLException e) {
             System.err.println("Erro ao carregar clientes: " + e.getMessage());
         }
+    }
+
+    private void carregarClientes() {
+        // Método mantido para compatibilidade (recarrega a lista mestra)
+        carregarClientesDoBanco();
+    }
+
+    /**
+     * Método utilitário que capitaliza cada palavra de um nome.
+     * Exemplo: "BRUNO SANTOS" ou "bruno santos" → "Bruno Santos"
+     */
+    private String capitalizarNome(String nome) {
+        if (nome == null || nome.isBlank()) {
+            return nome;
+        }
+        
+        String[] palavras = nome.trim().toLowerCase().split("\\s+");
+        StringBuilder resultado = new StringBuilder();
+        
+        for (String palavra : palavras) {
+            if (!palavra.isEmpty()) {
+                // Capitaliza a primeira letra e mantém o resto em minúsculo
+                resultado.append(Character.toUpperCase(palavra.charAt(0)))
+                         .append(palavra.substring(1))
+                         .append(" ");
+            }
+        }
+        
+        return resultado.toString().trim();
     }
 
     private void configurarMascaraTelefone() {
@@ -679,7 +804,7 @@ public class PrimaryController {
 
     @FXML
     private void handleSalvarCliente() {
-        String nome = nomeField.getText();
+        String nome = capitalizarNome(nomeField.getText());
         String telefone = telefoneField.getText();
         String endereco = enderecoField.getText();
         String predioCasa = predioCasaField.getText();
@@ -800,7 +925,7 @@ public class PrimaryController {
                     pstmt.setNull(9, java.sql.Types.VARCHAR); // numero_avulso
                 } else {
                     pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
-                    pstmt.setString(6, nomeAvulso);
+                    pstmt.setString(6, capitalizarNome(nomeAvulso));
                     pstmt.setString(7, ruaAvulso);
                     pstmt.setString(8, tipoAvulso);
                     pstmt.setString(9, numeroAvulso);
@@ -844,7 +969,7 @@ public class PrimaryController {
                     pstmt.setNull(7, java.sql.Types.VARCHAR); // numero_avulso
                 } else {
                     pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
-                    pstmt.setString(4, nomeAvulso);
+                    pstmt.setString(4, capitalizarNome(nomeAvulso));
                     pstmt.setString(5, ruaAvulso);
                     pstmt.setString(6, tipoAvulso);
                     pstmt.setString(7, numeroAvulso);
