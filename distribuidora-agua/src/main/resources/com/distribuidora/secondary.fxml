@@ -20,7 +20,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" prefHeight="930.0" prefWidth="1318.0" spacing="20.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.distribuidora.SecondaryController">
+<VBox alignment="CENTER" prefHeight="930.0" prefWidth="1318.0" spacing="20.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.distribuidora.SecondaryController">
     <children>
         <Label text="Painel Administrativo">
          <font>
@@ -215,8 +215,11 @@
                                             </columns>
                                           </TableView>
                                           <Button fx:id="btnBaixarGarrafao" mnemonicParsing="false" onAction="#handleBaixarGarrafao" text="Confirmar Devolução">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
                                              <VBox.margin>
-                                                <Insets top="10.0" />
+                                                <Insets top="15.0" />
                                              </VBox.margin>
                                           </Button>
                                        </children>
@@ -244,8 +247,11 @@
                                             </columns>
                                           </TableView>
                                           <Button fx:id="btnBaixarFinanceiro" mnemonicParsing="false" onAction="#handleBaixarFinanceiro" text="Confirmar Pagamento">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
                                              <VBox.margin>
-                                                <Insets top="10.0" />
+                                                <Insets top="15.0" />
                                              </VBox.margin>
                                           </Button>
                                        </children>
@@ -384,13 +390,13 @@
                                              </font>
                                           </Button>
                                           <Separator prefHeight="65.0" prefWidth="350.0" />
-                                          <Button fx:id="excluirProdutoButton" mnemonicParsing="false" onAction="#handleExcluirProduto" text="Excluir produto">
+                                          <Button fx:id="excluirProdutoButton" mnemonicParsing="false" onAction="#handleExcluirProduto" style="-fx-background-color: linear-gradient(to bottom, #f44336 0%, #d32f2f 100%);" text="Excluir produto">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Button>
                                           <Separator prefHeight="65.0" prefWidth="350.0" />
-                                          <Button fx:id="limparProdutoButton" mnemonicParsing="false" onAction="#handleLimparProduto" text="Limpar">
+                                          <Button fx:id="limparProdutoButton" mnemonicParsing="false" onAction="#handleLimparProduto" text="Limpar formulário">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -448,13 +454,13 @@
                                              </font>
                                           </Button>
                                           <Separator prefHeight="65.0" prefWidth="350.0" />
-                                          <Button fx:id="excluirFuncionarioButton" mnemonicParsing="false" onAction="#handleExcluirFuncionario" text="Excluir funcionário">
+                                          <Button fx:id="excluirFuncionarioButton" mnemonicParsing="false" onAction="#handleExcluirFuncionario" style="-fx-background-color: linear-gradient(to bottom, #f44336 0%, #d32f2f 100%);" text="Excluir funcionário">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Button>
                                           <Separator prefHeight="65.0" prefWidth="350.0" />
-                                          <Button fx:id="limparFuncionarioButton" mnemonicParsing="false" onAction="#handleLimparFuncionario" text="Limpar">
+                                          <Button fx:id="limparFuncionarioButton" mnemonicParsing="false" onAction="#handleLimparFuncionario" text="Limpar formulário">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -483,7 +489,7 @@
             </Tab>
         </tabs>
       </TabPane>
-        <Button fx:id="secondaryButton" onAction="#switchToPrimary" text="VOLTAR">
+        <Button fx:id="secondaryButton" onAction="#switchToPrimary" style="-fx-background-color: linear-gradient(to bottom, #757575 0%, #616161 100%);" text="VOLTAR">
          <font>
             <Font name="System Bold" size="16.0" />
          </font></Button>
