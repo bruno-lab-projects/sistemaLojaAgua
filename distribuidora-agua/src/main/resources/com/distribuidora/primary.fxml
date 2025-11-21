@@ -163,7 +163,7 @@
                                                 <TableView fx:id="tablePedidosNaRua" prefHeight="200.0" prefWidth="758.0" VBox.vgrow="ALWAYS">
                                                    <columns>
                                                       <TableColumn fx:id="colNaRuaCliente" prefWidth="75.0" text="Cliente" />
-                                                      <TableColumn fx:id="colNaRuaEndereco" prefWidth="200.0" text="Endereço" />
+                                                      <TableColumn fx:id="colNaRuaEndereco" prefWidth="190.0" text="Endereço" />
                                                       <TableColumn fx:id="colNaRuaProduto" prefWidth="60.0" text="Produto" />
                                                       <TableColumn fx:id="colNaRuaQtd" prefWidth="38.0" text="Qtd" />
                                                       <TableColumn fx:id="colNaRuaHora" prefWidth="50.0" text="Hora" />
@@ -183,7 +183,7 @@
                                                 <TableView fx:id="tablePedidosEntregues" prefHeight="200.0" prefWidth="758.0" VBox.vgrow="ALWAYS">
                                                    <columns>
                                                       <TableColumn fx:id="colEntreguesCliente" prefWidth="75.0" text="Cliente" />
-                                                      <TableColumn fx:id="colEntreguesEndereco" prefWidth="200.0" text="Endereço" />
+                                                      <TableColumn fx:id="colEntreguesEndereco" prefWidth="190.0" text="Endereço" />
                                                       <TableColumn fx:id="colEntreguesProduto" prefWidth="60.0" text="Produto" />
                                                       <TableColumn fx:id="colEntreguesQtd" prefWidth="38.0" text="Qtd" />
                                                       <TableColumn fx:id="colEntreguesHora" prefWidth="50.0" text="Hora" />
