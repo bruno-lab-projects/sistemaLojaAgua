@@ -270,7 +270,7 @@
                      <children>
                         <HBox prefHeight="739.0" prefWidth="1278.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <AnchorPane maxWidth="350.0" minHeight="0.0" minWidth="200.0" prefHeight="449.0" prefWidth="253.0" HBox.hgrow="NEVER">
+                              <AnchorPane maxWidth="350.0" minHeight="0.0" minWidth="300.0" prefHeight="449.0" prefWidth="253.0" HBox.hgrow="NEVER">
                                  <children>
                                     <VBox alignment="TOP_CENTER" prefHeight="721.5" prefWidth="379.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
@@ -360,7 +360,7 @@
                      <children>
                         <HBox prefHeight="739.0" prefWidth="1278.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <AnchorPane maxWidth="350.0" minHeight="0.0" minWidth="200.0" prefHeight="449.0" prefWidth="253.0" HBox.hgrow="NEVER">
+                              <AnchorPane maxWidth="350.0" minHeight="0.0" minWidth="300.0" prefHeight="449.0" prefWidth="253.0" HBox.hgrow="NEVER">
                                  <children>
                                     <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
@@ -430,7 +430,7 @@
                      <children>
                         <HBox prefHeight="739.0" prefWidth="1278.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <AnchorPane maxWidth="350.0" minHeight="0.0" minWidth="200.0" prefHeight="449.0" prefWidth="253.0" HBox.hgrow="NEVER">
+                              <AnchorPane maxWidth="350.0" minHeight="0.0" minWidth="300.0" prefHeight="449.0" prefWidth="253.0" HBox.hgrow="NEVER">
                                  <children>
                                     <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
