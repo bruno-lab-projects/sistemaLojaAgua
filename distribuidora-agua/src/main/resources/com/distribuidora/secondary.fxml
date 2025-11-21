@@ -9,7 +9,6 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -79,29 +78,29 @@
                               </HBox>
                               
                               <!-- Meio: 3 Gráficos lado a lado (Produtos, Pagamentos, Funcionários) -->
-                              <HBox spacing="15.0" prefHeight="280.0" VBox.vgrow="SOMETIMES">
+                              <HBox prefHeight="280.0" spacing="15.0" VBox.vgrow="SOMETIMES">
                                  <children>
                                     <!-- Gráfico de Produtos -->
                                     <VBox spacing="10.0" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;" HBox.hgrow="ALWAYS">
                                        <children>
-                                          <Label text="📊 Produtos Mais Vendidos" style="-fx-font-weight: bold; -fx-font-size: 14px;" />
-                                          <PieChart fx:id="graficoProdutos" prefHeight="230.0" legendVisible="true" labelsVisible="true" VBox.vgrow="ALWAYS" />
+                                          <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="📊 Produtos Mais Vendidos" />
+                                          <PieChart fx:id="graficoProdutos" labelsVisible="true" legendVisible="true" prefHeight="230.0" VBox.vgrow="ALWAYS" />
                                        </children>
                                     </VBox>
                                     
                                     <!-- Gráfico de Formas de Pagamento (NOVO) -->
                                     <VBox spacing="10.0" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;" HBox.hgrow="ALWAYS">
                                        <children>
-                                          <Label text="💳 Formas de Pagamento" style="-fx-font-weight: bold; -fx-font-size: 14px;" />
-                                          <PieChart fx:id="graficoPagamentos" prefHeight="230.0" legendVisible="true" labelsVisible="true" VBox.vgrow="ALWAYS" />
+                                          <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="💳 Formas de Pagamento" />
+                                          <PieChart fx:id="graficoPagamentos" labelsVisible="true" legendVisible="true" prefHeight="230.0" VBox.vgrow="ALWAYS" />
                                        </children>
                                     </VBox>
                                     
                                     <!-- Gráfico de Funcionários -->
                                     <VBox spacing="10.0" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;" HBox.hgrow="ALWAYS">
                                        <children>
-                                          <Label text="👤 Entregas por Funcionário" style="-fx-font-weight: bold; -fx-font-size: 14px;" />
-                                          <BarChart fx:id="graficoFuncionarios" prefHeight="230.0" legendVisible="false" VBox.vgrow="ALWAYS">
+                                          <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="👤 Entregas por Funcionário" />
+                                          <BarChart fx:id="graficoFuncionarios" legendVisible="false" prefHeight="230.0" VBox.vgrow="ALWAYS">
                                             <xAxis>
                                               <CategoryAxis side="BOTTOM" />
                                             </xAxis>
@@ -118,41 +117,25 @@
                               <HBox spacing="15.0" VBox.vgrow="ALWAYS">
                                  <children>
                                     <!-- Gráfico de Horários (60%) -->
-                                    <VBox spacing="10.0" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 15;" HBox.hgrow="ALWAYS" prefWidth="600.0">
+                                    <VBox prefWidth="600.0" spacing="10.0" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 15;" HBox.hgrow="ALWAYS">
                                        <children>
-                                          <Label text="🕐 Horários de Pico" style="-fx-font-weight: bold; -fx-font-size: 14px;" />
-                                          <BarChart fx:id="graficoHorarios" prefHeight="250.0" legendVisible="false" VBox.vgrow="ALWAYS">
+                                          <Label style="-fx-font-weight: bold; -fx-font-size: 14px;" text="🕐 Horários de Pico" />
+                                          <BarChart fx:id="graficoHorarios" legendVisible="false" prefHeight="250.0" VBox.vgrow="ALWAYS">
                                             <xAxis>
-                                              <CategoryAxis side="BOTTOM" label="Horário" />
+                                              <CategoryAxis label="Horário" side="BOTTOM" />
                                             </xAxis>
                                             <yAxis>
-                                              <NumberAxis side="LEFT" label="Pedidos" />
+                                              <NumberAxis label="Pedidos" side="LEFT" />
                                             </yAxis>
                                           </BarChart>
                                        </children>
                                     </VBox>
                                     
                                     <!-- Tabelas Empilhadas (40%) -->
-                                    <VBox spacing="10.0" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;" prefWidth="400.0">
+                                    <VBox prefWidth="400.0" spacing="10.0" style="-fx-background-color: white; -fx-border-color: #ddd; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 10;">
                                        <children>
                                           <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
                                             <tabs>
-                                              <!-- Tab Top Clientes -->
-                                              <Tab text="⭐ Top Clientes">
-                                                <content>
-                                                  <AnchorPane>
-                                                     <children>
-                                                        <TableView fx:id="tabelaTopClientes" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                                          <columns>
-                                                            <TableColumn fx:id="colTopClienteNome" prefWidth="180.0" text="Nome" />
-                                                            <TableColumn fx:id="colTopClienteQtd" prefWidth="80.0" text="Pedidos" />
-                                                            <TableColumn fx:id="colTopClienteValor" prefWidth="100.0" text="Total" />
-                                                          </columns>
-                                                        </TableView>
-                                                     </children>
-                                                  </AnchorPane>
-                                                </content>
-                                              </Tab>
                                               
                                               <!-- Tab Clientes Inativos -->
                                               <Tab text="⚠️ Clientes Inativos">
@@ -164,6 +147,22 @@
                                                             <TableColumn fx:id="colInativoNome" prefWidth="150.0" text="Nome" />
                                                             <TableColumn fx:id="colInativoTelefone" prefWidth="120.0" text="Telefone" />
                                                             <TableColumn fx:id="colInativoUltimaCompra" prefWidth="90.0" text="Última Compra" />
+                                                          </columns>
+                                                        </TableView>
+                                                     </children>
+                                                  </AnchorPane>
+                                                </content>
+                                              </Tab>
+                                              <!-- Tab Top Clientes -->
+                                              <Tab text="⭐ Top Clientes">
+                                                <content>
+                                                  <AnchorPane>
+                                                     <children>
+                                                        <TableView fx:id="tabelaTopClientes" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                                          <columns>
+                                                            <TableColumn fx:id="colTopClienteNome" prefWidth="180.0" text="Nome" />
+                                                            <TableColumn fx:id="colTopClienteQtd" prefWidth="80.0" text="Pedidos" />
+                                                            <TableColumn fx:id="colTopClienteValor" prefWidth="100.0" text="Total" />
                                                           </columns>
                                                         </TableView>
                                                      </children>
@@ -188,9 +187,38 @@
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <SplitPane dividerPositions="0.5" prefHeight="737.5" prefWidth="1278.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                          <items>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                        <HBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                            <AnchorPane minHeight="0.0" minWidth="400.0" prefHeight="160.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <VBox layoutX="14.0" layoutY="75.0" prefHeight="739.0" prefWidth="400.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                       <children>
+                                          <Label fx:id="lblTituloPendenciasGarrafao" text="Pendências de Garrafão">
+                                             <font>
+                                                <Font name="System Bold" size="18.0" />
+                                             </font>
+                                             <VBox.margin>
+                                                <Insets bottom="10.0" top="10.0" />
+                                             </VBox.margin>
+                                          </Label>
+                                          <TableView fx:id="tabelaPendenciaGarrafao" prefHeight="640.0" prefWidth="634.0" VBox.vgrow="ALWAYS">
+                                            <columns>
+                                              <TableColumn fx:id="colGarCliente" prefWidth="130.0" text="Cliente" />
+                                              <TableColumn fx:id="colGarProduto" prefWidth="140.0" text="Produto" />
+                                              <TableColumn fx:id="colGarEndereco" prefWidth="230.0" text="Endereço" />
+                                              <TableColumn fx:id="colGarData" prefWidth="100.0" text="Data" />
+                                            </columns>
+                                          </TableView>
+                                          <Button fx:id="btnBaixarGarrafao" mnemonicParsing="false" onAction="#handleBaixarGarrafao" text="Confirmar Devolução">
+                                             <VBox.margin>
+                                                <Insets top="10.0" />
+                                             </VBox.margin>
+                                          </Button>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </AnchorPane>
+                            <AnchorPane minHeight="0.0" minWidth="400.0" prefHeight="160.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
                                  <children>
                                     <VBox layoutX="138.0" layoutY="89.0" prefHeight="735.5" prefWidth="635.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
@@ -219,37 +247,8 @@
                                     </VBox>
                                  </children>
                               </AnchorPane>
-                            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-                                 <children>
-                                    <VBox layoutX="14.0" layoutY="75.0" prefHeight="735.5" prefWidth="634.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                       <children>
-                                          <Label fx:id="lblTituloPendenciasGarrafao" text="Pendências de Garrafão">
-                                             <font>
-                                                <Font name="System Bold" size="18.0" />
-                                             </font>
-                                             <VBox.margin>
-                                                <Insets bottom="10.0" top="10.0" />
-                                             </VBox.margin>
-                                          </Label>
-                                          <TableView fx:id="tabelaPendenciaGarrafao" prefHeight="640.0" prefWidth="634.0" VBox.vgrow="ALWAYS">
-                                            <columns>
-                                              <TableColumn fx:id="colGarCliente" prefWidth="130.0" text="Cliente" />
-                                              <TableColumn fx:id="colGarProduto" prefWidth="140.0" text="Produto" />
-                                              <TableColumn fx:id="colGarEndereco" prefWidth="230.0" text="Endereço" />
-                                              <TableColumn fx:id="colGarData" prefWidth="100.0" text="Data" />
-                                            </columns>
-                                          </TableView>
-                                          <Button fx:id="btnBaixarGarrafao" mnemonicParsing="false" onAction="#handleBaixarGarrafao" text="Confirmar Devolução">
-                                             <VBox.margin>
-                                                <Insets top="10.0" />
-                                             </VBox.margin>
-                                          </Button>
-                                       </children>
-                                    </VBox>
-                                 </children>
-                              </AnchorPane>
-                          </items>
-                        </SplitPane>
+                           </children>
+                        </HBox>
                      </children>
                   </AnchorPane>
               </content>
@@ -258,13 +257,13 @@
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <SplitPane dividerPositions="0.3" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                           <items>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="449.0" prefWidth="253.0">
+                        <HBox prefHeight="739.0" prefWidth="1278.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <AnchorPane maxWidth="350.0" minHeight="0.0" minWidth="200.0" prefHeight="449.0" prefWidth="253.0" HBox.hgrow="NEVER">
                                  <children>
                                     <VBox alignment="TOP_CENTER" prefHeight="721.5" prefWidth="379.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
-                                          <Label text="Adicionar Cliente">
+                                          <Label text="Adicionar cliente">
                                              <VBox.margin>
                                                 <Insets bottom="20.0" />
                                              </VBox.margin>
@@ -326,7 +325,7 @@
                                     </VBox>
                                  </children>
                               </AnchorPane>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                              <AnchorPane minHeight="0.0" minWidth="500.0" prefHeight="160.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
                                  <children>
                                     <TableView fx:id="clientesTable" prefHeight="338.0" prefWidth="298.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <columns>
@@ -338,8 +337,8 @@
                                     </TableView>
                                  </children>
                               </AnchorPane>
-                           </items>
-                        </SplitPane>
+                           </children>
+                        </HBox>
                      </children>
                   </AnchorPane>
                </content>
@@ -348,9 +347,9 @@
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <SplitPane dividerPositions="0.3" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                           <items>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="449.0" prefWidth="253.0">
+                        <HBox prefHeight="739.0" prefWidth="1278.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <AnchorPane maxWidth="350.0" minHeight="0.0" minWidth="200.0" prefHeight="449.0" prefWidth="253.0" HBox.hgrow="NEVER">
                                  <children>
                                     <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
@@ -398,7 +397,7 @@
                                     </VBox>
                                  </children>
                               </AnchorPane>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                              <AnchorPane minHeight="0.0" minWidth="500.0" prefHeight="160.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
                                  <children>
                                     <TableView fx:id="produtosTable" prefHeight="338.0" prefWidth="298.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <columns>
@@ -408,8 +407,8 @@
                                     </TableView>
                                  </children>
                               </AnchorPane>
-                           </items>
-                        </SplitPane>
+                           </children>
+                        </HBox>
                      </children>
                   </AnchorPane>
                </content>
@@ -418,9 +417,9 @@
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <SplitPane dividerPositions="0.3" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                           <items>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="449.0" prefWidth="253.0">
+                        <HBox prefHeight="739.0" prefWidth="1278.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <AnchorPane maxWidth="350.0" minHeight="0.0" minWidth="200.0" prefHeight="449.0" prefWidth="253.0" HBox.hgrow="NEVER">
                                  <children>
                                     <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
@@ -462,7 +461,7 @@
                                     </VBox>
                                  </children>
                               </AnchorPane>
-                              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+                              <AnchorPane minHeight="0.0" minWidth="500.0" prefHeight="160.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
                                  <children>
                                     <TableView fx:id="funcionariosTable" prefHeight="338.0" prefWidth="298.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <columns>
@@ -471,8 +470,8 @@
                                     </TableView>
                                  </children>
                               </AnchorPane>
-                           </items>
-                        </SplitPane>
+                           </children>
+                        </HBox>
                      </children>
                   </AnchorPane>
                </content>
