@@ -21,7 +21,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" prefHeight="924.0" prefWidth="1284.0" spacing="20.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.distribuidora.PrimaryController">
+<VBox alignment="CENTER" prefHeight="924.0" prefWidth="1284.0" spacing="20.0" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.distribuidora.PrimaryController">
    <children>
       <TabPane prefHeight="482.0" prefWidth="376.0" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
         <tabs>
@@ -33,7 +33,7 @@
                           <items>
                             <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="150.0" prefWidth="1242.0">
                                  <children>
-                                    <SplitPane dividerPositions="0.5338709677419354" prefHeight="239.0" prefWidth="1242.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                    <SplitPane prefHeight="239.0" prefWidth="1242.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <items>
                                           <GridPane prefHeight="152.0" prefWidth="526.0">
                                             <columnConstraints>
@@ -62,13 +62,13 @@
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <ComboBox fx:id="pedidoProdutoCombo" prefWidth="150.0" promptText="Selecionar água" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                <ComboBox fx:id="pedidoProdutoCombo" prefWidth="150.0" promptText="SELECIONE" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                                 <Label text="Água" GridPane.rowIndex="2">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <ComboBox fx:id="pedidoClienteCombo" editable="true" prefWidth="150.0" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" GridPane.halignment="CENTER">
+                                                <ComboBox fx:id="pedidoClienteCombo" editable="true" prefWidth="150.0" promptText="Selecione cliente" GridPane.columnIndex="2" GridPane.halignment="CENTER">
                                                    <GridPane.margin>
                                                       <Insets left="3.0" right="3.0" />
                                                    </GridPane.margin></ComboBox>
@@ -95,7 +95,7 @@
                                                       <Insets left="3.0" right="3.0" />
                                                    </GridPane.margin>
                                                 </TextField>
-                                                <TextField fx:id="pedidoAvulsoTipoField" prefHeight="25.0" prefWidth="234.0" promptText="Nome do prédio/casa" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                                <TextField fx:id="pedidoAvulsoTipoField" prefHeight="25.0" prefWidth="234.0" promptText="Prédio / Casa" GridPane.columnIndex="1" GridPane.rowIndex="1">
                                                    <GridPane.margin>
                                                       <Insets left="3.0" right="3.0" />
                                                    </GridPane.margin>
@@ -113,33 +113,6 @@
                                              </children>
                                              <padding>
                                                 <Insets left="15.0" />
-                                             </padding>
-                                          </GridPane>
-                                          <GridPane prefHeight="152.0" prefWidth="468.0">
-                                             <columnConstraints>
-                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="400.0" minWidth="10.0" prefWidth="400.0" />
-                                                <ColumnConstraints hgrow="ALWAYS" maxWidth="305.0" minWidth="10.0" percentWidth="50.0" prefWidth="217.0" />
-                                                <ColumnConstraints maxWidth="1.0" minWidth="0.0" prefWidth="0.0" />
-                                             </columnConstraints>
-                                             <rowConstraints>
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                             </rowConstraints>
-                                             <children>
-                                                <Label alignment="TOP_LEFT" style="-fx-background-color: red;" text="REMOVER EM BREVE" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
-                                                   <font>
-                                                      <Font size="18.0" />
-                                                   </font>
-                                                </Label>
-                                             </children>
-                                             <opaqueInsets>
-                                                <Insets right="15.0" />
-                                             </opaqueInsets>
-                                             <padding>
-                                                <Insets right="15.0" />
                                              </padding>
                                           </GridPane>
                                        </items>
