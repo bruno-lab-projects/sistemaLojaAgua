@@ -13,10 +13,6 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.chart.BarChart?>
-<?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.NumberAxis?>
-<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -133,12 +129,11 @@
                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                              </rowConstraints>
                                              <children>
-                                                <Label alignment="TOP_LEFT" text="Visualizar pedidos do dia:" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
+                                                <Label alignment="TOP_LEFT" style="-fx-background-color: red;" text="REMOVER EM BREVE" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <DatePicker fx:id="pedidoDatePicker" editable="false" prefWidth="200.0" showWeekNumbers="false" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
                                              </children>
                                              <opaqueInsets>
                                                 <Insets right="15.0" />
@@ -155,10 +150,16 @@
                                  <children>
                                     <VBox prefHeight="481.0" prefWidth="1242.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
-                                          <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="PEDIDOS DO DIA">
-                                             <font>
-                                                <Font name="System Bold" size="18.0" />
-                                             </font></Label>
+                                          <HBox alignment="CENTER" prefHeight="29.0" prefWidth="1222.0" spacing="10.0">
+                                             <children>
+                                                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="PEDIDOS DO DIA">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <DatePicker fx:id="pedidoDatePicker" editable="false" prefHeight="25.0" prefWidth="108.0" showWeekNumbers="false" />
+                                             </children>
+                                          </HBox>
                                           <HBox prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
                                              <children>
                                                 <VBox prefHeight="200.0" prefWidth="100.0" HBox.hgrow="ALWAYS">

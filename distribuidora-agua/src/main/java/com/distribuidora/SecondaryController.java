@@ -69,6 +69,7 @@ public class SecondaryController {
     @FXML private TableColumn<Pedido, String> colFinData;
     @FXML private TableColumn<Pedido, Double> colFinValor;
     @FXML private Button btnBaixarFinanceiro;
+    @FXML private Label lblTituloPendenciasFinanceiras;
 
     // Injeções FXML para Pendências de Garrafão
     @FXML private TableView<Pedido> tabelaPendenciaGarrafao;
@@ -77,12 +78,12 @@ public class SecondaryController {
     @FXML private TableColumn<Pedido, String> colGarEndereco;
     @FXML private TableColumn<Pedido, String> colGarData;
     @FXML private Button btnBaixarGarrafao;
+    @FXML private Label lblTituloPendenciasGarrafao;
 
     // Componentes do Dashboard
     @FXML private ComboBox<String> comboPeriodoDashboard;
     @FXML private Label lblTotalVendido;
     @FXML private Label lblQtdPedidos;
-    @FXML private Label lblGarrafoesNaRua;
     @FXML private javafx.scene.chart.PieChart graficoProdutos;
     @FXML private javafx.scene.chart.BarChart<String, Number> graficoFuncionarios;
     @FXML private javafx.scene.chart.BarChart<String, Number> graficoHorarios;
@@ -644,6 +645,9 @@ public class SecondaryController {
         pendenciasFinanceiraData.clear();
         pendenciasGarrafaoData.clear();
         
+        int contadorFinanceiro = 0;
+        int contadorGarrafao = 0;
+        
         String sql = "SELECT p.id, " +
                      "COALESCE(c.nome, p.nome_avulso) as cliente, " +
                      "CASE " +
@@ -688,19 +692,33 @@ public class SecondaryController {
                 // Adiciona à tabela financeira se tem pendência de pagamento
                 if (pendPagamento == 1) {
                     pendenciasFinanceiraData.add(pedido);
+                    contadorFinanceiro++;
                 }
                 
                 // Adiciona à tabela de garrafão se tem pendência de garrafão
                 if (pendGarrafao == 1) {
                     pendenciasGarrafaoData.add(pedido);
+                    contadorGarrafao++;
                 }
             }
 
             tabelaPendenciaFinanceira.setItems(pendenciasFinanceiraData);
             tabelaPendenciaGarrafao.setItems(pendenciasGarrafaoData);
+            
+            // Atualiza os títulos com as contagens
+            atualizarTitulosPendencias(contadorFinanceiro, contadorGarrafao);
 
         } catch (SQLException e) {
             System.err.println("Erro ao carregar pendências: " + e.getMessage());
+        }
+    }
+
+    private void atualizarTitulosPendencias(int contadorFinanceiro, int contadorGarrafao) {
+        if (lblTituloPendenciasFinanceiras != null) {
+            lblTituloPendenciasFinanceiras.setText("Pendências Financeiras (" + contadorFinanceiro + ")");
+        }
+        if (lblTituloPendenciasGarrafao != null) {
+            lblTituloPendenciasGarrafao.setText("Pendências de Garrafão (" + contadorGarrafao + ")");
         }
     }
 
@@ -783,7 +801,6 @@ public class SecondaryController {
         }
 
         carregarKPIs(dataInicio, dataFim);
-        carregarGarrafoesNaRua();
         carregarGraficoProdutos(dataInicio, dataFim);
         carregarGraficoFuncionarios(dataInicio, dataFim);
         carregarGraficoHorarios(dataInicio, dataFim);
@@ -949,32 +966,6 @@ public class SecondaryController {
             
         } catch (SQLException e) {
             System.err.println("Erro ao carregar top clientes: " + e.getMessage());
-        }
-    }
-
-    private void carregarGarrafoesNaRua() {
-        if (lblGarrafoesNaRua == null) return;
-        
-        String sql = "SELECT COUNT(*) as qtd FROM Pedidos WHERE pendencia_garrafao = 1";
-
-        try (Connection conn = Database.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                int qtd = rs.getInt("qtd");
-                lblGarrafoesNaRua.setText(String.valueOf(qtd));
-                
-                // Muda cor para vermelho se > 20
-                if (qtd > 20) {
-                    lblGarrafoesNaRua.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                } else {
-                    lblGarrafoesNaRua.setStyle("-fx-text-fill: black;");
-                }
-            }
-            
-        } catch (SQLException e) {
-            System.err.println("Erro ao carregar garrafões na rua: " + e.getMessage());
         }
     }
 

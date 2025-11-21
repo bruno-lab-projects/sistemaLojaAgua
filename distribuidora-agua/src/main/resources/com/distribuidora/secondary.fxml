@@ -51,8 +51,6 @@
                                 <columnConstraints>
                                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                                 </columnConstraints>
                                 <rowConstraints>
                                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -86,20 +84,7 @@
                                           </Label>
                                        </children>
                                     </VBox>
-                                    <VBox alignment="CENTER" style="-fx-background-color: #fff3e0; -fx-padding: 15; -fx-background-radius: 10;" GridPane.columnIndex="2">
-                                       <children>
-                                          <Label text="Garrafões na Rua">
-                                             <font>
-                                                <Font size="14.0" />
-                                             </font>
-                                          </Label>
-                                          <Label fx:id="lblGarrafoesNaRua" text="0">
-                                             <font>
-                                                <Font name="System Bold" size="24.0" />
-                                             </font>
-                                          </Label>
-                                       </children>
-                                    </VBox>
+
                                  </children>
                               </GridPane>
                               <HBox spacing="15.0" VBox.vgrow="ALWAYS">
@@ -204,7 +189,7 @@
                                  <children>
                                     <VBox layoutX="138.0" layoutY="89.0" prefHeight="735.5" prefWidth="635.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
-                                          <Label text="Pendências Financeiras">
+                                          <Label fx:id="lblTituloPendenciasFinanceiras" text="Pendências Financeiras">
                                              <font>
                                                 <Font name="System Bold" size="18.0" />
                                              </font>
@@ -233,7 +218,7 @@
                                  <children>
                                     <VBox layoutX="14.0" layoutY="75.0" prefHeight="735.5" prefWidth="634.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
-                                          <Label text="Pendências de Garrafão">
+                                          <Label fx:id="lblTituloPendenciasGarrafao" text="Pendências de Garrafão">
                                              <font>
                                                 <Font name="System Bold" size="18.0" />
                                              </font>
