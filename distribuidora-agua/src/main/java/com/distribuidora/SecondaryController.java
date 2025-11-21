@@ -85,6 +85,7 @@ public class SecondaryController {
     @FXML private Label lblTotalVendido;
     @FXML private Label lblQtdPedidos;
     @FXML private javafx.scene.chart.PieChart graficoProdutos;
+    @FXML private javafx.scene.chart.PieChart graficoPagamentos;
     @FXML private javafx.scene.chart.BarChart<String, Number> graficoFuncionarios;
     @FXML private javafx.scene.chart.BarChart<String, Number> graficoHorarios;
     @FXML private TableView<TopClienteDTO> tabelaTopClientes;
@@ -826,6 +827,7 @@ public class SecondaryController {
 
         carregarKPIs(dataInicio, dataFim);
         carregarGraficoProdutos(dataInicio, dataFim);
+        carregarGraficoPagamentos(dataInicio, dataFim);
         carregarGraficoFuncionarios(dataInicio, dataFim);
         carregarGraficoHorarios(dataInicio, dataFim);
         carregarTopClientes(dataInicio, dataFim);
@@ -896,14 +898,48 @@ public class SecondaryController {
         }
     }
 
+    private void carregarGraficoPagamentos(LocalDate inicio, LocalDate fim) {
+        if (graficoPagamentos == null) return;
+        
+        graficoPagamentos.getData().clear();
+        
+        String sql = "SELECT COALESCE(p.forma_pagamento, 'Não Informado') as pagamento, COUNT(*) as qtd " +
+                     "FROM Pedidos p " +
+                     "WHERE DATE(p.data_hora) BETWEEN ? AND ? " +
+                     "AND p.status != 'Cancelado' " +
+                     "GROUP BY p.forma_pagamento " +
+                     "ORDER BY qtd DESC";
+
+        try (Connection conn = Database.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, inicio.toString());
+            pstmt.setString(2, fim.toString());
+            
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                String pagamento = rs.getString("pagamento");
+                int qtd = rs.getInt("qtd");
+                
+                javafx.scene.chart.PieChart.Data slice = new javafx.scene.chart.PieChart.Data(
+                    pagamento + " (" + qtd + ")", qtd
+                );
+                graficoPagamentos.getData().add(slice);
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao carregar gráfico de pagamentos: " + e.getMessage());
+        }
+    }
+
     private void carregarGraficoFuncionarios(LocalDate inicio, LocalDate fim) {
         if (graficoFuncionarios == null) return;
         
         graficoFuncionarios.getData().clear();
         
-        String sql = "SELECT COALESCE(f.nome, 'Sem Funcionário') as funcionario, COUNT(*) as entregas " +
+        String sql = "SELECT f.nome as funcionario, COUNT(*) as entregas " +
                      "FROM Pedidos p " +
-                     "LEFT JOIN Funcionarios f ON p.funcionario_id = f.id " +
+                     "INNER JOIN Funcionarios f ON p.funcionario_id = f.id " +
                      "WHERE DATE(p.data_hora_entregue) BETWEEN ? AND ? " +
                      "AND p.status = 'Entregue' " +
                      "GROUP BY f.nome " +
@@ -923,7 +959,11 @@ public class SecondaryController {
                 String funcionario = rs.getString("funcionario");
                 int entregas = rs.getInt("entregas");
                 
-                series.getData().add(new javafx.scene.chart.XYChart.Data<>(funcionario, entregas));
+                // Adiciona o número de entregas no nome do funcionário
+                String labelComNumero = funcionario + " (" + entregas + ")";
+                
+                javafx.scene.chart.XYChart.Data<String, Number> data = new javafx.scene.chart.XYChart.Data<>(labelComNumero, entregas);
+                series.getData().add(data);
             }
             
             graficoFuncionarios.getData().add(series);
@@ -948,7 +988,7 @@ public class SecondaryController {
                      "AND p.status != 'Cancelado' " +
                      "GROUP BY cliente " +
                      "ORDER BY compras DESC " +
-                     "LIMIT 5";
+                     "LIMIT 50";
 
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -998,7 +1038,7 @@ public class SecondaryController {
         
         graficoHorarios.getData().clear();
         
-        String sql = "SELECT strftime('%H', data_hora) as hora, COUNT(*) as qtd " +
+        String sql = "SELECT CAST(strftime('%H', data_hora) AS INTEGER) as hora, COUNT(*) as qtd " +
                      "FROM Pedidos " +
                      "WHERE DATE(data_hora) BETWEEN ? AND ? " +
                      "AND status != 'Cancelado' " +
@@ -1016,10 +1056,11 @@ public class SecondaryController {
             
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                String hora = rs.getString("hora") + "h";
+                int horaInt = rs.getInt("hora");
+                String horaFormatada = String.format("%02d:00", horaInt);
                 int qtd = rs.getInt("qtd");
                 
-                series.getData().add(new javafx.scene.chart.XYChart.Data<>(hora, qtd));
+                series.getData().add(new javafx.scene.chart.XYChart.Data<>(horaFormatada, qtd));
             }
             
             graficoHorarios.getData().add(series);
@@ -1035,7 +1076,8 @@ public class SecondaryController {
         ObservableList<Cliente> clientesInativos = FXCollections.observableArrayList();
         
         String sql = "SELECT c.id, c.nome, c.telefone, c.endereco, c.predio_casa, c.numero, c.observacoes, " +
-                     "MAX(p.data_hora) as ultima_compra " +
+                     "MAX(p.data_hora) as ultima_compra, " +
+                     "CAST(julianday('now') - julianday(MAX(p.data_hora)) AS INTEGER) as dias_sem_comprar " +
                      "FROM Clientes c " +
                      "JOIN Pedidos p ON c.id = p.cliente_id " +
                      "GROUP BY c.id " +
@@ -1057,6 +1099,11 @@ public class SecondaryController {
                     rs.getString("numero"),
                     rs.getString("observacoes")
                 );
+                
+                int diasSemComprar = rs.getInt("dias_sem_comprar");
+                // Armazena os dias na propriedade de observações temporariamente (só para exibição)
+                cliente.setObservacoes(String.valueOf(diasSemComprar));
+                
                 clientesInativos.add(cliente);
             }
             
@@ -1066,7 +1113,10 @@ public class SecondaryController {
             if (colInativoNome != null && colInativoNome.getCellValueFactory() == null) {
                 colInativoNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
                 colInativoTelefone.setCellValueFactory(cellData -> cellData.getValue().telefoneProperty());
-                colInativoUltimaCompra.setCellValueFactory(cellData -> new SimpleStringProperty("Há mais de 30 dias"));
+                colInativoUltimaCompra.setCellValueFactory(cellData -> {
+                    String dias = cellData.getValue().getObservacoes();
+                    return new SimpleStringProperty("Há " + dias + " dias");
+                });
             }
             
         } catch (SQLException e) {
