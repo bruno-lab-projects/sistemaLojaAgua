@@ -26,7 +26,7 @@
    <children>
       <TabPane prefHeight="482.0" prefWidth="376.0" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
         <tabs>
-          <Tab text="Pedidos">
+          <Tab text="PEDIDOS">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -52,18 +52,18 @@
                                         <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                       </rowConstraints>
                                        <children>
-                                          <Button fx:id="criarPedidoButton" mnemonicParsing="false" onAction="#handleCriarPedido" text="Criar pedido" GridPane.rowIndex="5">
+                                          <Button fx:id="criarPedidoButton" mnemonicParsing="false" onAction="#handleCriarPedido" text="CRIAR PEDIDO" GridPane.rowIndex="5">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Button>
-                                          <Label text="Quantidade" GridPane.rowIndex="3">
+                                          <Label text="QUANTIDADE" GridPane.rowIndex="3">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                           <ComboBox fx:id="pedidoProdutoCombo" prefHeight="38.0" prefWidth="142.0" promptText="SELECIONE" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                          <Label text="Água" GridPane.rowIndex="2">
+                                          <Label text="ÁGUA" GridPane.rowIndex="2">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -73,19 +73,19 @@
                                                 <Insets left="3.0" right="3.0" />
                                              </GridPane.margin>
                                           </ComboBox>
-                                          <Label text="Cliente">
+                                          <Label text="CLIENTE">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                           <TextField fx:id="pedidoNomeAvulsoField" promptText="Nome do cliente                    OU" GridPane.columnIndex="1" />
-                                          <Label text="Endereço" GridPane.rowIndex="1">
+                                          <Label text="ENDEREÇO" GridPane.rowIndex="1">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                           <Spinner fx:id="pedidoQtdSpinner" prefHeight="38.0" prefWidth="92.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                          <Label text="Forma de pagamento" GridPane.rowIndex="4">
+                                          <Label text="FORMA DE PAGAMENTO" GridPane.rowIndex="4">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -106,7 +106,7 @@
                                                 <Insets left="3.0" right="3.0" />
                                              </GridPane.margin>
                                           </TextField>
-                                          <Button fx:id="limparPedidoButton" mnemonicParsing="false" onAction="#handleLimparPedido" text="Limpar formulário" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                          <Button fx:id="limparPedidoButton" mnemonicParsing="false" onAction="#handleLimparPedido" text="LIMPAR FORMULÁRIO" GridPane.columnIndex="1" GridPane.rowIndex="5">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -237,7 +237,7 @@
                      </children></AnchorPane>
             </content>
           </Tab>
-          <Tab text="Clientes">
+          <Tab text="CLIENTES">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -247,12 +247,12 @@
                                  <children>
                                     <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
-                                          <Label text="Adicionar cliente">
+                                          <Label text="ADICIONAR CLIENTE">
                                              <VBox.margin>
                                                 <Insets bottom="20.0" />
                                              </VBox.margin>
                                              <font>
-                                                <Font name="System Bold" size="18.0" />
+                                                <Font name="System Bold" size="24.0" />
                                              </font>
                                           </Label>
                                           <Label text="Nome">

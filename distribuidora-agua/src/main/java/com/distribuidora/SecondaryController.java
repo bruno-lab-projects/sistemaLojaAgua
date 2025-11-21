@@ -125,7 +125,7 @@ public class SecondaryController {
                     telefoneField.setText(newSelection.getTelefone());
                     clientePredioField.setText(newSelection.getPredioCasa());
                     clienteNumeroField.setText(newSelection.getNumero());
-                    clienteRuaField.setText(newSelection.getEndereco());
+                    clienteRuaField.setText(newSelection.getEnderecoRua());  // USA APENAS A RUA!
                     observacoesField.setText(newSelection.getObservacoes());
 
                     // 2. Armazene o cliente selecionado
@@ -230,10 +230,11 @@ public class SecondaryController {
                     rs.getInt("id"),
                     rs.getString("nome"),
                     rs.getString("telefone"),
-                    rs.getString("endereco_completo"),
+                    rs.getString("endereco_completo"),     // Endereço completo para tabela
                     rs.getString("predio_casa"),
                     rs.getString("numero"),
-                    rs.getString("observacoes")
+                    rs.getString("observacoes"),
+                    rs.getString("endereco")               // Apenas a rua para edição
                 );
                 clientesData.add(cliente);
             }
@@ -1090,14 +1091,20 @@ public class SecondaryController {
             
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
+                // Monta o endereço completo para exibição
+                String enderecoCompleto = rs.getString("predio_casa") + ", " + 
+                                         rs.getString("numero") + ", " + 
+                                         rs.getString("endereco");
+                
                 Cliente cliente = new Cliente(
                     rs.getInt("id"),
                     rs.getString("nome"),
                     rs.getString("telefone"),
-                    rs.getString("endereco"),
+                    enderecoCompleto,                          // Endereço completo
                     rs.getString("predio_casa"),
                     rs.getString("numero"),
-                    rs.getString("observacoes")
+                    rs.getString("observacoes"),
+                    rs.getString("endereco")                   // Apenas a rua
                 );
                 
                 int diasSemComprar = rs.getInt("dias_sem_comprar");

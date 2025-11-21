@@ -8,17 +8,19 @@ public class Cliente {
     private SimpleIntegerProperty id;
     private SimpleStringProperty nome;
     private SimpleStringProperty telefone;
-    private SimpleStringProperty endereco;
+    private SimpleStringProperty endereco;        // Endereço COMPLETO para exibição na tabela
+    private SimpleStringProperty enderecoRua;     // Apenas a RUA (logradouro)
     private SimpleStringProperty predioCasa;
     private SimpleStringProperty numero;
     private SimpleStringProperty observacoes;
 
     // Construtor
-    public Cliente(int id, String nome, String telefone, String endereco, String predioCasa, String numero, String observacoes) {
+    public Cliente(int id, String nome, String telefone, String endereco, String predioCasa, String numero, String observacoes, String enderecoRua) {
         this.id = new SimpleIntegerProperty(id);
         this.nome = new SimpleStringProperty(nome);
         this.telefone = new SimpleStringProperty(telefone);
-        this.endereco = new SimpleStringProperty(endereco);
+        this.endereco = new SimpleStringProperty(endereco);           // Endereço completo
+        this.enderecoRua = new SimpleStringProperty(enderecoRua);    // Apenas rua
         this.predioCasa = new SimpleStringProperty(predioCasa);
         this.numero = new SimpleStringProperty(numero);
         this.observacoes = new SimpleStringProperty(observacoes);
@@ -74,6 +76,19 @@ public class Cliente {
 
     public SimpleStringProperty enderecoProperty() {
         return endereco;
+    }
+
+    // Getters e Setters para Endereco Rua (apenas logradouro)
+    public String getEnderecoRua() {
+        return enderecoRua.get();
+    }
+
+    public void setEnderecoRua(String enderecoRua) {
+        this.enderecoRua.set(enderecoRua);
+    }
+
+    public SimpleStringProperty enderecoRuaProperty() {
+        return enderecoRua;
     }
 
     // Getters e Setters para Predio/Casa

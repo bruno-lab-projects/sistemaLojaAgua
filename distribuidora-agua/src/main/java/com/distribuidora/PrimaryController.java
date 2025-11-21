@@ -677,14 +677,20 @@ public class PrimaryController {
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
+                // Monta o endereço completo para exibição no ComboBox
+                String enderecoCompleto = rs.getString("predio_casa") + ", " + 
+                                         rs.getString("numero") + ", " + 
+                                         rs.getString("endereco");
+                
                 Cliente cliente = new Cliente(
                     rs.getInt("id"),
                     rs.getString("nome"),
                     rs.getString("telefone"),
-                    rs.getString("endereco"),
+                    enderecoCompleto,                          // Endereço completo
                     rs.getString("predio_casa"),
                     rs.getString("numero"),
-                    rs.getString("observacoes")
+                    rs.getString("observacoes"),
+                    rs.getString("endereco")                   // Apenas a rua
                 );
                 clientesMestra.add(cliente);
             }
