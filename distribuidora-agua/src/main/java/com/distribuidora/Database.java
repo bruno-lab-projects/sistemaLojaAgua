@@ -9,14 +9,15 @@ public class Database {
 
     private static String NOME_ARQUIVO_DB = "distribuidora.db";
 
-    public static Connection connect() {
+    /**
+     * Estabelece uma conexão com o banco de dados SQLite.
+     * 
+     * @return Connection ativa para o banco de dados
+     * @throws SQLException se houver erro ao conectar
+     */
+    public static Connection connect() throws SQLException {
         String url = "jdbc:sqlite:" + NOME_ARQUIVO_DB;
-        try {
-            return DriverManager.getConnection(url);
-        } catch (SQLException e) {
-            System.err.println("Erro ao conectar ao banco: " + e.getMessage());
-            return null;
-        }
+        return DriverManager.getConnection(url);
     }
 
     public static void initialize() {
@@ -64,18 +65,13 @@ public class Database {
                 + ");";
 
         // Cria conexão e statement usando try-with-resources
-        try (Connection conn = connect()) {
-            if (conn == null) {
-                System.err.println("Não foi possível conectar ao banco de dados.");
-                return;
-            }
-            try (Statement stmt = conn.createStatement()) {
-                // Cria as tabelas
-                stmt.execute(sqlClientes);
-                stmt.execute(sqlFuncionarios);
-                stmt.execute(sqlProdutos);
-                stmt.execute(sqlPedidos);
-            }
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement()) {
+            // Cria as tabelas
+            stmt.execute(sqlClientes);
+            stmt.execute(sqlFuncionarios);
+            stmt.execute(sqlProdutos);
+            stmt.execute(sqlPedidos);
         } catch (SQLException e) {
             System.err.println("Erro ao inicializar o banco: " + e.getMessage());
         }

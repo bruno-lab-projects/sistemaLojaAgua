@@ -1,5 +1,7 @@
 package com.distribuidora;
 
+import com.distribuidora.util.AlertUtils;
+import com.distribuidora.util.FormatUtils;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,20 +24,16 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
-import java.util.function.UnaryOperator;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
@@ -122,7 +120,7 @@ public class PrimaryController {
     @FXML
     private void initialize() {
         // Configura máscara de telefone
-        configurarMascaraTelefone();
+        FormatUtils.configurarMascaraTelefone(telefoneField);
         
         // Configura autocomplete para o ComboBox de clientes
         configurarAutocompleteClientes();
@@ -158,7 +156,7 @@ public class PrimaryController {
         colFeitosHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
         colFeitosTotal.setCellValueFactory(cellData -> {
             double valor = cellData.getValue().getPrecoTotal();
-            return new SimpleStringProperty(String.format("R$ %.2f", valor));
+            return new SimpleStringProperty(FormatUtils.formatarMoeda(valor));
         });
         colFeitosPagamento.setCellValueFactory(cellData -> {
             // Converte o Enum para String para exibir na tabela
@@ -174,7 +172,7 @@ public class PrimaryController {
         colNaRuaHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
         colNaRuaTotal.setCellValueFactory(cellData -> {
             double valor = cellData.getValue().getPrecoTotal();
-            return new SimpleStringProperty(String.format("R$ %.2f", valor));
+            return new SimpleStringProperty(FormatUtils.formatarMoeda(valor));
         });
         colNaRuaFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
 
@@ -186,7 +184,7 @@ public class PrimaryController {
         colEntreguesHora.setCellValueFactory(new PropertyValueFactory<>("hora"));
         colEntreguesTotal.setCellValueFactory(cellData -> {
             double valor = cellData.getValue().getPrecoTotal();
-            return new SimpleStringProperty(String.format("R$ %.2f", valor));
+            return new SimpleStringProperty(FormatUtils.formatarMoeda(valor));
         });
         colEntreguesFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
 
@@ -414,12 +412,12 @@ public class PrimaryController {
                 funcionarios.add(new Funcionario(rs.getInt("id"), rs.getString("nome")));
             }
         } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao carregar funcionários: " + e.getMessage()).show();
+            AlertUtils.mostrarErro("Erro", "Erro ao carregar funcionários: " + e.getMessage());
             return false;
         }
 
         if (funcionarios.isEmpty()) {
-            new Alert(AlertType.WARNING, "Nenhum funcionário cadastrado!").show();
+            AlertUtils.mostrarAviso("Aviso", "Nenhum funcionário cadastrado!");
             return false;
         }
 
@@ -490,11 +488,11 @@ public class PrimaryController {
             // Recarrega as tabelas
             loadPedidosPorData();
             
-            new Alert(AlertType.INFORMATION, "Pedido marcado como Entregue!").show();
+            AlertUtils.mostrarSucesso("Sucesso", "Pedido marcado como Entregue!");
             return true;
             
         } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+            AlertUtils.mostrarErro("Erro", "Erro ao atualizar pedido: " + e.getMessage());
             return false;
         }
     }
@@ -505,19 +503,9 @@ public class PrimaryController {
      */
     private boolean handleRetornoParaFeitos(Pedido pedido) {
         // Confirma a ação
-        Alert confirmacao = new Alert(AlertType.CONFIRMATION);
-        confirmacao.setTitle("Confirmar Retorno");
-        confirmacao.setHeaderText("Retornar pedido para Pendentes");
-        confirmacao.setContentText("Isso irá resetar o pedido, removendo funcionário e horário de saída. Confirmar?");
-        
-        final boolean[] confirmed = {false};
-        confirmacao.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                confirmed[0] = true;
-            }
-        });
-        
-        if (!confirmed[0]) {
+        if (!AlertUtils.mostrarConfirmacao(
+            "Confirmar Retorno",
+            "Retornar pedido para Pendentes?\n\nIsso irá resetar o pedido, removendo funcionário e horário de saída.")) {
             return false;
         }
         
@@ -535,11 +523,11 @@ public class PrimaryController {
             // Recarrega as tabelas
             loadPedidosPorData();
             
-            new Alert(AlertType.INFORMATION, "Pedido retornado para Pendentes!").show();
+            AlertUtils.mostrarSucesso("Sucesso", "Pedido retornado para Pendentes!");
             return true;
             
         } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+            AlertUtils.mostrarErro("Erro", "Erro ao atualizar pedido: " + e.getMessage());
             return false;
         }
     }
@@ -698,112 +686,9 @@ public class PrimaryController {
         }
     }
 
-    /**
-     * Método utilitário que capitaliza cada palavra de um nome.
-     * Exemplo: "BRUNO SANTOS" ou "bruno santos" → "Bruno Santos"
-     */
-    private String capitalizarNome(String nome) {
-        if (nome == null || nome.isBlank()) {
-            return nome;
-        }
-        
-        String[] palavras = nome.trim().toLowerCase().split("\\s+");
-        StringBuilder resultado = new StringBuilder();
-        
-        for (String palavra : palavras) {
-            if (!palavra.isEmpty()) {
-                // Capitaliza a primeira letra e mantém o resto em minúsculo
-                resultado.append(Character.toUpperCase(palavra.charAt(0)))
-                         .append(palavra.substring(1))
-                         .append(" ");
-            }
-        }
-        
-        return resultado.toString().trim();
-    }
-
-    private void configurarMascaraTelefone() {
-        // Cria um TextFormatter que formata automaticamente
-        UnaryOperator<TextFormatter.Change> filter = change -> {
-            String newText = change.getControlNewText();
-            
-            // Remove tudo que não é dígito
-            String apenasNumeros = newText.replaceAll("[^0-9]", "");
-            
-            // Se apagou tudo, permite campo vazio
-            if (apenasNumeros.isEmpty()) {
-                change.setText("");
-                change.setRange(0, change.getControlText().length());
-                return change;
-            }
-            
-            // Limita a 11 dígitos
-            if (apenasNumeros.length() > 11) {
-                return null; // Rejeita a mudança
-            }
-            
-            // Formata o telefone
-            String formatted = formatarTelefone(apenasNumeros);
-            
-            // Atualiza o change com o texto formatado
-            change.setText(formatted);
-            change.setRange(0, change.getControlText().length());
-            
-            // Ajusta a posição do cursor
-            int newCaretPos = formatted.length();
-            change.setCaretPosition(newCaretPos);
-            change.setAnchor(newCaretPos);
-            
-            return change;
-        };
-        
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        telefoneField.setTextFormatter(textFormatter);
-        
-        // Define o texto inicial como "(71) 9"
-        telefoneField.setText("(71) 9");
-        
-        // Ao focar no campo vazio, preenche com o padrão (71) 9
-        telefoneField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-            if (isNowFocused && telefoneField.getText().isEmpty()) {
-                telefoneField.setText("(71) 9");
-                telefoneField.positionCaret(telefoneField.getText().length());
-            }
-        });
-    }
-    
-    private String formatarTelefone(String numeros) {
-        // Formata: (DD) 9 9999-9999
-        StringBuilder formatted = new StringBuilder();
-        
-        int length = numeros.length();
-        
-        if (length <= 2) {
-            // Apenas DDD: (71
-            formatted.append("(").append(numeros);
-        } else if (length == 3) {
-            // DDD completo + primeiro dígito: (71) 9
-            formatted.append("(").append(numeros.substring(0, 2))
-                     .append(") ").append(numeros.substring(2));
-        } else if (length <= 7) {
-            // DDD + primeiros dígitos: (71) 9 1234
-            formatted.append("(").append(numeros.substring(0, 2))
-                     .append(") ").append(numeros.substring(2, 3))
-                     .append(" ").append(numeros.substring(3));
-        } else {
-            // Formato completo: (71) 9 1234-5678
-            formatted.append("(").append(numeros.substring(0, 2))
-                     .append(") ").append(numeros.substring(2, 3))
-                     .append(" ").append(numeros.substring(3, 7))
-                     .append("-").append(numeros.substring(7));
-        }
-        
-        return formatted.toString();
-    }
-
     @FXML
     private void handleSalvarCliente() {
-        String nome = capitalizarNome(nomeField.getText());
+        String nome = FormatUtils.capitalizarNome(nomeField.getText());
         String telefone = telefoneField.getText();
         String endereco = enderecoField.getText();
         String predioCasa = predioCasaField.getText();
@@ -811,7 +696,7 @@ public class PrimaryController {
         String observacoes = observacoesField.getText();
 
         if (nome.isBlank()) {
-            new Alert(AlertType.ERROR, "O nome é obrigatório.").show();
+            AlertUtils.mostrarErro("Erro", "O nome é obrigatório.");
             return;
         }
 
@@ -826,9 +711,9 @@ public class PrimaryController {
             pstmt.setString(5, blocoNumero);
             pstmt.setString(6, observacoes);
             pstmt.executeUpdate();
-            new Alert(AlertType.INFORMATION, "Cliente salvo com sucesso!").show();
+            AlertUtils.mostrarSucesso("Sucesso", "Cliente salvo com sucesso!");
         } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao salvar: " + e.getMessage()).show();
+            AlertUtils.mostrarErro("Erro", "Erro ao salvar: " + e.getMessage());
         }
 
         // Recarrega lista de clientes e limpa o formulário
@@ -894,7 +779,12 @@ public class PrimaryController {
 
         // 2. Validações
         if (produto == null) {
-            new Alert(AlertType.ERROR, "Selecione um Produto.").show();
+            AlertUtils.mostrarErro("Erro", "Selecione um Produto.");
+            return;
+        }
+
+        if (quantidade <= 0) {
+            AlertUtils.mostrarErro("Erro", "A quantidade deve ser maior que zero.");
             return;
         }
 
@@ -917,7 +807,7 @@ public class PrimaryController {
                     pstmt.setNull(9, java.sql.Types.VARCHAR); // numero_avulso
                 } else {
                     pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
-                    pstmt.setString(6, capitalizarNome(nomeAvulso));
+                    pstmt.setString(6, FormatUtils.capitalizarNome(nomeAvulso));
                     pstmt.setString(7, ruaAvulso);
                     pstmt.setString(8, tipoAvulso);
                     pstmt.setString(9, numeroAvulso);
@@ -937,10 +827,10 @@ public class PrimaryController {
                 }
 
                 pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Pedido criado com sucesso!").show();
+                AlertUtils.mostrarSucesso("Sucesso", "Pedido criado com sucesso!");
 
             } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao criar pedido: " + e.getMessage()).show();
+                AlertUtils.mostrarErro("Erro", "Erro ao criar pedido: " + e.getMessage());
             }
 
         } else {
@@ -961,7 +851,7 @@ public class PrimaryController {
                     pstmt.setNull(7, java.sql.Types.VARCHAR); // numero_avulso
                 } else {
                     pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
-                    pstmt.setString(4, capitalizarNome(nomeAvulso));
+                    pstmt.setString(4, FormatUtils.capitalizarNome(nomeAvulso));
                     pstmt.setString(5, ruaAvulso);
                     pstmt.setString(6, tipoAvulso);
                     pstmt.setString(7, numeroAvulso);
@@ -981,10 +871,10 @@ public class PrimaryController {
                 pstmt.setInt(9, pedidoEmEdicao.getId());
 
                 pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Pedido atualizado com sucesso!").show();
+                AlertUtils.mostrarSucesso("Sucesso", "Pedido atualizado com sucesso!");
 
             } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+                AlertUtils.mostrarErro("Erro", "Erro ao atualizar pedido: " + e.getMessage());
             }
         }
 
@@ -1045,7 +935,7 @@ public class PrimaryController {
         if (pedido == null) pedido = tablePedidosEntregues.getSelectionModel().getSelectedItem();
 
         if (pedido == null) {
-            new Alert(AlertType.ERROR, "Selecione um pedido para editar.").show();
+            AlertUtils.mostrarErro("Erro", "Selecione um pedido para editar.");
             return;
         }
 
@@ -1211,11 +1101,11 @@ public class PrimaryController {
                 try {
                     App.setRoot("secondary");
                 } catch (IOException e) {
-                    new Alert(AlertType.ERROR, "Erro ao carregar tela: " + e.getMessage()).show();
+                    AlertUtils.mostrarErro("Erro", "Erro ao carregar tela: " + e.getMessage());
                 }
             } else {
                 // Senha incorreta - mostra erro
-                new Alert(AlertType.ERROR, "Senha incorreta!").show();
+                AlertUtils.mostrarErro("Erro", "Senha incorreta!");
             }
         });
         // Se o usuário cancelar (ifPresent não executa), não faz nada
@@ -1227,7 +1117,7 @@ public class PrimaryController {
         Pedido pedidoSelecionado = tablePedidosFeitos.getSelectionModel().getSelectedItem();
         
         if (pedidoSelecionado == null) {
-            new Alert(AlertType.WARNING, "Selecione um pedido na tabela 'Pendentes' primeiro!").show();
+            AlertUtils.mostrarAviso("Aviso", "Selecione um pedido na tabela 'Pendentes' primeiro!");
             return;
         }
 
@@ -1243,12 +1133,12 @@ public class PrimaryController {
                 funcionarios.add(new Funcionario(rs.getInt("id"), rs.getString("nome")));
             }
         } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao carregar funcionários: " + e.getMessage()).show();
+            AlertUtils.mostrarErro("Erro", "Erro ao carregar funcionários: " + e.getMessage());
             return;
         }
 
         if (funcionarios.isEmpty()) {
-            new Alert(AlertType.WARNING, "Nenhum funcionário cadastrado!").show();
+            AlertUtils.mostrarAviso("Aviso", "Nenhum funcionário cadastrado!");
             return;
         }
 
@@ -1277,7 +1167,7 @@ public class PrimaryController {
                 loadPedidosPorData();
                 
             } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+                AlertUtils.mostrarErro("Erro", "Erro ao atualizar pedido: " + e.getMessage());
             }
         });
     }
@@ -1288,7 +1178,7 @@ public class PrimaryController {
         Pedido pedidoSelecionado = tablePedidosNaRua.getSelectionModel().getSelectedItem();
         
         if (pedidoSelecionado == null) {
-            new Alert(AlertType.WARNING, "Selecione um pedido na tabela 'Saíram para entrega' primeiro!").show();
+            AlertUtils.mostrarAviso("Aviso", "Selecione um pedido na tabela 'Saíram para entrega' primeiro!");
             return;
         }
 
@@ -1333,13 +1223,13 @@ public class PrimaryController {
                     pstmt.setInt(5, pedidoSelecionado.getId());
                     
                     pstmt.executeUpdate();
-                    new Alert(AlertType.INFORMATION, "Pedido marcado como 'Entregue'!").show();
+                    AlertUtils.mostrarSucesso("Sucesso", "Pedido marcado como 'Entregue'!");
                     
                     // Recarrega as tabelas
                     loadPedidosPorData();
                     
                 } catch (SQLException e) {
-                    new Alert(AlertType.ERROR, "Erro ao atualizar pedido: " + e.getMessage()).show();
+                    AlertUtils.mostrarErro("Erro", "Erro ao atualizar pedido: " + e.getMessage());
                 }
             }
         });
@@ -1359,20 +1249,17 @@ public class PrimaryController {
         }
         
         if (pedidoSelecionado == null) {
-            new Alert(AlertType.WARNING, "Selecione um pedido em qualquer uma das tabelas primeiro!").show();
+            AlertUtils.mostrarAviso("Aviso", "Selecione um pedido em qualquer uma das tabelas primeiro!");
             return;
         }
 
         // Diálogo de confirmação
-        Alert confirmacao = new Alert(AlertType.CONFIRMATION);
-        confirmacao.setTitle("Confirmar Cancelamento");
-        confirmacao.setHeaderText("Tem certeza que deseja cancelar este pedido?");
-        confirmacao.setContentText("Cliente: " + pedidoSelecionado.getClienteNome() + "\n" +
-                                   "Produto: " + pedidoSelecionado.getProdutoNome() + "\n" +
-                                   "Quantidade: " + pedidoSelecionado.getQuantidade());
+        String mensagemConfirmacao = "Tem certeza que deseja cancelar este pedido?\n\n" +
+                                     "Cliente: " + pedidoSelecionado.getClienteNome() + "\n" +
+                                     "Produto: " + pedidoSelecionado.getProdutoNome() + "\n" +
+                                     "Quantidade: " + pedidoSelecionado.getQuantidade();
         
-        // Aguarda a resposta do usuário
-        if (confirmacao.showAndWait().get() != ButtonType.OK) {
+        if (!AlertUtils.mostrarConfirmacao("Confirmar Cancelamento", mensagemConfirmacao)) {
             return; // Usuário cancelou a operação
         }
 
@@ -1386,13 +1273,13 @@ public class PrimaryController {
             pstmt.setInt(2, pedidoSelecionado.getId());
             
             pstmt.executeUpdate();
-            new Alert(AlertType.INFORMATION, "Pedido cancelado!").show();
+            AlertUtils.mostrarSucesso("Sucesso", "Pedido cancelado!");
             
             // Recarrega as tabelas
             loadPedidosPorData();
             
         } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao cancelar pedido: " + e.getMessage()).show();
+            AlertUtils.mostrarErro("Erro", "Erro ao cancelar pedido: " + e.getMessage());
         }
     }
 }

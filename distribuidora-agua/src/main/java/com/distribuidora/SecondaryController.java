@@ -1,5 +1,7 @@
 package com.distribuidora;
 
+import com.distribuidora.util.AlertUtils;
+import com.distribuidora.util.FormatUtils;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,19 +13,14 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.PropertyValueFactory;
-import java.util.function.UnaryOperator;
 
 public class SecondaryController {
 
@@ -106,7 +103,7 @@ public class SecondaryController {
     @FXML
     private void initialize() {
         // Configura máscara de telefone
-        configurarMascaraTelefone();
+        FormatUtils.configurarMascaraTelefone(telefoneField);
         
         // Configura as colunas da tabela de clientes
         colNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
@@ -182,7 +179,7 @@ public class SecondaryController {
                 if (empty || valor == null) {
                     setText(null);
                 } else {
-                    setText(String.format("R$ %.2f", valor));
+                    setText(FormatUtils.formatarMoeda(valor));
                 }
             }
         });
@@ -246,112 +243,9 @@ public class SecondaryController {
         }
     }
 
-    private void configurarMascaraTelefone() {
-        // Cria um TextFormatter que formata automaticamente
-        UnaryOperator<TextFormatter.Change> filter = change -> {
-            String newText = change.getControlNewText();
-            
-            // Remove tudo que não é dígito
-            String apenasNumeros = newText.replaceAll("[^0-9]", "");
-            
-            // Se apagou tudo, permite campo vazio
-            if (apenasNumeros.isEmpty()) {
-                change.setText("");
-                change.setRange(0, change.getControlText().length());
-                return change;
-            }
-            
-            // Limita a 11 dígitos
-            if (apenasNumeros.length() > 11) {
-                return null; // Rejeita a mudança
-            }
-            
-            // Formata o telefone
-            String formatted = formatarTelefone(apenasNumeros);
-            
-            // Atualiza o change com o texto formatado
-            change.setText(formatted);
-            change.setRange(0, change.getControlText().length());
-            
-            // Ajusta a posição do cursor
-            int newCaretPos = formatted.length();
-            change.setCaretPosition(newCaretPos);
-            change.setAnchor(newCaretPos);
-            
-            return change;
-        };
-        
-        TextFormatter<String> textFormatter = new TextFormatter<>(filter);
-        telefoneField.setTextFormatter(textFormatter);
-        
-        // Define o texto inicial como "(71) 9"
-        telefoneField.setText("(71) 9");
-        
-        // Ao focar no campo vazio, preenche com o padrão (71) 9
-        telefoneField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
-            if (isNowFocused && telefoneField.getText().isEmpty()) {
-                telefoneField.setText("(71) 9");
-                telefoneField.positionCaret(telefoneField.getText().length());
-            }
-        });
-    }
-    
-    private String formatarTelefone(String numeros) {
-        // Formata: (DD) 9 9999-9999
-        StringBuilder formatted = new StringBuilder();
-        
-        int length = numeros.length();
-        
-        if (length <= 2) {
-            // Apenas DDD: (71
-            formatted.append("(").append(numeros);
-        } else if (length == 3) {
-            // DDD completo + primeiro dígito: (71) 9
-            formatted.append("(").append(numeros.substring(0, 2))
-                     .append(") ").append(numeros.substring(2));
-        } else if (length <= 7) {
-            // DDD + primeiros dígitos: (71) 9 1234
-            formatted.append("(").append(numeros.substring(0, 2))
-                     .append(") ").append(numeros.substring(2, 3))
-                     .append(" ").append(numeros.substring(3));
-        } else {
-            // Formato completo: (71) 9 1234-5678
-            formatted.append("(").append(numeros.substring(0, 2))
-                     .append(") ").append(numeros.substring(2, 3))
-                     .append(" ").append(numeros.substring(3, 7))
-                     .append("-").append(numeros.substring(7));
-        }
-        
-        return formatted.toString();
-    }
-
-    /**
-     * Método utilitário que capitaliza cada palavra de um nome.
-     * Exemplo: "BRUNO SANTOS" ou "bruno santos" → "Bruno Santos"
-     */
-    private String capitalizarNome(String nome) {
-        if (nome == null || nome.isBlank()) {
-            return nome;
-        }
-        
-        String[] palavras = nome.trim().toLowerCase().split("\\s+");
-        StringBuilder resultado = new StringBuilder();
-        
-        for (String palavra : palavras) {
-            if (!palavra.isEmpty()) {
-                // Capitaliza a primeira letra e mantém o resto em minúsculo
-                resultado.append(Character.toUpperCase(palavra.charAt(0)))
-                         .append(palavra.substring(1))
-                         .append(" ");
-            }
-        }
-        
-        return resultado.toString().trim();
-    }
-
     @FXML
     private void handleSalvarCliente() {
-        String nome = capitalizarNome(nomeField.getText());
+        String nome = FormatUtils.capitalizarNome(nomeField.getText());
         String telefone = telefoneField.getText();
         String predioCasa = clientePredioField.getText();
         String numero = clienteNumeroField.getText();
@@ -359,7 +253,7 @@ public class SecondaryController {
         String observacoes = observacoesField.getText();
 
         if (nome.isBlank()) {
-            new Alert(AlertType.ERROR, "O nome é obrigatório.").show();
+            AlertUtils.mostrarErro("Erro", "O nome é obrigatório.");
             return;
         }
 
@@ -375,9 +269,9 @@ public class SecondaryController {
                 pstmt.setString(5, numero);
                 pstmt.setString(6, observacoes);
                 pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Cliente salvo com sucesso!").show();
+                AlertUtils.mostrarSucesso("Sucesso", "Cliente salvo com sucesso!");
             } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao salvar: " + e.getMessage()).show();
+                AlertUtils.mostrarErro("Erro", "Erro ao salvar: " + e.getMessage());
             }
 
         } else {
@@ -393,9 +287,9 @@ public class SecondaryController {
                 pstmt.setString(6, observacoes);
                 pstmt.setInt(7, clienteSelecionado.getId());
                 pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Cliente atualizado com sucesso!").show();
+                AlertUtils.mostrarSucesso("Sucesso", "Cliente atualizado com sucesso!");
             } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao atualizar: " + e.getMessage()).show();
+                AlertUtils.mostrarErro("Erro", "Erro ao atualizar: " + e.getMessage());
             }
         }
 
@@ -422,46 +316,42 @@ public class SecondaryController {
     @FXML
     private void handleExcluirCliente() {
         if (clienteSelecionado == null) {
-            new Alert(AlertType.ERROR, "Selecione um cliente na tabela para excluir.").show();
+            AlertUtils.mostrarErro("Erro", "Selecione um cliente na tabela para excluir.");
             return;
         }
 
         // Crie um Alerta de Confirmação
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar Exclusão");
-        alert.setHeaderText("Excluir " + clienteSelecionado.getNome() + "?");
-        alert.setContentText("Tem certeza? Esta ação não pode ser desfeita.");
-
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                // Usuário confirmou
-                String sql = "DELETE FROM Clientes WHERE id = ?";
-                try (Connection conn = Database.connect();
-                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                    pstmt.setInt(1, clienteSelecionado.getId());
-                    pstmt.executeUpdate();
-                    new Alert(AlertType.INFORMATION, "Cliente excluído.").show();
-                } catch (SQLException e) {
-                    new Alert(AlertType.ERROR, "Erro ao excluir: " + e.getMessage()).show();
-                }
-
-                // Recarregue e limpe
-                loadClientesDaTabela();
-                handleLimparCliente();
+        if (AlertUtils.mostrarConfirmacao(
+            "Confirmar Exclusão",
+            "Excluir " + clienteSelecionado.getNome() + "?\n\nTem certeza? Esta ação não pode ser desfeita.")) {
+            
+            // Usuário confirmou
+            String sql = "DELETE FROM Clientes WHERE id = ?";
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, clienteSelecionado.getId());
+                pstmt.executeUpdate();
+                AlertUtils.mostrarSucesso("Sucesso", "Cliente excluído.");
+            } catch (SQLException e) {
+                AlertUtils.mostrarErro("Erro", "Erro ao excluir: " + e.getMessage());
             }
-        });
+
+            // Recarregue e limpe
+            loadClientesDaTabela();
+            handleLimparCliente();
+        }
     }
 
     // ==================== MÉTODOS DE PRODUTOS ====================
 
     @FXML
     private void handleSalvarProduto() {
-        String nome = capitalizarNome(produtoNomeField.getText());
+        String nome = FormatUtils.capitalizarNome(produtoNomeField.getText());
         String precoStr = produtoPrecoField.getText();
 
         // Validações
         if (nome.isBlank()) {
-            new Alert(AlertType.ERROR, "O nome é obrigatório.").show();
+            AlertUtils.mostrarErro("Erro", "O nome é obrigatório.");
             return;
         }
 
@@ -469,7 +359,12 @@ public class SecondaryController {
         try {
             preco = Double.parseDouble(precoStr);
         } catch (NumberFormatException e) {
-            new Alert(AlertType.ERROR, "Preço inválido. Use apenas números (ex: 19.50).").show();
+            AlertUtils.mostrarErro("Erro", "Preço inválido. Use apenas números (ex: 19.50).");
+            return;
+        }
+
+        if (preco <= 0) {
+            AlertUtils.mostrarErro("Erro", "O preço deve ser maior que zero.");
             return;
         }
 
@@ -481,9 +376,9 @@ public class SecondaryController {
                 pstmt.setString(1, nome);
                 pstmt.setDouble(2, preco);
                 pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Produto salvo com sucesso!").show();
+                AlertUtils.mostrarSucesso("Sucesso", "Produto salvo com sucesso!");
             } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao salvar: " + e.getMessage()).show();
+                AlertUtils.mostrarErro("Erro", "Erro ao salvar: " + e.getMessage());
             }
 
         } else {
@@ -495,9 +390,9 @@ public class SecondaryController {
                 pstmt.setDouble(2, preco);
                 pstmt.setInt(3, produtoSelecionado.getId());
                 pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Produto atualizado com sucesso!").show();
+                AlertUtils.mostrarSucesso("Sucesso", "Produto atualizado com sucesso!");
             } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao atualizar: " + e.getMessage()).show();
+                AlertUtils.mostrarErro("Erro", "Erro ao atualizar: " + e.getMessage());
             }
         }
 
@@ -517,34 +412,30 @@ public class SecondaryController {
     @FXML
     private void handleExcluirProduto() {
         if (produtoSelecionado == null) {
-            new Alert(AlertType.ERROR, "Selecione um produto na tabela para excluir.").show();
+            AlertUtils.mostrarErro("Erro", "Selecione um produto na tabela para excluir.");
             return;
         }
 
         // Crie um Alerta de Confirmação
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar Exclusão");
-        alert.setHeaderText("Excluir " + produtoSelecionado.getNome() + "?");
-        alert.setContentText("Tem certeza? Esta ação não pode ser desfeita.");
-
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                // Usuário confirmou
-                String sql = "DELETE FROM Produtos WHERE id = ?";
-                try (Connection conn = Database.connect();
-                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                    pstmt.setInt(1, produtoSelecionado.getId());
-                    pstmt.executeUpdate();
-                    new Alert(AlertType.INFORMATION, "Produto excluído.").show();
-                } catch (SQLException e) {
-                    new Alert(AlertType.ERROR, "Erro ao excluir: " + e.getMessage()).show();
-                }
-
-                // Recarregue e limpe
-                loadProdutosDaTabela();
-                handleLimparProduto();
+        if (AlertUtils.mostrarConfirmacao(
+            "Confirmar Exclusão",
+            "Excluir " + produtoSelecionado.getNome() + "?\n\nTem certeza? Esta ação não pode ser desfeita.")) {
+            
+            // Usuário confirmou
+            String sql = "DELETE FROM Produtos WHERE id = ?";
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, produtoSelecionado.getId());
+                pstmt.executeUpdate();
+                AlertUtils.mostrarSucesso("Sucesso", "Produto excluído.");
+            } catch (SQLException e) {
+                AlertUtils.mostrarErro("Erro", "Erro ao excluir: " + e.getMessage());
             }
-        });
+
+            // Recarregue e limpe
+            loadProdutosDaTabela();
+            handleLimparProduto();
+        }
     }
 
     private void loadProdutosDaTabela() {
@@ -571,9 +462,9 @@ public class SecondaryController {
 
     @FXML
     private void handleSalvarFuncionario() {
-        String nome = capitalizarNome(funcionarioNomeField.getText());
+        String nome = FormatUtils.capitalizarNome(funcionarioNomeField.getText());
         if (nome.isBlank()) {
-            new Alert(AlertType.ERROR, "O nome é obrigatório.").show();
+            AlertUtils.mostrarErro("Erro", "O nome é obrigatório.");
             return;
         }
 
@@ -584,9 +475,9 @@ public class SecondaryController {
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setString(1, nome);
                 pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Funcionário salvo com sucesso!").show();
+                AlertUtils.mostrarSucesso("Sucesso", "Funcionário salvo com sucesso!");
             } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao salvar: " + e.getMessage()).show();
+                AlertUtils.mostrarErro("Erro", "Erro ao salvar: " + e.getMessage());
             }
 
         } else {
@@ -597,9 +488,9 @@ public class SecondaryController {
                 pstmt.setString(1, nome);
                 pstmt.setInt(2, funcionarioSelecionado.getId());
                 pstmt.executeUpdate();
-                new Alert(AlertType.INFORMATION, "Funcionário atualizado com sucesso!").show();
+                AlertUtils.mostrarSucesso("Sucesso", "Funcionário atualizado com sucesso!");
             } catch (SQLException e) {
-                new Alert(AlertType.ERROR, "Erro ao atualizar: " + e.getMessage()).show();
+                AlertUtils.mostrarErro("Erro", "Erro ao atualizar: " + e.getMessage());
             }
         }
 
@@ -618,34 +509,30 @@ public class SecondaryController {
     @FXML
     private void handleExcluirFuncionario() {
         if (funcionarioSelecionado == null) {
-            new Alert(AlertType.ERROR, "Selecione um funcionário na tabela para excluir.").show();
+            AlertUtils.mostrarErro("Erro", "Selecione um funcionário na tabela para excluir.");
             return;
         }
 
         // Crie um Alerta de Confirmação
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.setTitle("Confirmar Exclusão");
-        alert.setHeaderText("Excluir " + funcionarioSelecionado.getNome() + "?");
-        alert.setContentText("Tem certeza? Esta ação não pode ser desfeita.");
-
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                // Usuário confirmou
-                String sql = "DELETE FROM Funcionarios WHERE id = ?";
-                try (Connection conn = Database.connect();
-                     PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                    pstmt.setInt(1, funcionarioSelecionado.getId());
-                    pstmt.executeUpdate();
-                    new Alert(AlertType.INFORMATION, "Funcionário excluído.").show();
-                } catch (SQLException e) {
-                    new Alert(AlertType.ERROR, "Erro ao excluir: " + e.getMessage()).show();
-                }
-
-                // Recarregue e limpe
-                loadFuncionariosDaTabela();
-                handleLimparFuncionario();
+        if (AlertUtils.mostrarConfirmacao(
+            "Confirmar Exclusão",
+            "Excluir " + funcionarioSelecionado.getNome() + "?\n\nTem certeza? Esta ação não pode ser desfeita.")) {
+            
+            // Usuário confirmou
+            String sql = "DELETE FROM Funcionarios WHERE id = ?";
+            try (Connection conn = Database.connect();
+                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, funcionarioSelecionado.getId());
+                pstmt.executeUpdate();
+                AlertUtils.mostrarSucesso("Sucesso", "Funcionário excluído.");
+            } catch (SQLException e) {
+                AlertUtils.mostrarErro("Erro", "Erro ao excluir: " + e.getMessage());
             }
-        });
+
+            // Recarregue e limpe
+            loadFuncionariosDaTabela();
+            handleLimparFuncionario();
+        }
     }
 
     private void loadFuncionariosDaTabela() {
@@ -752,7 +639,7 @@ public class SecondaryController {
         Pedido pedidoSelecionado = tabelaPendenciaFinanceira.getSelectionModel().getSelectedItem();
         
         if (pedidoSelecionado == null) {
-            new Alert(AlertType.WARNING, "Selecione uma pendência financeira na tabela primeiro!").show();
+            AlertUtils.mostrarAviso("Aviso", "Selecione uma pendência financeira na tabela primeiro!");
             return;
         }
 
@@ -764,11 +651,11 @@ public class SecondaryController {
             pstmt.setInt(1, pedidoSelecionado.getId());
             pstmt.executeUpdate();
             
-            new Alert(AlertType.INFORMATION, "Pendência financeira baixada com sucesso!").show();
+            AlertUtils.mostrarSucesso("Sucesso", "Pendência financeira baixada com sucesso!");
             loadPendencias(); // Recarrega as tabelas
             
         } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao baixar pendência: " + e.getMessage()).show();
+            AlertUtils.mostrarErro("Erro", "Erro ao baixar pendência: " + e.getMessage());
         }
     }
 
@@ -777,7 +664,7 @@ public class SecondaryController {
         Pedido pedidoSelecionado = tabelaPendenciaGarrafao.getSelectionModel().getSelectedItem();
         
         if (pedidoSelecionado == null) {
-            new Alert(AlertType.WARNING, "Selecione uma pendência de garrafão na tabela primeiro!").show();
+            AlertUtils.mostrarAviso("Aviso", "Selecione uma pendência de garrafão na tabela primeiro!");
             return;
         }
 
@@ -789,11 +676,11 @@ public class SecondaryController {
             pstmt.setInt(1, pedidoSelecionado.getId());
             pstmt.executeUpdate();
             
-            new Alert(AlertType.INFORMATION, "Pendência de garrafão baixada com sucesso!").show();
+            AlertUtils.mostrarSucesso("Sucesso", "Pendência de garrafão baixada com sucesso!");
             loadPendencias(); // Recarrega as tabelas
             
         } catch (SQLException e) {
-            new Alert(AlertType.ERROR, "Erro ao baixar pendência: " + e.getMessage()).show();
+            AlertUtils.mostrarErro("Erro", "Erro ao baixar pendência: " + e.getMessage());
         }
     }
 

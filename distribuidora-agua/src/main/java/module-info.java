@@ -4,6 +4,8 @@ module com.distribuidora {
     requires javafx.base;
     requires java.sql;
 
-    opens com.distribuidora to javafx.fxml;
+    opens com.distribuidora to javafx.fxml, org.junit.platform.commons;
+    opens com.distribuidora.util to org.junit.platform.commons;
     exports com.distribuidora;
+    exports com.distribuidora.util;
 }

@@ -54,7 +54,7 @@
                                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                             </rowConstraints>
                                              <children>
-                                                <Button fx:id="criarPedidoButton" mnemonicParsing="false" onAction="#handleCriarPedido" text="CRIAR PEDIDO" GridPane.rowIndex="5">
+                                                <Button fx:id="criarPedidoButton" mnemonicParsing="false" onAction="#handleCriarPedido" text="CRIAR PEDIDO" GridPane.columnIndex="1" GridPane.rowIndex="5">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
@@ -92,7 +92,7 @@
                                                 <TextField fx:id="pedidoAvulsoRuaField" promptText="Rua / Av / Bairro" GridPane.columnIndex="3" GridPane.rowIndex="1" />
                                                 <TextField fx:id="pedidoAvulsoTipoField" promptText="Prédio / Casa" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                 <TextField fx:id="pedidoAvulsoNumeroField" promptText="Bloco / Apto / Número" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                                                <Button fx:id="limparPedidoButton" mnemonicParsing="false" onAction="#handleLimparPedido" text="LIMPAR FORMULÁRIO" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                                <Button fx:id="limparPedidoButton" mnemonicParsing="false" onAction="#handleLimparPedido" text="LIMPAR FORMULÁRIO" GridPane.columnIndex="2" GridPane.rowIndex="5">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
@@ -102,7 +102,7 @@
                                                       <Font name="System Bold" size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <DatePicker fx:id="pedidoDatePicker" editable="false" prefHeight="25.0" prefWidth="108.0" showWeekNumbers="false" GridPane.columnIndex="4" GridPane.rowIndex="5" />
+                                                <DatePicker fx:id="pedidoDatePicker" editable="false" prefHeight="38.0" prefWidth="149.0" showWeekNumbers="false" GridPane.columnIndex="4" GridPane.rowIndex="5" />
                                              </children>
                                              <padding>
                                                 <Insets left="15.0" />
@@ -131,8 +131,8 @@
                                                       </Label>
                                                       <TableView fx:id="tablePedidosFeitos" prefHeight="200.0" prefWidth="408.0" VBox.vgrow="ALWAYS">
                                                          <columns>
-                                                            <TableColumn fx:id="colFeitosCliente" prefWidth="85.0" text="Cliente" />
-                                                            <TableColumn fx:id="colFeitosEndereco" prefWidth="150.0" text="Endereço" />
+                                                            <TableColumn fx:id="colFeitosCliente" prefWidth="100.0" text="Cliente" />
+                                                            <TableColumn fx:id="colFeitosEndereco" prefWidth="160.0" text="Endereço" />
                                                             <TableColumn fx:id="colFeitosProduto" prefWidth="65.0" text="Produto" />
                                                             <TableColumn fx:id="colFeitosQtd" prefWidth="40.0" text="Qtd" />
                                                             <TableColumn fx:id="colFeitosHora" prefWidth="50.0" text="Hora" />
@@ -155,7 +155,7 @@
                                                       <TableView fx:id="tablePedidosNaRua" prefHeight="200.0" prefWidth="40.0" VBox.vgrow="ALWAYS">
                                                          <columns>
                                                             <TableColumn fx:id="colNaRuaCliente" prefWidth="80.0" text="Cliente" />
-                                                            <TableColumn fx:id="colNaRuaEndereco" prefWidth="140.0" text="Endereço" />
+                                                            <TableColumn fx:id="colNaRuaEndereco" prefWidth="158.0" text="Endereço" />
                                                             <TableColumn fx:id="colNaRuaProduto" prefWidth="65.0" text="Produto" />
                                                             <TableColumn fx:id="colNaRuaQtd" prefWidth="40.0" text="Qtd" />
                                                             <TableColumn fx:id="colNaRuaHora" prefWidth="50.0" text="Hora" />
@@ -177,8 +177,8 @@
                                                       </Label>
                                                       <TableView fx:id="tablePedidosEntregues" prefHeight="200.0" prefWidth="387.0" VBox.vgrow="ALWAYS">
                                                          <columns>
-                                                            <TableColumn fx:id="colEntreguesCliente" prefWidth="80.0" text="Cliente" />
-                                                            <TableColumn fx:id="colEntreguesEndereco" prefWidth="140.0" text="Endereço" />
+                                                            <TableColumn fx:id="colEntreguesCliente" prefWidth="75.0" text="Cliente" />
+                                                            <TableColumn fx:id="colEntreguesEndereco" prefWidth="155.0" text="Endereço" />
                                                             <TableColumn fx:id="colEntreguesProduto" prefWidth="65.0" text="Produto" />
                                                             <TableColumn fx:id="colEntreguesQtd" prefWidth="40.0" text="Qtd" />
                                                             <TableColumn fx:id="colEntreguesHora" prefWidth="50.0" text="Hora" />
