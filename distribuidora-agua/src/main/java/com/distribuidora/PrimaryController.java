@@ -27,7 +27,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.DatePicker;
-import javafx.scene.control.TabPane;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextFormatter;
@@ -79,7 +78,6 @@ public class PrimaryController {
     @FXML private Button limparPedidoButton;
     @FXML private Button editarPedidoButton;
     @FXML private DatePicker pedidoDatePicker;
-    @FXML private TabPane statusTabPane;
 
     // Labels de título com contagem
     @FXML private Label lblTituloPendentes;
@@ -700,11 +698,6 @@ public class PrimaryController {
         }
     }
 
-    private void carregarClientes() {
-        // Método mantido para compatibilidade (recarrega a lista mestra)
-        carregarClientesDoBanco();
-    }
-
     /**
      * Método utilitário que capitaliza cada palavra de um nome.
      * Exemplo: "BRUNO SANTOS" ou "bruno santos" → "Bruno Santos"
@@ -839,7 +832,7 @@ public class PrimaryController {
         }
 
         // Recarrega lista de clientes e limpa o formulário
-        carregarClientes();
+        carregarClientesDoBanco();
         handleLimparCliente();
     }
 
@@ -872,17 +865,10 @@ public class PrimaryController {
             pedidoProdutoCombo.setItems(listaProdutos);
 
             // Define o produto padrão no ComboBox
-            setProdutoPadrao(listaProdutos);
+            setProdutoPadrao();
 
         } catch (SQLException e) {
             System.out.println("Erro ao carregar produtos: " + e.getMessage());
-        }
-    }
-
-    private void setProdutoPadrao(ObservableList<Produto> listaProdutos) {
-        // Define o produto mais barato (primeiro da lista) como padrão
-        if (!listaProdutos.isEmpty()) {
-            pedidoProdutoCombo.setValue(listaProdutos.get(0));
         }
     }
 
