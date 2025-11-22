@@ -220,7 +220,7 @@ public class SecondaryController {
         String sql = "SELECT id, nome, telefone, " +
                      "(predio_casa || ', ' || numero || ', ' || endereco) as endereco_completo, " +
                      "predio_casa, numero, endereco, observacoes " +
-                     "FROM Clientes";
+                     "FROM Clientes ORDER BY nome ASC";
 
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -445,7 +445,7 @@ public class SecondaryController {
 
     private void loadProdutosDaTabela() {
         ObservableList<Produto> listaProdutos = FXCollections.observableArrayList();
-        String sql = "SELECT * FROM Produtos ORDER BY preco ASC";
+        String sql = "SELECT * FROM Produtos ORDER BY nome ASC";
 
         try (Connection conn = Database.connect();
              Statement stmt = conn.createStatement();
