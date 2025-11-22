@@ -198,14 +198,19 @@
                                  <children>
                                     <VBox layoutX="14.0" layoutY="75.0" prefHeight="739.0" prefWidth="400.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
-                                          <Label fx:id="lblTituloPendenciasGarrafao" text="Pendências de Garrafão">
-                                             <font>
-                                                <Font name="System Bold" size="18.0" />
-                                             </font>
+                                          <HBox alignment="CENTER_LEFT" spacing="15.0">
+                                             <children>
+                                                <Label fx:id="lblTituloPendenciasGarrafao" text="Pendências de Garrafão">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <TextField fx:id="pesquisaGarrafaoField" promptText="🔍 Pesquisar por nome..." prefWidth="250.0" />
+                                             </children>
                                              <VBox.margin>
                                                 <Insets bottom="10.0" top="10.0" />
                                              </VBox.margin>
-                                          </Label>
+                                          </HBox>
                                           <TableView fx:id="tabelaPendenciaGarrafao" prefHeight="640.0" prefWidth="634.0" VBox.vgrow="ALWAYS">
                                             <columns>
                                               <TableColumn fx:id="colGarCliente" prefWidth="130.0" text="Cliente" />
@@ -230,14 +235,19 @@
                                  <children>
                                     <VBox layoutX="138.0" layoutY="89.0" prefHeight="735.5" prefWidth="635.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
-                                          <Label fx:id="lblTituloPendenciasFinanceiras" text="Pendências Financeiras">
-                                             <font>
-                                                <Font name="System Bold" size="18.0" />
-                                             </font>
+                                          <HBox alignment="CENTER_LEFT" spacing="15.0">
+                                             <children>
+                                                <Label fx:id="lblTituloPendenciasFinanceiras" text="Pendências Financeiras">
+                                                   <font>
+                                                      <Font name="System Bold" size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <TextField fx:id="pesquisaFinanceiraField" promptText="🔍 Pesquisar por nome..." prefWidth="250.0" />
+                                             </children>
                                              <VBox.margin>
                                                 <Insets bottom="10.0" top="10.0" />
                                              </VBox.margin>
-                                          </Label>
+                                          </HBox>
                                           <TableView fx:id="tabelaPendenciaFinanceira" prefHeight="640.0" prefWidth="635.0" VBox.vgrow="ALWAYS">
                                             <columns>
                                               <TableColumn fx:id="colFinCliente" prefWidth="150.0" text="Cliente" />

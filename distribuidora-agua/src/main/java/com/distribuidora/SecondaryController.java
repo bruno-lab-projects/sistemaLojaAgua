@@ -66,6 +66,7 @@ public class SecondaryController {
     @FXML private TableColumn<Pedido, Double> colFinValor;
     @FXML private Button btnBaixarFinanceiro;
     @FXML private Label lblTituloPendenciasFinanceiras;
+    @FXML private TextField pesquisaFinanceiraField;
 
     // Injeções FXML para Pendências de Garrafão
     @FXML private TableView<Pedido> tabelaPendenciaGarrafao;
@@ -75,6 +76,7 @@ public class SecondaryController {
     @FXML private TableColumn<Pedido, String> colGarData;
     @FXML private Button btnBaixarGarrafao;
     @FXML private Label lblTituloPendenciasGarrafao;
+    @FXML private TextField pesquisaGarrafaoField;
 
     // Componentes do Dashboard
     @FXML private ComboBox<String> comboPeriodoDashboard;
@@ -96,6 +98,8 @@ public class SecondaryController {
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
     private ObservableList<Pedido> pendenciasFinanceiraData = FXCollections.observableArrayList();
     private ObservableList<Pedido> pendenciasGarrafaoData = FXCollections.observableArrayList();
+    private ObservableList<Pedido> todasPendenciasFinanceira = FXCollections.observableArrayList();
+    private ObservableList<Pedido> todasPendenciasGarrafao = FXCollections.observableArrayList();
     private Cliente clienteSelecionado = null;
     private Funcionario funcionarioSelecionado = null;
     private Produto produtoSelecionado = null;
@@ -197,6 +201,14 @@ public class SecondaryController {
 
         // Carrega as pendências do banco
         loadPendencias();
+        
+        // Configura os campos de pesquisa para filtrar pendências
+        if (pesquisaFinanceiraField != null) {
+            pesquisaFinanceiraField.textProperty().addListener((obs, oldVal, newVal) -> filtrarPendenciasFinanceiras(newVal));
+        }
+        if (pesquisaGarrafaoField != null) {
+            pesquisaGarrafaoField.textProperty().addListener((obs, oldVal, newVal) -> filtrarPendenciasGarrafao(newVal));
+        }
 
         // Inicializa o Dashboard
         if (comboPeriodoDashboard != null) {
@@ -561,6 +573,8 @@ public class SecondaryController {
     private void loadPendencias() {
         pendenciasFinanceiraData.clear();
         pendenciasGarrafaoData.clear();
+        todasPendenciasFinanceira.clear();
+        todasPendenciasGarrafao.clear();
         
         int contadorFinanceiro = 0;
         int contadorGarrafao = 0;
@@ -609,12 +623,14 @@ public class SecondaryController {
                 // Adiciona à tabela financeira se tem pendência de pagamento
                 if (pendPagamento == 1) {
                     pendenciasFinanceiraData.add(pedido);
+                    todasPendenciasFinanceira.add(pedido);
                     contadorFinanceiro++;
                 }
                 
                 // Adiciona à tabela de garrafão se tem pendência de garrafão
                 if (pendGarrafao == 1) {
                     pendenciasGarrafaoData.add(pedido);
+                    todasPendenciasGarrafao.add(pedido);
                     contadorGarrafao++;
                 }
             }
@@ -636,6 +652,38 @@ public class SecondaryController {
         }
         if (lblTituloPendenciasGarrafao != null) {
             lblTituloPendenciasGarrafao.setText("Pendências de Garrafão (" + contadorGarrafao + ")");
+        }
+    }
+    
+    private void filtrarPendenciasFinanceiras(String filtro) {
+        if (filtro == null || filtro.trim().isEmpty()) {
+            tabelaPendenciaFinanceira.setItems(todasPendenciasFinanceira);
+        } else {
+            String filtroLower = filtro.toLowerCase().trim();
+            ObservableList<Pedido> filtrados = FXCollections.observableArrayList();
+            for (Pedido pedido : todasPendenciasFinanceira) {
+                if (pedido.getClienteNome() != null && 
+                    pedido.getClienteNome().toLowerCase().contains(filtroLower)) {
+                    filtrados.add(pedido);
+                }
+            }
+            tabelaPendenciaFinanceira.setItems(filtrados);
+        }
+    }
+    
+    private void filtrarPendenciasGarrafao(String filtro) {
+        if (filtro == null || filtro.trim().isEmpty()) {
+            tabelaPendenciaGarrafao.setItems(todasPendenciasGarrafao);
+        } else {
+            String filtroLower = filtro.toLowerCase().trim();
+            ObservableList<Pedido> filtrados = FXCollections.observableArrayList();
+            for (Pedido pedido : todasPendenciasGarrafao) {
+                if (pedido.getClienteNome() != null && 
+                    pedido.getClienteNome().toLowerCase().contains(filtroLower)) {
+                    filtrados.add(pedido);
+                }
+            }
+            tabelaPendenciaGarrafao.setItems(filtrados);
         }
     }
 
