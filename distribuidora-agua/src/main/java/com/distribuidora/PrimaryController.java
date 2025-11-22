@@ -41,6 +41,12 @@ import javafx.scene.control.TableRow;
 
 public class PrimaryController {
 
+    // Constantes de Status de Pedidos
+    public static final String STATUS_FEITO = "Feito";
+    public static final String STATUS_SAIU = "Saiu p/ Entrega";
+    public static final String STATUS_ENTREGUE = "Entregue";
+    public static final String STATUS_CANCELADO = "Cancelado";
+
     // Variável de controle para modo de edição
     private Pedido pedidoEmEdicao = null;
     
@@ -187,6 +193,11 @@ public class PrimaryController {
             return new SimpleStringProperty(FormatUtils.formatarMoeda(valor));
         });
         colEntreguesFuncionario.setCellValueFactory(new PropertyValueFactory<>("funcionarioNome"));
+
+        // Configura o botão padrão para responder ao ENTER
+        if (criarPedidoButton != null) {
+            criarPedidoButton.setDefaultButton(true);
+        }
 
         // Carrega os pedidos do banco
         loadPedidosPorData();
@@ -475,7 +486,7 @@ public class PrimaryController {
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
             
-            pstmt.setString(1, "Entregue");
+            pstmt.setString(1, STATUS_ENTREGUE);
             pstmt.setInt(2, funcionarioEscolhido[0].getId());
             pstmt.setString(3, dataHoraAgora);
             pstmt.setString(4, dataHoraAgora);
@@ -515,7 +526,7 @@ public class PrimaryController {
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
             
-            pstmt.setString(1, "Feito");
+            pstmt.setString(1, STATUS_FEITO);
             pstmt.setInt(2, pedido.getId());
             
             pstmt.executeUpdate();
@@ -682,7 +693,7 @@ public class PrimaryController {
             }
 
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar clientes: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -753,7 +764,7 @@ public class PrimaryController {
             setProdutoPadrao();
 
         } catch (SQLException e) {
-            System.out.println("Erro ao carregar produtos: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -793,7 +804,7 @@ public class PrimaryController {
             String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso, predio_casa_avulso, numero_avulso, forma_pagamento) " +
                          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             String dataAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            String statusInicial = "Feito";
+            String statusInicial = STATUS_FEITO;
 
             try (Connection conn = Database.connect();
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -1028,9 +1039,10 @@ public class PrimaryController {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setString(1, dataStr);
-            ResultSet rs = pstmt.executeQuery();
+            
+            try (ResultSet rs = pstmt.executeQuery()) {
 
-            while (rs.next()) {
+                while (rs.next()) {
                 // Recupera e converte a forma de pagamento
                 String formaPagamentoStr = rs.getString("forma_pagamento");
                 FormaPagamento formaPagamento = null;
@@ -1058,18 +1070,20 @@ public class PrimaryController {
                 // Separa os pedidos por status em diferentes tabelas
                 String status = rs.getString("status");
                 switch (status) {
-                    case "Feito":
+                    case STATUS_FEITO:
                         pedidosFeitos.add(pedido);
                         break;
-                    case "Saiu p/ Entrega":
+                    case STATUS_SAIU:
                         pedidosNaRua.add(pedido);
                         break;
-                    case "Entregue":
+                    case STATUS_ENTREGUE:
                         pedidosEntregues.add(pedido);
                         break;
                     // Cancelado não aparece em nenhuma tabela
                 }
             }
+            
+            } // Fecha try-with-resources do ResultSet
             
             tablePedidosFeitos.setItems(pedidosFeitos);
             tablePedidosNaRua.setItems(pedidosNaRua);
@@ -1081,7 +1095,7 @@ public class PrimaryController {
             lblTituloEntregues.setText(String.format("ENTREGUES (%d)", pedidosEntregues.size()));
 
         } catch (SQLException e) {
-            System.out.println("Erro ao carregar pedidos: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -1156,7 +1170,7 @@ public class PrimaryController {
             try (Connection conn = Database.connect();
                  PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
                 
-                pstmt.setString(1, "Saiu p/ Entrega");
+                pstmt.setString(1, STATUS_SAIU);
                 pstmt.setInt(2, funcionarioEscolhido.getId());
                 pstmt.setString(3, dataHoraAgora);
                 pstmt.setInt(4, pedidoSelecionado.getId());
@@ -1216,7 +1230,7 @@ public class PrimaryController {
                 try (Connection conn = Database.connect();
                      PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
                     
-                    pstmt.setString(1, "Entregue");
+                    pstmt.setString(1, STATUS_ENTREGUE);
                     pstmt.setString(2, dataHoraAgora);
                     pstmt.setInt(3, pendenciaPagamento);
                     pstmt.setInt(4, pendenciaGarrafao);
@@ -1269,7 +1283,7 @@ public class PrimaryController {
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
             
-            pstmt.setString(1, "Cancelado");
+            pstmt.setString(1, STATUS_CANCELADO);
             pstmt.setInt(2, pedidoSelecionado.getId());
             
             pstmt.executeUpdate();

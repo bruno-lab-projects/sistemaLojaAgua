@@ -11,7 +11,7 @@ public class Funcionario {
     // Construtor
     public Funcionario(int id, String nome) {
         this.id = new SimpleIntegerProperty(id);
-        this.nome = new SimpleStringProperty(nome);
+        this.nome = new SimpleStringProperty(nome != null ? nome : "");
     }
 
     // Getters e Setters para ID

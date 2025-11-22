@@ -133,6 +133,11 @@ public class SecondaryController {
         // Carrega os clientes do banco
         loadClientesDaTabela();
 
+        // Configura o botão padrão para responder ao ENTER na aba de clientes
+        if (salvarButton != null) {
+            salvarButton.setDefaultButton(true);
+        }
+
         // Configura as colunas da tabela de produtos
         colProdutoNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colProdutoPreco.setCellValueFactory(new PropertyValueFactory<>("preco"));
@@ -239,7 +244,7 @@ public class SecondaryController {
             clientesTable.setItems(clientesData);
 
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar clientes: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -456,7 +461,7 @@ public class SecondaryController {
             produtosTable.setItems(listaProdutos);
 
         } catch (SQLException e) {
-            System.out.println("Erro ao carregar produtos: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -547,7 +552,7 @@ public class SecondaryController {
             }
             funcionariosTable.setItems(lista);
         } catch (SQLException e) {
-            System.out.println("Erro ao carregar funcionários: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -621,7 +626,7 @@ public class SecondaryController {
             atualizarTitulosPendencias(contadorFinanceiro, contadorGarrafao);
 
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar pendências: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -728,7 +733,7 @@ public class SecondaryController {
                      "FROM Pedidos p " +
                      "JOIN Produtos pr ON p.produto_id = pr.id " +
                      "WHERE DATE(p.data_hora) BETWEEN ? AND ? " +
-                     "AND p.status != 'Cancelado'";
+                     "AND p.status != '" + PrimaryController.STATUS_CANCELADO + "'";
 
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -736,17 +741,18 @@ public class SecondaryController {
             pstmt.setString(1, inicio.toString());
             pstmt.setString(2, fim.toString());
             
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                double total = rs.getDouble("total");
-                int qtd = rs.getInt("qtd");
-                
-                lblTotalVendido.setText(String.format("R$ %.2f", total));
-                lblQtdPedidos.setText(String.valueOf(qtd));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    double total = rs.getDouble("total");
+                    int qtd = rs.getInt("qtd");
+                    
+                    lblTotalVendido.setText(String.format("R$ %.2f", total));
+                    lblQtdPedidos.setText(String.valueOf(qtd));
+                }
             }
             
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar KPIs: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -759,7 +765,7 @@ public class SecondaryController {
                      "FROM Pedidos p " +
                      "JOIN Produtos pr ON p.produto_id = pr.id " +
                      "WHERE DATE(p.data_hora) BETWEEN ? AND ? " +
-                     "AND p.status != 'Cancelado' " +
+                     "AND p.status != '" + PrimaryController.STATUS_CANCELADO + "' " +
                      "GROUP BY pr.nome " +
                      "ORDER BY qtd DESC";
 
@@ -769,19 +775,20 @@ public class SecondaryController {
             pstmt.setString(1, inicio.toString());
             pstmt.setString(2, fim.toString());
             
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String produto = rs.getString("nome");
-                int qtd = rs.getInt("qtd");
-                
-                javafx.scene.chart.PieChart.Data slice = new javafx.scene.chart.PieChart.Data(
-                    produto + " (" + qtd + ")", qtd
-                );
-                graficoProdutos.getData().add(slice);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String produto = rs.getString("nome");
+                    int qtd = rs.getInt("qtd");
+                    
+                    javafx.scene.chart.PieChart.Data slice = new javafx.scene.chart.PieChart.Data(
+                        produto + " (" + qtd + ")", qtd
+                    );
+                    graficoProdutos.getData().add(slice);
+                }
             }
             
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar gráfico de produtos: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -793,7 +800,7 @@ public class SecondaryController {
         String sql = "SELECT COALESCE(p.forma_pagamento, 'Não Informado') as pagamento, COUNT(*) as qtd " +
                      "FROM Pedidos p " +
                      "WHERE DATE(p.data_hora) BETWEEN ? AND ? " +
-                     "AND p.status != 'Cancelado' " +
+                     "AND p.status != '" + PrimaryController.STATUS_CANCELADO + "' " +
                      "GROUP BY p.forma_pagamento " +
                      "ORDER BY qtd DESC";
 
@@ -803,19 +810,20 @@ public class SecondaryController {
             pstmt.setString(1, inicio.toString());
             pstmt.setString(2, fim.toString());
             
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String pagamento = rs.getString("pagamento");
-                int qtd = rs.getInt("qtd");
-                
-                javafx.scene.chart.PieChart.Data slice = new javafx.scene.chart.PieChart.Data(
-                    pagamento + " (" + qtd + ")", qtd
-                );
-                graficoPagamentos.getData().add(slice);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String pagamento = rs.getString("pagamento");
+                    int qtd = rs.getInt("qtd");
+                    
+                    javafx.scene.chart.PieChart.Data slice = new javafx.scene.chart.PieChart.Data(
+                        pagamento + " (" + qtd + ")", qtd
+                    );
+                    graficoPagamentos.getData().add(slice);
+                }
             }
             
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar gráfico de pagamentos: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -828,7 +836,7 @@ public class SecondaryController {
                      "FROM Pedidos p " +
                      "INNER JOIN Funcionarios f ON p.funcionario_id = f.id " +
                      "WHERE DATE(p.data_hora_entregue) BETWEEN ? AND ? " +
-                     "AND p.status = 'Entregue' " +
+                     "AND p.status = '" + PrimaryController.STATUS_ENTREGUE + "' " +
                      "GROUP BY f.nome " +
                      "ORDER BY entregas DESC";
 
@@ -841,22 +849,23 @@ public class SecondaryController {
             javafx.scene.chart.XYChart.Series<String, Number> series = new javafx.scene.chart.XYChart.Series<>();
             series.setName("Entregas");
             
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String funcionario = rs.getString("funcionario");
-                int entregas = rs.getInt("entregas");
-                
-                // Adiciona o número de entregas no nome do funcionário
-                String labelComNumero = funcionario + " (" + entregas + ")";
-                
-                javafx.scene.chart.XYChart.Data<String, Number> data = new javafx.scene.chart.XYChart.Data<>(labelComNumero, entregas);
-                series.getData().add(data);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String funcionario = rs.getString("funcionario");
+                    int entregas = rs.getInt("entregas");
+                    
+                    // Adiciona o número de entregas no nome do funcionário
+                    String labelComNumero = funcionario + " (" + entregas + ")";
+                    
+                    javafx.scene.chart.XYChart.Data<String, Number> data = new javafx.scene.chart.XYChart.Data<>(labelComNumero, entregas);
+                    series.getData().add(data);
+                }
             }
             
             graficoFuncionarios.getData().add(series);
             
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar gráfico de funcionários: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -872,7 +881,7 @@ public class SecondaryController {
                      "LEFT JOIN Clientes c ON p.cliente_id = c.id " +
                      "JOIN Produtos pr ON p.produto_id = pr.id " +
                      "WHERE DATE(p.data_hora) BETWEEN ? AND ? " +
-                     "AND p.status != 'Cancelado' " +
+                     "AND p.status != '" + PrimaryController.STATUS_CANCELADO + "' " +
                      "GROUP BY cliente " +
                      "ORDER BY compras DESC " +
                      "LIMIT 50";
@@ -883,14 +892,15 @@ public class SecondaryController {
             pstmt.setString(1, inicio.toString());
             pstmt.setString(2, fim.toString());
             
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                String nome = rs.getString("cliente");
-                int compras = rs.getInt("compras");
-                double valor = rs.getDouble("valor");
-                
-                TopClienteDTO cliente = new TopClienteDTO(nome, compras, valor);
-                topClientes.add(cliente);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String nome = rs.getString("cliente");
+                    int compras = rs.getInt("compras");
+                    double valor = rs.getDouble("valor");
+                    
+                    TopClienteDTO cliente = new TopClienteDTO(nome, compras, valor);
+                    topClientes.add(cliente);
+                }
             }
             
             tabelaTopClientes.setItems(topClientes);
@@ -916,7 +926,7 @@ public class SecondaryController {
             }
             
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar top clientes: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -928,7 +938,7 @@ public class SecondaryController {
         String sql = "SELECT CAST(strftime('%H', data_hora) AS INTEGER) as hora, COUNT(*) as qtd " +
                      "FROM Pedidos " +
                      "WHERE DATE(data_hora) BETWEEN ? AND ? " +
-                     "AND status != 'Cancelado' " +
+                     "AND status != '" + PrimaryController.STATUS_CANCELADO + "' " +
                      "GROUP BY hora " +
                      "ORDER BY hora";
 
@@ -941,19 +951,20 @@ public class SecondaryController {
             javafx.scene.chart.XYChart.Series<String, Number> series = new javafx.scene.chart.XYChart.Series<>();
             series.setName("Pedidos por Hora");
             
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                int horaInt = rs.getInt("hora");
-                String horaFormatada = String.format("%02d:00", horaInt);
-                int qtd = rs.getInt("qtd");
-                
-                series.getData().add(new javafx.scene.chart.XYChart.Data<>(horaFormatada, qtd));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    int horaInt = rs.getInt("hora");
+                    String horaFormatada = String.format("%02d:00", horaInt);
+                    int qtd = rs.getInt("qtd");
+                    
+                    series.getData().add(new javafx.scene.chart.XYChart.Data<>(horaFormatada, qtd));
+                }
             }
             
             graficoHorarios.getData().add(series);
             
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar gráfico de horários: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 
@@ -975,29 +986,30 @@ public class SecondaryController {
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                // Monta o endereço completo para exibição
-                String enderecoCompleto = rs.getString("predio_casa") + ", " + 
-                                         rs.getString("numero") + ", " + 
-                                         rs.getString("endereco");
-                
-                Cliente cliente = new Cliente(
-                    rs.getInt("id"),
-                    rs.getString("nome"),
-                    rs.getString("telefone"),
-                    enderecoCompleto,                          // Endereço completo
-                    rs.getString("predio_casa"),
-                    rs.getString("numero"),
-                    rs.getString("observacoes"),
-                    rs.getString("endereco")                   // Apenas a rua
-                );
-                
-                int diasSemComprar = rs.getInt("dias_sem_comprar");
-                // Armazena os dias na propriedade de observações temporariamente (só para exibição)
-                cliente.setObservacoes(String.valueOf(diasSemComprar));
-                
-                clientesInativos.add(cliente);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    // Monta o endereço completo para exibição
+                    String enderecoCompleto = rs.getString("predio_casa") + ", " + 
+                                             rs.getString("numero") + ", " + 
+                                             rs.getString("endereco");
+                    
+                    Cliente cliente = new Cliente(
+                        rs.getInt("id"),
+                        rs.getString("nome"),
+                        rs.getString("telefone"),
+                        enderecoCompleto,                          // Endereço completo
+                        rs.getString("predio_casa"),
+                        rs.getString("numero"),
+                        rs.getString("observacoes"),
+                        rs.getString("endereco")                   // Apenas a rua
+                    );
+                    
+                    int diasSemComprar = rs.getInt("dias_sem_comprar");
+                    // Armazena os dias na propriedade de observações temporariamente (só para exibição)
+                    cliente.setObservacoes(String.valueOf(diasSemComprar));
+                    
+                    clientesInativos.add(cliente);
+                }
             }
             
             tabelaInativos.setItems(clientesInativos);
@@ -1013,7 +1025,7 @@ public class SecondaryController {
             }
             
         } catch (SQLException e) {
-            System.err.println("Erro ao carregar clientes inativos: " + e.getMessage());
+            AlertUtils.mostrarErro("Erro no Sistema", e.getMessage());
         }
     }
 

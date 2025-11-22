@@ -20,7 +20,7 @@ public class Database {
         return DriverManager.getConnection(url);
     }
 
-    public static void initialize() {
+    public static void initialize() throws SQLException {
         String sqlClientes = "CREATE TABLE IF NOT EXISTS Clientes ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "nome TEXT NOT NULL,"
@@ -72,8 +72,7 @@ public class Database {
             stmt.execute(sqlFuncionarios);
             stmt.execute(sqlProdutos);
             stmt.execute(sqlPedidos);
-        } catch (SQLException e) {
-            System.err.println("Erro ao inicializar o banco: " + e.getMessage());
         }
+        // Propaga a exceção para ser tratada pela camada superior
     }
 }

@@ -24,13 +24,13 @@ public class Pedido {
                   String funcionarioNome, String status, String hora, String endereco, double precoTotal,
                   FormaPagamento pagamento) {
         this.id = new SimpleIntegerProperty(id);
-        this.clienteNome = new SimpleStringProperty(clienteNome);
-        this.produtoNome = new SimpleStringProperty(produtoNome);
+        this.clienteNome = new SimpleStringProperty(clienteNome != null ? clienteNome : "");
+        this.produtoNome = new SimpleStringProperty(produtoNome != null ? produtoNome : "");
         this.quantidade = new SimpleIntegerProperty(quantidade);
-        this.funcionarioNome = new SimpleStringProperty(funcionarioNome);
-        this.status = new SimpleStringProperty(status);
-        this.hora = new SimpleStringProperty(hora);
-        this.endereco = new SimpleStringProperty(endereco);
+        this.funcionarioNome = new SimpleStringProperty(funcionarioNome != null ? funcionarioNome : "");
+        this.status = new SimpleStringProperty(status != null ? status : "");
+        this.hora = new SimpleStringProperty(hora != null ? hora : "");
+        this.endereco = new SimpleStringProperty(endereco != null ? endereco : "");
         this.precoTotal = new SimpleDoubleProperty(precoTotal);
         this.formaPagamento = new SimpleObjectProperty<>(pagamento);
     }

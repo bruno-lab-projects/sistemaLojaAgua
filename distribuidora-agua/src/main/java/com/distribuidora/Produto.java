@@ -13,7 +13,7 @@ public class Produto {
     // Construtor
     public Produto(int id, String nome, double preco) {
         this.id = new SimpleIntegerProperty(id);
-        this.nome = new SimpleStringProperty(nome);
+        this.nome = new SimpleStringProperty(nome != null ? nome : "");
         this.preco = new SimpleDoubleProperty(preco);
     }
 

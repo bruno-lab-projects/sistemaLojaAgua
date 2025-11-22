@@ -10,7 +10,7 @@ public class TopClienteDTO {
     private final SimpleDoubleProperty valor;
 
     public TopClienteDTO(String nome, int quantidade, double valor) {
-        this.nome = new SimpleStringProperty(nome);
+        this.nome = new SimpleStringProperty(nome != null ? nome : "");
         this.quantidade = new SimpleIntegerProperty(quantidade);
         this.valor = new SimpleDoubleProperty(valor);
     }

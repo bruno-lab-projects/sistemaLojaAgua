@@ -274,6 +274,7 @@
                                  <children>
                                     <VBox alignment="TOP_CENTER" prefHeight="721.5" prefWidth="379.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                        <children>
+                                          <!-- Título -->
                                           <Label text="Adicionar cliente">
                                              <VBox.margin>
                                                 <Insets bottom="20.0" />
@@ -282,48 +283,65 @@
                                                 <Font name="System Bold" size="18.0" />
                                              </font>
                                           </Label>
+                                          
+                                          <!-- Campo 1: Nome -->
                                           <Label text="Nome">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                           <TextField fx:id="nomeField" />
+                                          
+                                          <!-- Campo 2: Telefone -->
                                           <Label text="Telefone">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                           <TextField fx:id="telefoneField" />
+                                          
+                                          <!-- Campo 3: Prédio / Casa -->
                                           <Label text="Prédio / Casa">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                           <TextField fx:id="clientePredioField" />
-                                          <Label layoutX="145.0" layoutY="219.0" text="Bloco / Apto / Número">
+                                          
+                                          <!-- Campo 4: Bloco / Apto / Número -->
+                                          <Label text="Bloco / Apto / Número">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                           <TextField fx:id="clienteNumeroField" />
+                                          
+                                          <!-- Campo 5: Endereço -->
                                           <Label text="Endereço">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                           <TextField fx:id="clienteRuaField" />
+                                          
+                                          <!-- Campo 6: Observações -->
                                           <Label text="Observações">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
-                                          <TextField fx:id="observacoesField" layoutX="20.0" layoutY="252.0" />
+                                          <TextField fx:id="observacoesField" />
+                                          
+                                          <!-- Botão Salvar -->
                                           <Button fx:id="salvarButton" mnemonicParsing="false" onAction="#handleSalvarCliente" text="Salvar cliente">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Button>
+                                          
                                           <Separator prefHeight="65.0" prefWidth="350.0" />
+                                          
+                                          <!-- Botão Limpar -->
                                           <Button fx:id="limparClienteButton" mnemonicParsing="false" onAction="#handleLimparCliente" text="Limpar formulário">
                                              <font>
                                                 <Font size="18.0" />
@@ -384,7 +402,7 @@
                                              </font>
                                           </Label>
                                           <TextField fx:id="produtoPrecoField" />
-                                          <Button fx:id="salvarProdutoButton" mnemonicParsing="false" onAction="#handleSalvarProduto" text="Salvar produto">
+                                          <Button fx:id="salvarProdutoButton" defaultButton="true" mnemonicParsing="false" onAction="#handleSalvarProduto" text="Salvar produto">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -448,7 +466,7 @@
                                              </font>
                                           </Label>
                                           <TextField fx:id="funcionarioNomeField" />
-                                          <Button fx:id="salvarFuncionarioButton" mnemonicParsing="false" onAction="#handleSalvarFuncionario" text="Salvar funcionário">
+                                          <Button fx:id="salvarFuncionarioButton" defaultButton="true" mnemonicParsing="false" onAction="#handleSalvarFuncionario" text="Salvar funcionário">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>

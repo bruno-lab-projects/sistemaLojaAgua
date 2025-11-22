@@ -17,13 +17,13 @@ public class Cliente {
     // Construtor
     public Cliente(int id, String nome, String telefone, String endereco, String predioCasa, String numero, String observacoes, String enderecoRua) {
         this.id = new SimpleIntegerProperty(id);
-        this.nome = new SimpleStringProperty(nome);
-        this.telefone = new SimpleStringProperty(telefone);
-        this.endereco = new SimpleStringProperty(endereco);           // Endereço completo
-        this.enderecoRua = new SimpleStringProperty(enderecoRua);    // Apenas rua
-        this.predioCasa = new SimpleStringProperty(predioCasa);
-        this.numero = new SimpleStringProperty(numero);
-        this.observacoes = new SimpleStringProperty(observacoes);
+        this.nome = new SimpleStringProperty(nome != null ? nome : "");
+        this.telefone = new SimpleStringProperty(telefone != null ? telefone : "");
+        this.endereco = new SimpleStringProperty(endereco != null ? endereco : "");           // Endereço completo
+        this.enderecoRua = new SimpleStringProperty(enderecoRua != null ? enderecoRua : "");    // Apenas rua
+        this.predioCasa = new SimpleStringProperty(predioCasa != null ? predioCasa : "");
+        this.numero = new SimpleStringProperty(numero != null ? numero : "");
+        this.observacoes = new SimpleStringProperty(observacoes != null ? observacoes : "");
     }
 
     // Getters e Setters para ID

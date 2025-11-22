@@ -54,44 +54,55 @@
                                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                             </rowConstraints>
                                              <children>
-                                                <Button fx:id="criarPedidoButton" mnemonicParsing="false" onAction="#handleCriarPedido" text="CRIAR PEDIDO" GridPane.columnIndex="1" GridPane.rowIndex="5">
-                                                   <font>
-                                                      <Font size="18.0" />
-                                                   </font>
-                                                </Button>
-                                                <Label text="QUANTIDADE" GridPane.rowIndex="3">
-                                                   <font>
-                                                      <Font size="18.0" />
-                                                   </font>
-                                                </Label>
-                                                <ComboBox fx:id="pedidoProdutoCombo" prefHeight="38.0" prefWidth="168.0" promptText="SELECIONE" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                                <Label text="ÁGUA" GridPane.rowIndex="2">
-                                                   <font>
-                                                      <Font size="18.0" />
-                                                   </font>
-                                                </Label>
-                                                <ComboBox fx:id="pedidoClienteCombo" editable="true" prefHeight="42.0" prefWidth="244.0" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" />
+                                                <!-- Linha 0: CLIENTE -->
                                                 <Label text="CLIENTE">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
                                                 <TextField fx:id="pedidoNomeAvulsoField" promptText="Nome do cliente                    OU" GridPane.columnIndex="1" />
+                                                <ComboBox fx:id="pedidoClienteCombo" editable="true" prefHeight="42.0" prefWidth="244.0" promptText="Selecione cliente cadastrado" GridPane.columnIndex="2" />
+                                                
+                                                <!-- Linha 1: ENDEREÇO -->
                                                 <Label text="ENDEREÇO" GridPane.rowIndex="1">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
+                                                <TextField fx:id="pedidoAvulsoTipoField" promptText="Prédio / Casa" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                <TextField fx:id="pedidoAvulsoNumeroField" promptText="Bloco / Apto / Número" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                                <TextField fx:id="pedidoAvulsoRuaField" promptText="Rua / Av / Bairro" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                                
+                                                <!-- Linha 2: ÁGUA -->
+                                                <Label text="ÁGUA" GridPane.rowIndex="2">
+                                                   <font>
+                                                      <Font size="18.0" />
+                                                   </font>
+                                                </Label>
+                                                <ComboBox fx:id="pedidoProdutoCombo" prefHeight="38.0" prefWidth="168.0" promptText="SELECIONE" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                
+                                                <!-- Linha 3: QUANTIDADE -->
+                                                <Label text="QUANTIDADE" GridPane.rowIndex="3">
+                                                   <font>
+                                                      <Font size="18.0" />
+                                                   </font>
+                                                </Label>
                                                 <Spinner fx:id="pedidoQtdSpinner" prefHeight="38.0" prefWidth="92.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                
+                                                <!-- Linha 4: FORMA DE PAGAMENTO -->
                                                 <Label text="FORMA DE PAGAMENTO" GridPane.rowIndex="4">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
                                                 <ComboBox fx:id="pedidoPagamentoCombo" prefHeight="38.0" prefWidth="239.0" promptText="FORMA DE PAGAMENTO" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                                <TextField fx:id="pedidoAvulsoRuaField" promptText="Rua / Av / Bairro" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-                                                <TextField fx:id="pedidoAvulsoTipoField" promptText="Prédio / Casa" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                                <TextField fx:id="pedidoAvulsoNumeroField" promptText="Bloco / Apto / Número" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                                
+                                                <!-- Linha 5: BOTÕES -->
+                                                <Button fx:id="criarPedidoButton" mnemonicParsing="false" onAction="#handleCriarPedido" text="CRIAR PEDIDO" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                                   <font>
+                                                      <Font size="18.0" />
+                                                   </font>
+                                                </Button>
                                                 <Button fx:id="limparPedidoButton" mnemonicParsing="false" onAction="#handleLimparPedido" text="LIMPAR FORMULÁRIO" GridPane.columnIndex="2" GridPane.rowIndex="5">
                                                    <font>
                                                       <Font size="18.0" />
@@ -244,6 +255,7 @@
                                        <children>
                                           <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                              <children>
+                                                <!-- Título -->
                                                 <Label text="ADICIONAR CLIENTE">
                                                    <VBox.margin>
                                                       <Insets bottom="20.0" />
@@ -252,48 +264,65 @@
                                                       <Font name="System Bold" size="24.0" />
                                                    </font>
                                                 </Label>
+                                                
+                                                <!-- Campo 1: Nome -->
                                                 <Label text="Nome">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
                                                 <TextField fx:id="nomeField" />
+                                                
+                                                <!-- Campo 2: Telefone -->
                                                 <Label text="Telefone">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
                                                 <TextField fx:id="telefoneField" />
+                                                
+                                                <!-- Campo 3: Prédio / Casa -->
                                                 <Label text="Prédio / Casa">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
                                                 <TextField fx:id="predioCasaField" />
-                                                <Label layoutX="145.0" layoutY="219.0" text="Bloco / Apto / Número">
+                                                
+                                                <!-- Campo 4: Bloco / Apto / Número -->
+                                                <Label text="Bloco / Apto / Número">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
                                                 <TextField fx:id="blocoNumeroField" />
+                                                
+                                                <!-- Campo 5: Endereço -->
                                                 <Label text="Endereço">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
                                                 <TextField fx:id="enderecoField" />
+                                                
+                                                <!-- Campo 6: Observações -->
                                                 <Label text="Observações">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <TextField fx:id="observacoesField" layoutX="20.0" layoutY="252.0" />
+                                                <TextField fx:id="observacoesField" />
+                                                
+                                                <!-- Botão Salvar -->
                                                 <Button fx:id="salvarButton" mnemonicParsing="false" onAction="#handleSalvarCliente" text="Salvar cliente">
                                                    <font>
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Button>
+                                                
                                                 <Separator prefHeight="65.0" prefWidth="350.0" />
+                                                
+                                                <!-- Botão Limpar -->
                                                 <Button fx:id="limparClienteButton" mnemonicParsing="false" onAction="#handleLimparCliente" text="Limpar formulário">
                                                    <font>
                                                       <Font size="18.0" />
