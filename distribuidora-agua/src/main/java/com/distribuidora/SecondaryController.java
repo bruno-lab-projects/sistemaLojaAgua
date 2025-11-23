@@ -2,13 +2,19 @@ package com.distribuidora;
 
 import com.distribuidora.util.AlertUtils;
 import com.distribuidora.util.FormatUtils;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,6 +27,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 
 public class SecondaryController {
 
@@ -94,6 +101,7 @@ public class SecondaryController {
     @FXML private TableColumn<Cliente, String> colInativoNome;
     @FXML private TableColumn<Cliente, String> colInativoTelefone;
     @FXML private TableColumn<Cliente, String> colInativoUltimaCompra;
+    @FXML private Button btnBackup;
 
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
     private ObservableList<Pedido> pendenciasFinanceiraData = FXCollections.observableArrayList();
@@ -103,6 +111,61 @@ public class SecondaryController {
     private Cliente clienteSelecionado = null;
     private Funcionario funcionarioSelecionado = null;
     private Produto produtoSelecionado = null;
+
+    /**
+     * Realiza backup manual do banco de dados.
+     * Permite ao usuário escolher o local e nome do arquivo de backup.
+     */
+    @FXML
+    private void handleRealizarBackup() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Salvar Backup do Sistema");
+        
+        // Define o nome inicial do arquivo com a data de hoje (SEM a extensão)
+        String dataHoje = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        fileChooser.setInitialFileName("backup_loja_" + dataHoje);
+        
+        // Adiciona filtro de extensão para arquivos .db
+        FileChooser.ExtensionFilter extFilter = 
+            new FileChooser.ExtensionFilter("Arquivo de Banco de Dados (*.db)", "*.db");
+        fileChooser.getExtensionFilters().add(extFilter);
+        
+        // Mostra o dialog de salvar
+        File file = fileChooser.showSaveDialog(btnBackup.getScene().getWindow());
+        
+        // Se o usuário escolheu um arquivo
+        if (file != null) {
+            try {
+                // Define origem
+                Path origem = Paths.get("distribuidora.db");
+                
+                // Garante que o arquivo tenha a extensão .db
+                String caminhoDestino = file.getAbsolutePath();
+                if (!caminhoDestino.toLowerCase().endsWith(".db")) {
+                    caminhoDestino += ".db";
+                }
+                Path destino = Paths.get(caminhoDestino);
+                
+                // Verifica se o arquivo de origem existe
+                if (!Files.exists(origem)) {
+                    AlertUtils.mostrarErro("Falha no Backup", 
+                        "Arquivo do banco de dados não encontrado em: " + origem.toAbsolutePath());
+                    return;
+                }
+                
+                // Copia o arquivo do banco para o destino escolhido
+                Files.copy(origem, destino, StandardCopyOption.REPLACE_EXISTING);
+                
+                // Mostra mensagem de sucesso
+                AlertUtils.mostrarSucesso("Backup Concluído", 
+                    "Arquivo salvo em: " + destino.toString());
+                
+            } catch (IOException e) {
+                // Mostra mensagem de erro
+                AlertUtils.mostrarErro("Falha no Backup", e.getMessage());
+            }
+        }
+    }
 
     @FXML
     private void initialize() {
