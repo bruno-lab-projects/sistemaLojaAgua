@@ -59,10 +59,10 @@ class PedidoTest {
 
         // Assert
         assertEquals(2, pedido.getId());
-        assertNull(pedido.getClienteNome(), "Cliente nome pode ser nulo para pedidos avulsos");
+        assertEquals("", pedido.getClienteNome(), "Cliente nome pode ser string vazia para pedidos avulsos");
         assertEquals("Produto X", pedido.getProdutoNome());
-        assertNull(pedido.getFuncionarioNome(), "Funcionário pode ser nulo");
-        assertNull(pedido.getEndereco(), "Endereço pode ser nulo");
+        assertEquals("", pedido.getFuncionarioNome(), "Funcionário pode ser string vazia");
+        assertEquals("", pedido.getEndereco(), "Endereço pode ser string vazia");
         assertNull(pedido.getFormaPagamento(), "Forma de pagamento pode ser nula");
     }
 
@@ -345,8 +345,8 @@ class PedidoTest {
             "Feito", "2025-11-22", "Rua X, Casa 10", 20.0, FormaPagamento.DINHEIRO);
 
         // Assert
-        assertNull(pedido.getClienteNome(), 
-            "Pedido avulso não deve ter nome de cliente");
+        assertEquals("", pedido.getClienteNome(), 
+            "Pedido avulso deve ter nome de cliente como string vazia");
         assertEquals("Rua X, Casa 10", pedido.getEndereco(), 
             "Pedido avulso deve ter endereço informado");
     }

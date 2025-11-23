@@ -55,12 +55,12 @@ class ClienteTest {
         // Assert
         assertEquals(2, cliente.getId());
         assertEquals("Maria Santos", cliente.getNome());
-        assertNull(cliente.getTelefone(), "Telefone nulo deve retornar null");
-        assertNull(cliente.getEndereco(), "Endereço nulo deve retornar null");
-        assertNull(cliente.getPredioCasa(), "Prédio/Casa nulo deve retornar null");
-        assertNull(cliente.getNumero(), "Número nulo deve retornar null");
-        assertNull(cliente.getObservacoes(), "Observações nulas devem retornar null");
-        assertNull(cliente.getEnderecoRua(), "Endereço (rua) nulo deve retornar null");
+        assertEquals("", cliente.getTelefone(), "Telefone nulo deve retornar string vazia");
+        assertEquals("", cliente.getEndereco(), "Endereço nulo deve retornar string vazia");
+        assertEquals("", cliente.getPredioCasa(), "Prédio/Casa nulo deve retornar string vazia");
+        assertEquals("", cliente.getNumero(), "Número nulo deve retornar string vazia");
+        assertEquals("", cliente.getObservacoes(), "Observações nulas devem retornar string vazia");
+        assertEquals("", cliente.getEnderecoRua(), "Endereço (rua) nulo deve retornar string vazia");
     }
 
     @Test
