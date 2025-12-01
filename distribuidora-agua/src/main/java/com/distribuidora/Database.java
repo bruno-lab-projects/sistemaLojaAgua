@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.sql.SQLException;
+import java.sql.ResultSet;
+import java.sql.PreparedStatement;
 
 public class Database {
 
@@ -46,7 +48,7 @@ public class Database {
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "cliente_id INTEGER NULL,"
                 + "funcionario_id INTEGER NULL,"
-                + "produto_id INTEGER NOT NULL,"
+                + "produto_id INTEGER NULL,"
                 + "status TEXT NOT NULL,"
                 + "data_hora TEXT NOT NULL,"
                 + "quantidade INTEGER NOT NULL DEFAULT 1,"
@@ -59,9 +61,13 @@ public class Database {
                 + "forma_pagamento TEXT NULL,"
                 + "pendencia_pagamento INTEGER DEFAULT 0,"
                 + "pendencia_garrafao INTEGER DEFAULT 0,"
-                + "FOREIGN KEY (cliente_id) REFERENCES Clientes(id),"
-                + "FOREIGN KEY (funcionario_id) REFERENCES Funcionarios(id),"
-                + "FOREIGN KEY (produto_id) REFERENCES Produtos(id)"
+                // Dados históricos (snapshot) - preservam informações mesmo após exclusão/alteração
+                + "cliente_nome_historico TEXT,"
+                + "cliente_telefone_historico TEXT,"
+                + "cliente_endereco_historico TEXT,"
+                + "funcionario_nome_historico TEXT,"
+                + "produto_nome_historico TEXT NOT NULL,"
+                + "produto_preco_historico REAL"
                 + ");";
 
         // Cria conexão e statement usando try-with-resources
@@ -72,7 +78,69 @@ public class Database {
             stmt.execute(sqlFuncionarios);
             stmt.execute(sqlProdutos);
             stmt.execute(sqlPedidos);
+            
+            // Migra dados existentes para os novos campos históricos
+            migrateHistoricalData(conn);
         }
         // Propaga a exceção para ser tratada pela camada superior
+    }
+
+    /**
+     * Migra pedidos existentes para incluir dados históricos.
+     * Adiciona as colunas de histórico se não existirem e preenche com dados atuais.
+     */
+    private static void migrateHistoricalData(Connection conn) throws SQLException {
+        // Adiciona colunas de histórico se não existirem
+        try (Statement stmt = conn.createStatement()) {
+            // Tenta adicionar as colunas (se já existirem, SQLite ignora)
+            try {
+                stmt.execute("ALTER TABLE Pedidos ADD COLUMN cliente_nome_historico TEXT");
+            } catch (SQLException e) { /* Coluna já existe */ }
+            
+            try {
+                stmt.execute("ALTER TABLE Pedidos ADD COLUMN cliente_telefone_historico TEXT");
+            } catch (SQLException e) { /* Coluna já existe */ }
+            
+            try {
+                stmt.execute("ALTER TABLE Pedidos ADD COLUMN cliente_endereco_historico TEXT");
+            } catch (SQLException e) { /* Coluna já existe */ }
+            
+            try {
+                stmt.execute("ALTER TABLE Pedidos ADD COLUMN funcionario_nome_historico TEXT");
+            } catch (SQLException e) { /* Coluna já existe */ }
+            
+            try {
+                stmt.execute("ALTER TABLE Pedidos ADD COLUMN produto_nome_historico TEXT");
+            } catch (SQLException e) { /* Coluna já existe */ }
+            
+            try {
+                stmt.execute("ALTER TABLE Pedidos ADD COLUMN produto_preco_historico REAL");
+            } catch (SQLException e) { /* Coluna já existe */ }
+        }
+        
+        // Preenche dados históricos para pedidos que não os têm
+        String updateSql = "UPDATE Pedidos SET "
+                + "cliente_nome_historico = COALESCE(cliente_nome_historico, "
+                + "  (SELECT nome FROM Clientes WHERE Clientes.id = Pedidos.cliente_id), "
+                + "  Pedidos.nome_avulso, 'Cliente Removido'), "
+                + "cliente_telefone_historico = COALESCE(cliente_telefone_historico, "
+                + "  (SELECT telefone FROM Clientes WHERE Clientes.id = Pedidos.cliente_id), ''), "
+                + "cliente_endereco_historico = COALESCE(cliente_endereco_historico, "
+                + "  (SELECT endereco || ' ' || predio_casa || ' ' || numero FROM Clientes "
+                + "   WHERE Clientes.id = Pedidos.cliente_id), "
+                + "  Pedidos.endereco_avulso || ' ' || Pedidos.predio_casa_avulso || ' ' || Pedidos.numero_avulso, ''), "
+                + "funcionario_nome_historico = COALESCE(funcionario_nome_historico, "
+                + "  (SELECT nome FROM Funcionarios WHERE Funcionarios.id = Pedidos.funcionario_id), "
+                + "  'Funcionário Não Informado'), "
+                + "produto_nome_historico = COALESCE(produto_nome_historico, "
+                + "  (SELECT nome FROM Produtos WHERE Produtos.id = Pedidos.produto_id), "
+                + "  'Produto Removido'), "
+                + "produto_preco_historico = COALESCE(produto_preco_historico, "
+                + "  (SELECT preco FROM Produtos WHERE Produtos.id = Pedidos.produto_id), 0) "
+                + "WHERE produto_nome_historico IS NULL OR produto_nome_historico = ''";
+        
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute(updateSql);
+        }
     }
 }

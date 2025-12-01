@@ -480,7 +480,7 @@ public class PrimaryController {
         
         String sqlUpdate = "UPDATE Pedidos SET status = ?, funcionario_id = ?, " +
                            "data_hora_saiu = ?, data_hora_entregue = ?, " +
-                           "pendencia_pagamento = ?, pendencia_garrafao = ? WHERE id = ?";
+                           "pendencia_pagamento = ?, pendencia_garrafao = ?, funcionario_nome_historico = ? WHERE id = ?";
         String dataHoraAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         
         try (Connection conn = Database.connect();
@@ -492,7 +492,8 @@ public class PrimaryController {
             pstmt.setString(4, dataHoraAgora);
             pstmt.setInt(5, pendenciaPagamento);
             pstmt.setInt(6, pendenciaGarrafao);
-            pstmt.setInt(7, pedido.getId());
+            pstmt.setString(7, funcionarioEscolhido[0].getNome());
+            pstmt.setInt(8, pedido.getId());
             
             pstmt.executeUpdate();
             
@@ -521,7 +522,7 @@ public class PrimaryController {
         }
         
         // Reseta o pedido no banco
-        String sqlUpdate = "UPDATE Pedidos SET status = ?, funcionario_id = NULL, data_hora_saiu = NULL WHERE id = ?";
+        String sqlUpdate = "UPDATE Pedidos SET status = ?, funcionario_id = NULL, data_hora_saiu = NULL, funcionario_nome_historico = NULL WHERE id = ?";
         
         try (Connection conn = Database.connect();
              PreparedStatement pstmt = conn.prepareStatement(sqlUpdate)) {
@@ -801,8 +802,9 @@ public class PrimaryController {
 
         if (pedidoEmEdicao == null) {
             // ========== MODO: CRIAR NOVO PEDIDO ==========
-            String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso, predio_casa_avulso, numero_avulso, forma_pagamento) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO Pedidos (cliente_id, produto_id, status, data_hora, quantidade, nome_avulso, endereco_avulso, predio_casa_avulso, numero_avulso, forma_pagamento, " +
+                         "cliente_nome_historico, cliente_telefone_historico, cliente_endereco_historico, produto_nome_historico, produto_preco_historico) " +
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             String dataAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             String statusInicial = STATUS_FEITO;
 
@@ -810,18 +812,29 @@ public class PrimaryController {
                  PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
                 // Lógica do Cliente (se for cadastrado ou avulso)
+                String nomeCliente, telefoneCliente, enderecoCompleto;
                 if (cliente != null) {
                     pstmt.setInt(1, cliente.getId());
                     pstmt.setNull(6, java.sql.Types.VARCHAR); // nome_avulso
                     pstmt.setNull(7, java.sql.Types.VARCHAR); // endereco_avulso
                     pstmt.setNull(8, java.sql.Types.VARCHAR); // predio_casa_avulso
                     pstmt.setNull(9, java.sql.Types.VARCHAR); // numero_avulso
+                    
+                    // Dados históricos do cliente cadastrado
+                    nomeCliente = cliente.getNome();
+                    telefoneCliente = cliente.getTelefone();
+                    enderecoCompleto = cliente.getEndereco() + " " + cliente.getPredioCasa() + " " + cliente.getNumero();
                 } else {
                     pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
                     pstmt.setString(6, FormatUtils.capitalizarNome(nomeAvulso));
                     pstmt.setString(7, ruaAvulso);
                     pstmt.setString(8, tipoAvulso);
                     pstmt.setString(9, numeroAvulso);
+                    
+                    // Dados históricos do cliente avulso
+                    nomeCliente = FormatUtils.capitalizarNome(nomeAvulso);
+                    telefoneCliente = "";
+                    enderecoCompleto = ruaAvulso + " " + tipoAvulso + " " + numeroAvulso;
                 }
 
                 // Resto dos dados
@@ -836,6 +849,13 @@ public class PrimaryController {
                 } else {
                     pstmt.setNull(10, java.sql.Types.VARCHAR);
                 }
+                
+                // Dados históricos (snapshot no momento do pedido)
+                pstmt.setString(11, nomeCliente);
+                pstmt.setString(12, telefoneCliente);
+                pstmt.setString(13, enderecoCompleto.trim());
+                pstmt.setString(14, produto.getNome());
+                pstmt.setDouble(15, produto.getPreco());
 
                 pstmt.executeUpdate();
                 AlertUtils.mostrarSucesso("Sucesso", "Pedido criado com sucesso!");
@@ -1012,22 +1032,18 @@ public class PrimaryController {
         String dataStr = dataSelecionada.toString(); // formato YYYY-MM-DD
 
         String sql = "SELECT p.id, " +
-                     "COALESCE(c.nome, p.nome_avulso) as cliente, " +
-                     "pr.nome as produto, p.quantidade, " +
-                     "COALESCE(f.nome, 'Aguardando') as funcionario, " +
+                     // Usa dados históricos (snapshot) - imunes a exclusões/alterações
+                     "COALESCE(p.cliente_nome_historico, p.nome_avulso, 'Cliente Desconhecido') as cliente, " +
+                     "COALESCE(p.produto_nome_historico, 'Produto Removido') as produto, " +
+                     "p.quantidade, " +
+                     "COALESCE(p.funcionario_nome_historico, 'Aguardando') as funcionario, " +
                      "p.status, strftime('%H:%M', p.data_hora) as hora, " +
-                     "CASE " +
-                     "  WHEN p.cliente_id IS NOT NULL THEN " +
-                     "    c.predio_casa || ', ' || c.numero || ', ' || c.endereco " +
-                     "  ELSE " +
-                     "    p.predio_casa_avulso || ', ' || p.numero_avulso || ', ' || p.endereco_avulso " +
-                     "END as endereco_completo, " +
-                     "(pr.preco * p.quantidade) as total, " +
+                     "COALESCE(p.cliente_endereco_historico, " +
+                     "  p.predio_casa_avulso || ', ' || p.numero_avulso || ', ' || p.endereco_avulso, " +
+                     "  'Endereço não informado') as endereco_completo, " +
+                     "(COALESCE(p.produto_preco_historico, 0) * p.quantidade) as total, " +
                      "p.forma_pagamento " +
                      "FROM Pedidos p " +
-                     "LEFT JOIN Clientes c ON p.cliente_id = c.id " +
-                     "JOIN Produtos pr ON p.produto_id = pr.id " +
-                     "LEFT JOIN Funcionarios f ON p.funcionario_id = f.id " +
                      "WHERE date(p.data_hora) = ? " + // Filtra pela data
                      "ORDER BY p.data_hora DESC";
 
@@ -1164,7 +1180,7 @@ public class PrimaryController {
         
         dialog.showAndWait().ifPresent(funcionarioEscolhido -> {
             // Atualiza o pedido no banco
-            String sqlUpdate = "UPDATE Pedidos SET status = ?, funcionario_id = ?, data_hora_saiu = ? WHERE id = ?";
+            String sqlUpdate = "UPDATE Pedidos SET status = ?, funcionario_id = ?, data_hora_saiu = ?, funcionario_nome_historico = ? WHERE id = ?";
             String dataHoraAgora = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             
             try (Connection conn = Database.connect();
@@ -1173,7 +1189,8 @@ public class PrimaryController {
                 pstmt.setString(1, STATUS_SAIU);
                 pstmt.setInt(2, funcionarioEscolhido.getId());
                 pstmt.setString(3, dataHoraAgora);
-                pstmt.setInt(4, pedidoSelecionado.getId());
+                pstmt.setString(4, funcionarioEscolhido.getNome());
+                pstmt.setInt(5, pedidoSelecionado.getId());
                 
                 pstmt.executeUpdate();
                 

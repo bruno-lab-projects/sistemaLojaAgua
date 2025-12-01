@@ -643,21 +643,15 @@ public class SecondaryController {
         int contadorGarrafao = 0;
         
         String sql = "SELECT p.id, " +
-                     "COALESCE(c.nome, p.nome_avulso) as cliente, " +
-                     "CASE " +
-                     "  WHEN p.cliente_id IS NOT NULL THEN " +
-                     "    c.predio_casa || ', ' || c.numero || ', ' || c.endereco " +
-                     "  ELSE " +
-                     "    p.predio_casa_avulso || ', ' || p.numero_avulso || ', ' || p.endereco_avulso " +
-                     "END as endereco_completo, " +
+                     "COALESCE(p.cliente_nome_historico, p.nome_avulso) as cliente, " +
+                     "COALESCE(p.cliente_endereco_historico, " +
+                     "  p.predio_casa_avulso || ', ' || p.numero_avulso || ', ' || p.endereco_avulso) as endereco_completo, " +
                      "strftime('%d/%m/%Y', p.data_hora_entregue) as data_entrega, " +
                      "p.pendencia_pagamento, " +
                      "p.pendencia_garrafao, " +
-                     "pr.nome as produto, " +
-                     "(pr.preco * p.quantidade) as total " +
+                     "p.produto_nome_historico as produto, " +
+                     "(p.produto_preco_historico * p.quantidade) as total " +
                      "FROM Pedidos p " +
-                     "LEFT JOIN Clientes c ON p.cliente_id = c.id " +
-                     "JOIN Produtos pr ON p.produto_id = pr.id " +
                      "WHERE p.pendencia_pagamento = 1 OR p.pendencia_garrafao = 1 " +
                      "ORDER BY p.data_hora_entregue DESC";
 
@@ -840,9 +834,8 @@ public class SecondaryController {
     private void carregarKPIs(LocalDate inicio, LocalDate fim) {
         if (lblTotalVendido == null || lblQtdPedidos == null) return;
         
-        String sql = "SELECT SUM(pr.preco * p.quantidade) as total, COUNT(*) as qtd " +
+        String sql = "SELECT SUM(p.produto_preco_historico * p.quantidade) as total, COUNT(*) as qtd " +
                      "FROM Pedidos p " +
-                     "JOIN Produtos pr ON p.produto_id = pr.id " +
                      "WHERE DATE(p.data_hora) BETWEEN ? AND ? " +
                      "AND p.status != '" + PrimaryController.STATUS_CANCELADO + "'";
 
@@ -872,12 +865,11 @@ public class SecondaryController {
         
         graficoProdutos.getData().clear();
         
-        String sql = "SELECT pr.nome, COUNT(*) as qtd " +
+        String sql = "SELECT p.produto_nome_historico as nome, COUNT(*) as qtd " +
                      "FROM Pedidos p " +
-                     "JOIN Produtos pr ON p.produto_id = pr.id " +
                      "WHERE DATE(p.data_hora) BETWEEN ? AND ? " +
                      "AND p.status != '" + PrimaryController.STATUS_CANCELADO + "' " +
-                     "GROUP BY pr.nome " +
+                     "GROUP BY p.produto_nome_historico " +
                      "ORDER BY qtd DESC";
 
         try (Connection conn = Database.connect();
@@ -943,12 +935,12 @@ public class SecondaryController {
         
         graficoFuncionarios.getData().clear();
         
-        String sql = "SELECT f.nome as funcionario, COUNT(*) as entregas " +
+        String sql = "SELECT p.funcionario_nome_historico as funcionario, COUNT(*) as entregas " +
                      "FROM Pedidos p " +
-                     "INNER JOIN Funcionarios f ON p.funcionario_id = f.id " +
                      "WHERE DATE(p.data_hora_entregue) BETWEEN ? AND ? " +
                      "AND p.status = '" + PrimaryController.STATUS_ENTREGUE + "' " +
-                     "GROUP BY f.nome " +
+                     "AND p.funcionario_nome_historico IS NOT NULL " +
+                     "GROUP BY p.funcionario_nome_historico " +
                      "ORDER BY entregas DESC";
 
         try (Connection conn = Database.connect();
@@ -985,12 +977,10 @@ public class SecondaryController {
         
         ObservableList<TopClienteDTO> topClientes = FXCollections.observableArrayList();
         
-        String sql = "SELECT COALESCE(c.nome, p.nome_avulso) as cliente, " +
+        String sql = "SELECT COALESCE(p.cliente_nome_historico, p.nome_avulso, 'Cliente Desconhecido') as cliente, " +
                      "COUNT(*) as compras, " +
-                     "SUM(pr.preco * p.quantidade) as valor " +
+                     "SUM(p.produto_preco_historico * p.quantidade) as valor " +
                      "FROM Pedidos p " +
-                     "LEFT JOIN Clientes c ON p.cliente_id = c.id " +
-                     "JOIN Produtos pr ON p.produto_id = pr.id " +
                      "WHERE DATE(p.data_hora) BETWEEN ? AND ? " +
                      "AND p.status != '" + PrimaryController.STATUS_CANCELADO + "' " +
                      "GROUP BY cliente " +
