@@ -71,6 +71,7 @@ public class PrimaryController {
 
     // Componentes da aba Pedidos
     @FXML private ComboBox<Cliente> pedidoClienteCombo;
+    @FXML private ComboBox<Cliente> pedidoEnderecoCombo;
     @FXML private ComboBox<Produto> pedidoProdutoCombo;
     @FXML private ComboBox<FormaPagamento> pedidoPagamentoCombo;
     @FXML private Spinner<Integer> pedidoQtdSpinner;
@@ -130,6 +131,9 @@ public class PrimaryController {
         
         // Configura autocomplete para o ComboBox de clientes
         configurarAutocompleteClientes();
+        
+        // Configura autocomplete para o ComboBox de endereços
+        configurarAutocompleteEnderecos();
         
         // Carrega produtos para o ComboBox de pedidos
         carregarProdutosParaCombo();
@@ -663,6 +667,103 @@ public class PrimaryController {
     }
     
     /**
+     * Configura o sistema de autocomplete para o ComboBox de endereços.
+     * Permite pesquisa/filtro por endereço em tempo real enquanto o usuário digita.
+     */
+    private void configurarAutocompleteEnderecos() {
+        // 1. Usa a mesma lista mestra de clientes (já carregada)
+        FilteredList<Cliente> listaFiltradaEndereco = new FilteredList<>(clientesMestra, p -> true);
+        pedidoEnderecoCombo.setItems(listaFiltradaEndereco);
+        
+        // 2. Configura como o Cliente aparece no texto (mostra o endereço completo)
+        pedidoEnderecoCombo.setConverter(new StringConverter<Cliente>() {
+            @Override
+            public String toString(Cliente cliente) {
+                if (cliente == null) {
+                    return "";
+                }
+                // Retorna endereço completo formatado
+                return cliente.getEndereco();
+            }
+
+            @Override
+            public Cliente fromString(String string) {
+                return null;
+            }
+        });
+        
+        // 3. Listener de seleção - preenche campos quando endereço é selecionado
+        pedidoEnderecoCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && !ignorarMudancaTexto) {
+                // Preenche o nome do cliente no campo avulso
+                pedidoNomeAvulsoField.setText(newVal.getNome());
+                
+                // Preenche os campos de endereço
+                pedidoAvulsoTipoField.setText(newVal.getPredioCasa());
+                pedidoAvulsoNumeroField.setText(newVal.getNumero());
+                pedidoAvulsoRuaField.setText(newVal.getEnderecoRua());
+                
+                // Também seleciona o cliente no ComboBox de clientes
+                ignorarMudancaTexto = true;
+                pedidoClienteCombo.setValue(newVal);
+                pedidoClienteCombo.getEditor().setText(newVal.getNome());
+                ignorarMudancaTexto = false;
+            }
+        });
+        
+        // 4. Listener de texto - filtra a lista enquanto usuário digita
+        pedidoEnderecoCombo.getEditor().textProperty().addListener((obs, oldText, newText) -> {
+            if (ignorarMudancaTexto) {
+                return;
+            }
+            
+            final Cliente clienteSelecionado = pedidoEnderecoCombo.getSelectionModel().getSelectedItem();
+            
+            // Se há um cliente selecionado e o texto corresponde ao endereço, não filtra
+            if (clienteSelecionado != null && clienteSelecionado.getEndereco().equals(newText)) {
+                return;
+            }
+            
+            // Aplica filtro baseado no texto digitado
+            if (newText == null || newText.isEmpty()) {
+                listaFiltradaEndereco.setPredicate(p -> true); // Mostra todos
+            } else {
+                String textoLower = newText.toLowerCase().trim();
+                listaFiltradaEndereco.setPredicate(cliente -> {
+                    // Busca em todas as partes do endereço
+                    String enderecoCompleto = cliente.getEndereco().toLowerCase();
+                    String predioCasa = cliente.getPredioCasa() != null ? cliente.getPredioCasa().toLowerCase() : "";
+                    String numero = cliente.getNumero() != null ? cliente.getNumero().toLowerCase() : "";
+                    String rua = cliente.getEnderecoRua() != null ? cliente.getEnderecoRua().toLowerCase() : "";
+                    
+                    return enderecoCompleto.contains(textoLower) ||
+                           predioCasa.contains(textoLower) ||
+                           numero.contains(textoLower) ||
+                           rua.contains(textoLower);
+                });
+            }
+            
+            // Abre o dropdown se houver resultados
+            if (!listaFiltradaEndereco.isEmpty()) {
+                if (!pedidoEnderecoCombo.isShowing()) {
+                    pedidoEnderecoCombo.show();
+                }
+            }
+        });
+        
+        // 5. Listener para fechar dropdown ao selecionar
+        pedidoEnderecoCombo.setOnAction(event -> {
+            Cliente selecionado = pedidoEnderecoCombo.getValue();
+            if (selecionado != null) {
+                ignorarMudancaTexto = true;
+                pedidoEnderecoCombo.getEditor().setText(selecionado.getEndereco());
+                ignorarMudancaTexto = false;
+                pedidoEnderecoCombo.hide();
+            }
+        });
+    }
+    
+    /**
      * Carrega os clientes do banco de dados para a lista mestra.
      * Este método é chamado apenas uma vez na inicialização e quando há atualizações.
      */
@@ -937,8 +1038,12 @@ public class PrimaryController {
 
         // 1. Resete o Cliente (isso vai disparar o listener que limpa/habilita os campos avulsos automaticamente!)
         pedidoClienteCombo.setValue(null);
+        
+        // 2. Resete o ComboBox de Endereço
+        pedidoEnderecoCombo.setValue(null);
+        pedidoEnderecoCombo.getEditor().clear();
 
-        // 2. Por segurança, garanta a limpeza e habilitação dos campos avulsos explicitamente:
+        // 3. Por segurança, garanta a limpeza e habilitação dos campos avulsos explicitamente:
         pedidoNomeAvulsoField.clear();
         pedidoAvulsoTipoField.clear();
         pedidoAvulsoNumeroField.clear();
@@ -948,13 +1053,13 @@ public class PrimaryController {
         pedidoAvulsoNumeroField.setDisable(false);
         pedidoAvulsoRuaField.setDisable(false);
 
-        // 3. Resete o Produto para o padrão (use o helper que criamos)
+        // 4. Resete o Produto para o padrão (use o helper que criamos)
         setProdutoPadrao();
 
-        // 4. Resete a Quantidade para 1
+        // 5. Resete a Quantidade para 1
         pedidoQtdSpinner.getValueFactory().setValue(1);
 
-        // 5. Limpe a Forma de Pagamento
+        // 6. Limpe a Forma de Pagamento
         pedidoPagamentoCombo.setValue(null);
     }
 

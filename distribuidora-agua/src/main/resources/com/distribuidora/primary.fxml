@@ -71,7 +71,8 @@
                                                 </Label>
                                                 <TextField fx:id="pedidoAvulsoTipoField" promptText="Prédio / Casa" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                                 <TextField fx:id="pedidoAvulsoNumeroField" promptText="Bloco / Apto / Número" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                                                <TextField fx:id="pedidoAvulsoRuaField" promptText="Rua / Av / Bairro" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                                <TextField fx:id="pedidoAvulsoRuaField" promptText="Rua / Av / Bairro                    OU" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                                                <ComboBox fx:id="pedidoEnderecoCombo" editable="true" prefHeight="42.0" prefWidth="149.0" promptText="Buscar por endereço" GridPane.columnIndex="4" GridPane.rowIndex="1" />
                                                 
                                                 <!-- Linha 2: ÁGUA -->
                                                 <Label text="ÁGUA" GridPane.rowIndex="2">
@@ -79,7 +80,7 @@
                                                       <Font size="18.0" />
                                                    </font>
                                                 </Label>
-                                                <ComboBox fx:id="pedidoProdutoCombo" prefHeight="38.0" prefWidth="168.0" promptText="SELECIONE" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                <ComboBox fx:id="pedidoProdutoCombo" prefHeight="38.0" prefWidth="280.0" promptText="SELECIONE" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2" />
                                                 
                                                 <!-- Linha 3: QUANTIDADE -->
                                                 <Label text="QUANTIDADE" GridPane.rowIndex="3">
