@@ -63,3 +63,9 @@ cd sistemaLojaAgua
 
 # Execute via Maven (Linux/Mac/Windows)
 mvn clean javafx:run
+```
+
+## 🔒 Privacidade
+-  Este repositório contém a estrutura funcional do sistema. Dados reais de clientes e transações foram removidos para garantir a privacidade do estabelecimento comercial.
+
+[Desenvolvido por Bruno Barreto](https://github.com/brunombs)
