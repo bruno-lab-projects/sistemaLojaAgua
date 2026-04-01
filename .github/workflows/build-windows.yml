@@ -1,13 +1,10 @@
 name: Build do Aplicativo para Windows
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch: # Permite rodar manualmente pelo site do GitHub
+
+permissions:
+  contents: write # Permissão obrigatória para o robô poder criar a página de Release
 
 jobs:
   build-windows:
@@ -46,3 +43,22 @@ jobs:
       with:
         name: Sistema-Loja-Windows-v${{ env.APP_VERSION }}
         path: EntregaWindows/
+
+    - name: Zipar os arquivos para o Release
+      run: |
+        cd EntregaWindows
+        zip -r ../Sistema-Loja-Windows-v${{ env.APP_VERSION }}.zip .
+        cd ..
+
+    - name: Criar Release no GitHub
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ env.APP_VERSION }}
+        name: Versão ${{ env.APP_VERSION }}
+        files: Sistema-Loja-Windows-v${{ env.APP_VERSION }}.zip
+        body: |
+          ### Download PRONTO PARA USO (Windows)
+          Para rodar o programa, baixe o arquivo `Sistema-Loja-Windows-v${{ env.APP_VERSION }}.zip` logo abaixo em "Assets". 
+          Extraia a pasta e dê dois cliques no arquivo **INICIAR.bat**.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
