@@ -4,10 +4,8 @@ import com.distribuidora.util.AlertUtils;
 import com.distribuidora.util.FormatUtils;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -136,31 +134,21 @@ public class SecondaryController {
         // Se o usuário escolheu um arquivo
         if (file != null) {
             try {
-                // Define origem
-                Path origem = Paths.get("distribuidora.db");
-                
                 // Garante que o arquivo tenha a extensão .db
                 String caminhoDestino = file.getAbsolutePath();
                 if (!caminhoDestino.toLowerCase().endsWith(".db")) {
                     caminhoDestino += ".db";
                 }
                 Path destino = Paths.get(caminhoDestino);
-                
-                // Verifica se o arquivo de origem existe
-                if (!Files.exists(origem)) {
-                    AlertUtils.mostrarErro("Falha no Backup", 
-                        "Arquivo do banco de dados não encontrado em: " + origem.toAbsolutePath());
-                    return;
-                }
-                
-                // Copia o arquivo do banco para o destino escolhido
-                Files.copy(origem, destino, StandardCopyOption.REPLACE_EXISTING);
+
+                // Gera uma cópia consistente, inclusive quando o banco estiver em WAL
+                Path backupGerado = Database.createBackup(destino);
                 
                 // Mostra mensagem de sucesso
                 AlertUtils.mostrarSucesso("Backup Concluído", 
-                    "Arquivo salvo em: " + destino.toString());
+                    "Arquivo salvo em: " + backupGerado.toString());
                 
-            } catch (IOException e) {
+            } catch (IOException | SQLException e) {
                 // Mostra mensagem de erro
                 AlertUtils.mostrarErro("Falha no Backup", e.getMessage());
             }
@@ -325,12 +313,19 @@ public class SecondaryController {
 
     @FXML
     private void handleSalvarCliente() {
-        String nome = FormatUtils.capitalizarNome(nomeField.getText());
-        String telefone = telefoneField.getText();
-        String predioCasa = clientePredioField.getText();
-        String numero = clienteNumeroField.getText();
-        String endereco = clienteRuaField.getText();
-        String observacoes = observacoesField.getText();
+        String nome = FormatUtils.capitalizarNome(FormatUtils.trimToEmpty(nomeField.getText()));
+        String telefone;
+        String predioCasa = FormatUtils.trimToEmpty(clientePredioField.getText());
+        String numero = FormatUtils.trimToEmpty(clienteNumeroField.getText());
+        String endereco = FormatUtils.trimToEmpty(clienteRuaField.getText());
+        String observacoes = FormatUtils.trimToEmpty(observacoesField.getText());
+
+        try {
+            telefone = FormatUtils.normalizarTelefoneParaPersistencia(telefoneField.getText());
+        } catch (IllegalArgumentException e) {
+            AlertUtils.mostrarErro("Erro", e.getMessage());
+            return;
+        }
 
         if (nome.isBlank()) {
             AlertUtils.mostrarErro("Erro", "O nome é obrigatório.");
@@ -426,8 +421,7 @@ public class SecondaryController {
 
     @FXML
     private void handleSalvarProduto() {
-        String nome = FormatUtils.capitalizarNome(produtoNomeField.getText());
-        String precoStr = produtoPrecoField.getText();
+        String nome = FormatUtils.capitalizarNome(FormatUtils.trimToEmpty(produtoNomeField.getText()));
 
         // Validações
         if (nome.isBlank()) {
@@ -437,9 +431,9 @@ public class SecondaryController {
 
         double preco;
         try {
-            preco = Double.parseDouble(precoStr);
-        } catch (NumberFormatException e) {
-            AlertUtils.mostrarErro("Erro", "Preço inválido. Use apenas números (ex: 19.50).");
+            preco = FormatUtils.parsePreco(produtoPrecoField.getText());
+        } catch (IllegalArgumentException e) {
+            AlertUtils.mostrarErro("Erro", e.getMessage());
             return;
         }
 
@@ -542,7 +536,7 @@ public class SecondaryController {
 
     @FXML
     private void handleSalvarFuncionario() {
-        String nome = FormatUtils.capitalizarNome(funcionarioNomeField.getText());
+        String nome = FormatUtils.capitalizarNome(FormatUtils.trimToEmpty(funcionarioNomeField.getText()));
         if (nome.isBlank()) {
             AlertUtils.mostrarErro("Erro", "O nome é obrigatório.");
             return;

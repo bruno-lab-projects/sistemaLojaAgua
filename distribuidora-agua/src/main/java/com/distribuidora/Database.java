@@ -1,15 +1,123 @@
 package com.distribuidora;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.Statement;
 import java.sql.SQLException;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.time.LocalDate;
 
 public class Database {
 
-    private static String NOME_ARQUIVO_DB = "distribuidora.db";
+    private static final String APP_DIRECTORY_NAME = ".distribuidora_agua";
+    private static final String DB_FILE_NAME = "distribuidora.db";
+    private static final Path DB_DIRECTORY = Path.of(System.getProperty("user.home"), APP_DIRECTORY_NAME);
+    private static final Path DB_PATH = DB_DIRECTORY.resolve(DB_FILE_NAME);
+
+    private static Path getLegacyDatabasePath() {
+        return Path.of(DB_FILE_NAME).toAbsolutePath().normalize();
+    }
+
+    public static Path getDatabaseFilePath() {
+        return DB_PATH;
+    }
+
+    private static void ensureDatabaseDirectoryExists() throws SQLException {
+        try {
+            Files.createDirectories(DB_DIRECTORY);
+        } catch (IOException e) {
+            throw new SQLException("Não foi possível preparar o diretório do banco de dados: " + DB_DIRECTORY, e);
+        }
+    }
+
+    private static void migrateLegacyDatabaseIfNeeded() throws SQLException {
+        Path legacyDbPath = getLegacyDatabasePath();
+        if (Files.exists(DB_PATH) || !Files.exists(legacyDbPath)) {
+            return;
+        }
+
+        try {
+            Files.move(legacyDbPath, DB_PATH, StandardCopyOption.REPLACE_EXISTING);
+
+            Path legacyWalPath = Path.of(legacyDbPath.toString() + "-wal");
+            Path legacyShmPath = Path.of(legacyDbPath.toString() + "-shm");
+            Path currentWalPath = Path.of(DB_PATH.toString() + "-wal");
+            Path currentShmPath = Path.of(DB_PATH.toString() + "-shm");
+
+            moveIfExists(legacyWalPath, currentWalPath);
+            moveIfExists(legacyShmPath, currentShmPath);
+
+            System.out.println("Banco legado migrado para: " + DB_PATH);
+        } catch (IOException e) {
+            throw new SQLException("Falha ao migrar banco legado para o diretório padrão.", e);
+        }
+    }
+
+    private static void moveIfExists(Path origem, Path destino) throws IOException {
+        if (Files.exists(origem)) {
+            Files.move(origem, destino, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private static void configureConnection(Connection conn) throws SQLException {
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA foreign_keys = ON;");
+            stmt.execute("PRAGMA busy_timeout = 5000;");
+            stmt.execute("PRAGMA journal_mode = WAL;");
+            stmt.execute("PRAGMA synchronous = NORMAL;");
+        }
+    }
+
+    private static String escapeForSqlLiteral(String value) {
+        return value.replace("'", "''");
+    }
+
+    public static Path createBackup(Path destinationPath) throws SQLException, IOException {
+        if (destinationPath == null) {
+            throw new IllegalArgumentException("O caminho de destino do backup não pode ser nulo.");
+        }
+
+        if (!Files.exists(DB_PATH)) {
+            throw new SQLException("Arquivo do banco de dados não encontrado em: " + DB_PATH);
+        }
+
+        Path destination = destinationPath.toAbsolutePath().normalize();
+        Path parent = destination.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+        Files.deleteIfExists(destination);
+
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA wal_checkpoint(FULL);");
+            stmt.execute("VACUUM INTO '" + escapeForSqlLiteral(destination.toString()) + "'");
+        }
+
+        return destination;
+    }
+
+    private static void performDailyBackupIfNeeded() {
+        if (!Files.exists(DB_PATH)) {
+            return;
+        }
+
+        Path backupDir = DB_DIRECTORY.resolve("backups");
+        Path backupFile = backupDir.resolve("distribuidora_" + LocalDate.now() + ".db");
+        if (Files.exists(backupFile)) {
+            return;
+        }
+
+        try {
+            createBackup(backupFile);
+            System.out.println("Backup diário realizado em: " + backupFile);
+        } catch (SQLException | IOException e) {
+            System.err.println("Erro ao realizar backup do banco de dados: " + e.getMessage());
+        }
+    }
 
     /**
      * Estabelece uma conexão com o banco de dados SQLite.
@@ -18,11 +126,18 @@ public class Database {
      * @throws SQLException se houver erro ao conectar
      */
     public static Connection connect() throws SQLException {
-        String url = "jdbc:sqlite:" + NOME_ARQUIVO_DB;
-        return DriverManager.getConnection(url);
+        ensureDatabaseDirectoryExists();
+        String url = "jdbc:sqlite:" + DB_PATH.toAbsolutePath();
+        Connection conn = DriverManager.getConnection(url);
+        configureConnection(conn);
+        return conn;
     }
 
     public static void initialize() throws SQLException {
+        ensureDatabaseDirectoryExists();
+        migrateLegacyDatabaseIfNeeded();
+        performDailyBackupIfNeeded();
+
         String sqlClientes = "CREATE TABLE IF NOT EXISTS Clientes ("
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + "nome TEXT NOT NULL,"

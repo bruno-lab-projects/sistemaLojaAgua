@@ -801,12 +801,19 @@ public class PrimaryController {
 
     @FXML
     private void handleSalvarCliente() {
-        String nome = FormatUtils.capitalizarNome(nomeField.getText());
-        String telefone = telefoneField.getText();
-        String endereco = enderecoField.getText();
-        String predioCasa = predioCasaField.getText();
-        String blocoNumero = blocoNumeroField.getText();
-        String observacoes = observacoesField.getText();
+        String nome = FormatUtils.capitalizarNome(FormatUtils.trimToEmpty(nomeField.getText()));
+        String telefone;
+        String endereco = FormatUtils.trimToEmpty(enderecoField.getText());
+        String predioCasa = FormatUtils.trimToEmpty(predioCasaField.getText());
+        String blocoNumero = FormatUtils.trimToEmpty(blocoNumeroField.getText());
+        String observacoes = FormatUtils.trimToEmpty(observacoesField.getText());
+
+        try {
+            telefone = FormatUtils.normalizarTelefoneParaPersistencia(telefoneField.getText());
+        } catch (IllegalArgumentException e) {
+            AlertUtils.mostrarErro("Erro", e.getMessage());
+            return;
+        }
 
         if (nome.isBlank()) {
             AlertUtils.mostrarErro("Erro", "O nome é obrigatório.");
@@ -884,10 +891,10 @@ public class PrimaryController {
         Cliente cliente = pedidoClienteCombo.getValue();
         Produto produto = pedidoProdutoCombo.getValue();
         int quantidade = pedidoQtdSpinner.getValue();
-        String nomeAvulso = pedidoNomeAvulsoField.getText();
-        String tipoAvulso = pedidoAvulsoTipoField.getText();
-        String numeroAvulso = pedidoAvulsoNumeroField.getText();
-        String ruaAvulso = pedidoAvulsoRuaField.getText();
+        String nomeAvulso = FormatUtils.capitalizarNome(FormatUtils.trimToEmpty(pedidoNomeAvulsoField.getText()));
+        String tipoAvulso = FormatUtils.trimToEmpty(pedidoAvulsoTipoField.getText());
+        String numeroAvulso = FormatUtils.trimToEmpty(pedidoAvulsoNumeroField.getText());
+        String ruaAvulso = FormatUtils.trimToEmpty(pedidoAvulsoRuaField.getText());
         FormaPagamento pagamento = pedidoPagamentoCombo.getValue();
 
         // 2. Validações
@@ -899,6 +906,18 @@ public class PrimaryController {
         if (quantidade <= 0) {
             AlertUtils.mostrarErro("Erro", "A quantidade deve ser maior que zero.");
             return;
+        }
+
+        if (cliente == null) {
+            if (nomeAvulso.isBlank()) {
+                AlertUtils.mostrarErro("Erro", "Selecione um cliente cadastrado ou informe o nome do cliente avulso.");
+                return;
+            }
+
+            if (ruaAvulso.isBlank()) {
+                AlertUtils.mostrarErro("Erro", "Informe a rua/endereço do cliente avulso.");
+                return;
+            }
         }
 
         if (pedidoEmEdicao == null) {
@@ -927,13 +946,13 @@ public class PrimaryController {
                     enderecoCompleto = cliente.getEndereco() + " " + cliente.getPredioCasa() + " " + cliente.getNumero();
                 } else {
                     pstmt.setNull(1, java.sql.Types.INTEGER); // cliente_id
-                    pstmt.setString(6, FormatUtils.capitalizarNome(nomeAvulso));
+                    pstmt.setString(6, nomeAvulso);
                     pstmt.setString(7, ruaAvulso);
                     pstmt.setString(8, tipoAvulso);
                     pstmt.setString(9, numeroAvulso);
                     
                     // Dados históricos do cliente avulso
-                    nomeCliente = FormatUtils.capitalizarNome(nomeAvulso);
+                    nomeCliente = nomeAvulso;
                     telefoneCliente = "";
                     enderecoCompleto = ruaAvulso + " " + tipoAvulso + " " + numeroAvulso;
                 }

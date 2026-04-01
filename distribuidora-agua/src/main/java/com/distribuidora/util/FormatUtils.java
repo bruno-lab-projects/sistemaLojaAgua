@@ -12,6 +12,31 @@ import java.util.function.UnaryOperator;
  */
 public class FormatUtils {
 
+    private static final String TELEFONE_PADRAO_INICIAL = "(71) 9";
+
+    /**
+     * Remove espaços laterais de um texto e garante retorno não nulo.
+     *
+     * @param texto Texto de entrada
+     * @return Texto sem espaços laterais, ou string vazia quando nulo
+     */
+    public static String trimToEmpty(String texto) {
+        return texto == null ? "" : texto.trim();
+    }
+
+    /**
+     * Retorna apenas os dígitos de uma string.
+     *
+     * @param texto Texto de entrada
+     * @return Apenas caracteres numéricos
+     */
+    public static String somenteDigitos(String texto) {
+        if (texto == null || texto.isEmpty()) {
+            return "";
+        }
+        return texto.replaceAll("[^0-9]", "");
+    }
+
     /**
      * Capitaliza cada palavra de um nome.
      * Exemplo: "BRUNO SANTOS" ou "bruno santos" → "Bruno Santos"
@@ -50,32 +75,82 @@ public class FormatUtils {
         if (numeros == null || numeros.isEmpty()) {
             return numeros;
         }
+
+        String apenasNumeros = somenteDigitos(numeros);
+        if (apenasNumeros.isEmpty()) {
+            return "";
+        }
+
+        if (apenasNumeros.length() > 11) {
+            apenasNumeros = apenasNumeros.substring(0, 11);
+        }
         
         // Formata: (DD) 9 9999-9999
         StringBuilder formatted = new StringBuilder();
-        int length = numeros.length();
+        int length = apenasNumeros.length();
         
         if (length <= 2) {
             // Apenas DDD: (71
-            formatted.append("(").append(numeros);
+            formatted.append("(").append(apenasNumeros);
         } else if (length == 3) {
             // DDD completo + primeiro dígito: (71) 9
-            formatted.append("(").append(numeros.substring(0, 2))
-                     .append(") ").append(numeros.substring(2));
+            formatted.append("(").append(apenasNumeros.substring(0, 2))
+                     .append(") ").append(apenasNumeros.substring(2));
         } else if (length <= 7) {
             // DDD + primeiros dígitos: (71) 9 1234
-            formatted.append("(").append(numeros.substring(0, 2))
-                     .append(") ").append(numeros.substring(2, 3))
-                     .append(" ").append(numeros.substring(3));
+            formatted.append("(").append(apenasNumeros.substring(0, 2))
+                     .append(") ").append(apenasNumeros.substring(2, 3))
+                     .append(" ").append(apenasNumeros.substring(3));
         } else {
             // Formato completo: (71) 9 1234-5678
-            formatted.append("(").append(numeros.substring(0, 2))
-                     .append(") ").append(numeros.substring(2, 3))
-                     .append(" ").append(numeros.substring(3, 7))
-                     .append("-").append(numeros.substring(7));
+            formatted.append("(").append(apenasNumeros.substring(0, 2))
+                     .append(") ").append(apenasNumeros.substring(2, 3))
+                     .append(" ").append(apenasNumeros.substring(3, 7))
+                     .append("-").append(apenasNumeros.substring(7));
         }
         
         return formatted.toString();
+    }
+
+    /**
+     * Normaliza telefone para persistência no banco.
+     * Aceita campo vazio, mas rejeita telefone parcial.
+     *
+     * @param telefone Texto digitado no campo de telefone
+     * @return Telefone formatado no padrão do sistema, ou vazio quando não informado
+     */
+    public static String normalizarTelefoneParaPersistencia(String telefone) {
+        String texto = trimToEmpty(telefone);
+        if (texto.isEmpty() || TELEFONE_PADRAO_INICIAL.equals(texto)) {
+            return "";
+        }
+
+        String digitos = somenteDigitos(texto);
+        if (digitos.length() != 11) {
+            throw new IllegalArgumentException("O número de telefone informado está incompleto.");
+        }
+
+        return formatarTelefone(digitos);
+    }
+
+    /**
+     * Converte preço digitado no formulário em double.
+     * Aceita vírgula ou ponto como separador decimal.
+     *
+     * @param valorDigitado Valor digitado pelo usuário
+     * @return Valor numérico convertido
+     */
+    public static double parsePreco(String valorDigitado) {
+        String normalizado = trimToEmpty(valorDigitado).replace(",", ".");
+        if (normalizado.isEmpty()) {
+            throw new IllegalArgumentException("Preço inválido. Use apenas números (ex: 19,50).");
+        }
+
+        try {
+            return Double.parseDouble(normalizado);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Preço inválido. Use apenas números (ex: 19,50).", e);
+        }
     }
 
     /**
@@ -143,7 +218,7 @@ public class FormatUtils {
      * @return String formatada com símbolo da moeda e separadores brasileiros
      */
     public static String formatarMoeda(double valor) {
-        NumberFormat formatador = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        NumberFormat formatador = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"));
         return formatador.format(valor);
     }
 }

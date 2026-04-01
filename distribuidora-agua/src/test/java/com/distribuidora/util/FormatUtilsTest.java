@@ -165,4 +165,60 @@ class FormatUtilsTest {
         assertEquals("(71) 9 1234-5", resultado, 
             "8 dígitos devem formatar com início do hífen: '(71) 9 1234-5'");
     }
+
+    // ==================== TESTES DE NORMALIZAÇÃO DE ENTRADA ====================
+
+    @Test
+    void testNormalizarTelefoneParaPersistencia_ValorVazio() {
+        String resultado = FormatUtils.normalizarTelefoneParaPersistencia("");
+        assertEquals("", resultado, "Campo de telefone vazio deve ser persistido como vazio");
+    }
+
+    @Test
+    void testNormalizarTelefoneParaPersistencia_PadraoInicial() {
+        String resultado = FormatUtils.normalizarTelefoneParaPersistencia("(71) 9");
+        assertEquals("", resultado, "Máscara inicial não deve ser salva como telefone");
+    }
+
+    @Test
+    void testNormalizarTelefoneParaPersistencia_NumeroCompleto() {
+        String resultado = FormatUtils.normalizarTelefoneParaPersistencia("71912345678");
+        assertEquals("(71) 9 1234-5678", resultado, "Telefone completo deve ser normalizado no formato padrão");
+    }
+
+    @Test
+    void testNormalizarTelefoneParaPersistencia_Incompleto() {
+        IllegalArgumentException ex = assertThrows(
+            IllegalArgumentException.class,
+            () -> FormatUtils.normalizarTelefoneParaPersistencia("7191234")
+        );
+        assertEquals("O número de telefone informado está incompleto.", ex.getMessage());
+    }
+
+    @Test
+    void testSomenteDigitos_TextoComMascara() {
+        String resultado = FormatUtils.somenteDigitos("(71) 9 1234-5678");
+        assertEquals("71912345678", resultado, "Deve extrair apenas os dígitos do telefone");
+    }
+
+    @Test
+    void testParsePreco_ComVirgula() {
+        double resultado = FormatUtils.parsePreco("19,50");
+        assertEquals(19.50, resultado, 0.0001, "Deve aceitar vírgula como separador decimal");
+    }
+
+    @Test
+    void testParsePreco_ComPonto() {
+        double resultado = FormatUtils.parsePreco("19.50");
+        assertEquals(19.50, resultado, 0.0001, "Deve aceitar ponto como separador decimal");
+    }
+
+    @Test
+    void testParsePreco_Invalido() {
+        IllegalArgumentException ex = assertThrows(
+            IllegalArgumentException.class,
+            () -> FormatUtils.parsePreco("abc")
+        );
+        assertEquals("Preço inválido. Use apenas números (ex: 19,50).", ex.getMessage());
+    }
 }
