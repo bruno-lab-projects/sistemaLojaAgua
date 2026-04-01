@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Baixar o código fonte
@@ -24,17 +24,25 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
+    - name: Definir Versão Automática
+      run: |
+        BASE_VERSION=$(mvn -f distribuidora-agua/pom.xml help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
+        NOVA_VERSAO="$BASE_VERSION.${{ github.run_number }}"
+        echo "Gerando versão automatica: $NOVA_VERSAO"
+        mvn -f distribuidora-agua/pom.xml versions:set -DnewVersion=$NOVA_VERSAO -DgenerateBackupPoms=false
+        echo "APP_VERSION=$NOVA_VERSAO" >> $GITHUB_ENV
+
     - name: Fazer o Build (Compilar e Gerar o JAR com tudo dentro)
       run: mvn -f distribuidora-agua/pom.xml clean package -Djavafx.platform=win
 
     - name: Preparar pasta de entrega
       run: |
         mkdir EntregaWindows
-        copy "distribuidora-agua\target\distribuidora-agua-1.1-SNAPSHOT.jar" "EntregaWindows\SistemaLoja.jar"
-        copy "Executavel-Sistema-Loja\INICIAR.bat" "EntregaWindows\"
+        cp distribuidora-agua/target/distribuidora-agua-*.jar EntregaWindows/SistemaLoja.jar
+        cp Executavel-Sistema-Loja/INICIAR.bat EntregaWindows/
 
     - name: Disponibilizar para Download (Artifacts)
       uses: actions/upload-artifact@v4
       with:
-        name: Sistema-Loja-Windows
+        name: Sistema-Loja-Windows-v${{ env.APP_VERSION }}
         path: EntregaWindows/
