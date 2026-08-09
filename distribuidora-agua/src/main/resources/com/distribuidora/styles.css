@@ -420,3 +420,44 @@ GridPane {
 .table-row-cell {
     -fx-transition: all 0.2s ease;
 }
+
+/* ===== FAIXA DE ATUALIZACAO =====
+   Aviso discreto no topo, nunca modal: a loja continua trabalhando
+   normalmente enquanto ele estiver ali. */
+.faixa-atualizacao {
+    -fx-background-color: linear-gradient(to bottom, #fff8e1 0%, #ffecb3 100%);
+    -fx-border-color: #ffb300;
+    -fx-border-width: 0 0 2 0;
+}
+
+.faixa-atualizacao-texto {
+    -fx-text-fill: #6d4c00;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* Menor que os botoes das abas: e um convite, nao uma acao principal. */
+.faixa-atualizacao-botao {
+    -fx-background-color: linear-gradient(to bottom, #ffb300 0%, #ff8f00 100%);
+    -fx-font-size: 13px;
+    -fx-padding: 6 16;
+}
+
+.faixa-atualizacao-botao:hover {
+    -fx-background-color: linear-gradient(to bottom, #ffa000 0%, #ef6c00 100%);
+}
+
+.faixa-atualizacao-secundario {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6d4c00;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-padding: 6 12;
+    -fx-effect: null;
+    -fx-underline: true;
+}
+
+.faixa-atualizacao-secundario:hover {
+    -fx-background-color: rgba(255, 179, 0, 0.2);
+    -fx-effect: null;
+}

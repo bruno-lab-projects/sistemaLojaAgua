@@ -5,6 +5,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.Tab?>
@@ -18,6 +19,7 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
@@ -26,6 +28,24 @@
    <children>
       <VBox alignment="CENTER" prefHeight="924.0" prefWidth="1284.0" spacing="10.0" stylesheets="@styles.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
+            <!--
+               Faixa de atualizacao. Fica escondida ate existir versao nova.
+               managed="false" junto com visible="false" e o que faz ela nao
+               ocupar espaco enquanto escondida: so visible deixaria um buraco
+               em branco no topo da tela.
+            -->
+            <HBox fx:id="faixaAtualizacao" alignment="CENTER_LEFT" managed="false" spacing="12.0" styleClass="faixa-atualizacao" visible="false">
+               <children>
+                  <Label fx:id="lblAtualizacao" styleClass="faixa-atualizacao-texto" text="" />
+                  <ProgressBar fx:id="progressoAtualizacao" managed="false" prefWidth="180.0" progress="0.0" visible="false" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnAtualizar" mnemonicParsing="false" onAction="#handleAtualizar" styleClass="faixa-atualizacao-botao" text="Atualizar" />
+                  <Button fx:id="btnLembrarDepois" mnemonicParsing="false" onAction="#handleLembrarDepois" styleClass="faixa-atualizacao-secundario" text="Lembrar depois" />
+               </children>
+               <padding>
+                  <Insets bottom="8.0" left="16.0" right="16.0" top="8.0" />
+               </padding>
+            </HBox>
             <TabPane prefHeight="482.0" prefWidth="376.0" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
               <tabs>
                 <Tab text="PEDIDOS">

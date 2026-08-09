@@ -1,5 +1,6 @@
 package com.distribuidora;
 
+import com.distribuidora.update.UpdateService;
 import com.distribuidora.util.AlertUtils;
 import com.distribuidora.util.FormatUtils;
 import java.io.IOException;
@@ -31,7 +32,9 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import javafx.scene.input.ClipboardContent;
@@ -124,6 +127,21 @@ public class PrimaryController {
     @FXML private TableColumn<Pedido, String> colEntreguesTotal;
     @FXML private TableColumn<Pedido, String> colEntreguesFuncionario;
 
+    // Faixa de atualização (topo da tela, escondida por padrão)
+    @FXML private HBox faixaAtualizacao;
+    @FXML private Label lblAtualizacao;
+    @FXML private ProgressBar progressoAtualizacao;
+    @FXML private Button btnAtualizar;
+    @FXML private Button btnLembrarDepois;
+
+    private final UpdateService updateService = new UpdateService();
+
+    /**
+     * Vira true quando o arquivo já está baixado e validado. A partir daí o
+     * mesmo botão da faixa passa a reiniciar o programa em vez de baixar.
+     */
+    private boolean atualizacaoPronta = false;
+
     @FXML
     private void initialize() {
         // Configura máscara de telefone
@@ -208,6 +226,95 @@ public class PrimaryController {
         
         // Configura Drag-and-Drop entre as tabelas
         configurarDragAndDrop();
+
+        // Procura versão nova em background. Se não houver (ou se a internet
+        // estiver fora), nada acontece na tela — nem aviso, nem erro.
+        updateService.verificarEmBackground(this::mostrarAvisoDeVersaoNova);
+    }
+
+    // ===================== FAIXA DE ATUALIZAÇÃO =====================
+
+    /** Estado 1: existe versão nova, ainda não baixada. */
+    private void mostrarAvisoDeVersaoNova(String versao) {
+        lblAtualizacao.setText("Nova versão " + versao + " disponível.");
+        btnAtualizar.setText("Atualizar");
+        btnAtualizar.setDisable(false);
+        btnLembrarDepois.setVisible(true);
+        btnLembrarDepois.setManaged(true);
+        mostrarProgresso(false);
+        mostrarFaixa(true);
+    }
+
+    @FXML
+    private void handleAtualizar() {
+        if (atualizacaoPronta) {
+            reiniciarParaAplicar();
+            return;
+        }
+        baixarAtualizacao();
+    }
+
+    /** Estado 2: baixando. */
+    private void baixarAtualizacao() {
+        lblAtualizacao.setText("Baixando a atualização...");
+        btnAtualizar.setDisable(true);
+        btnLembrarDepois.setDisable(true);
+        progressoAtualizacao.setProgress(0);
+        mostrarProgresso(true);
+
+        updateService.baixarEmBackground(
+                progressoAtualizacao::setProgress,
+                this::mostrarAtualizacaoPronta,
+                this::mostrarFalhaNoDownload);
+    }
+
+    /** Estado 3: arquivo baixado e validado, esperando o reinício. */
+    private void mostrarAtualizacaoPronta() {
+        atualizacaoPronta = true;
+        lblAtualizacao.setText("Atualização baixada. Reiniciar agora?");
+        btnAtualizar.setText("Reiniciar");
+        btnAtualizar.setDisable(false);
+        btnLembrarDepois.setText("Depois");
+        btnLembrarDepois.setDisable(false);
+        mostrarProgresso(false);
+    }
+
+    /** Estado 4: falhou. O detalhe técnico fica no log, não na tela da loja. */
+    private void mostrarFalhaNoDownload(Throwable causa) {
+        lblAtualizacao.setText("Não foi possível baixar a atualização. Tente mais tarde.");
+        btnAtualizar.setText("Tentar de novo");
+        btnAtualizar.setDisable(false);
+        btnLembrarDepois.setDisable(false);
+        mostrarProgresso(false);
+    }
+
+    private void reiniciarParaAplicar() {
+        // A troca do arquivo é feita pelo INICIAR.bat antes de subir a JVM.
+        if (!UpdateService.reiniciar()) {
+            lblAtualizacao.setText("Feche e abra o programa para aplicar a atualização.");
+            btnAtualizar.setVisible(false);
+            btnAtualizar.setManaged(false);
+        }
+    }
+
+    @FXML
+    private void handleLembrarDepois() {
+        // Sem "adiar" a faixa voltaria na próxima verificação, daqui a 4 horas.
+        if (!atualizacaoPronta) {
+            UpdateService.adiarParaAmanha();
+        }
+        mostrarFaixa(false);
+    }
+
+    /** visible e managed sempre juntos: só visible deixaria um vão no layout. */
+    private void mostrarFaixa(boolean visivel) {
+        faixaAtualizacao.setVisible(visivel);
+        faixaAtualizacao.setManaged(visivel);
+    }
+
+    private void mostrarProgresso(boolean visivel) {
+        progressoAtualizacao.setVisible(visivel);
+        progressoAtualizacao.setManaged(visivel);
     }
 
     /**
