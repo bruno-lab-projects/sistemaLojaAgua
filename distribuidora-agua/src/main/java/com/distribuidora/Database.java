@@ -124,15 +124,21 @@ public class Database {
 
         Path backupDir = getDatabaseDirectory().resolve("backups");
         Path backupFile = backupDir.resolve("distribuidora_" + LocalDate.now() + ".db");
-        if (Files.exists(backupFile)) {
-            return;
+
+        if (!Files.exists(backupFile)) {
+            try {
+                createBackup(backupFile);
+                LOG.info("Backup diário realizado em: " + backupFile);
+            } catch (SQLException | IOException e) {
+                LOG.log(java.util.logging.Level.WARNING, "Erro ao realizar backup do banco de dados: " + e.getMessage(), e);
+                return; // se o backup de hoje falhou, não apaga os antigos
+            }
         }
 
         try {
-            createBackup(backupFile);
-            LOG.info("Backup diário realizado em: " + backupFile);
-        } catch (SQLException | IOException e) {
-            LOG.log(java.util.logging.Level.WARNING, "Erro ao realizar backup do banco de dados: " + e.getMessage(), e);
+            com.distribuidora.util.BackupRotation.rotacionar(backupDir, LocalDate.now());
+        } catch (IOException | RuntimeException e) {
+            LOG.log(java.util.logging.Level.WARNING, "Falha ao rotacionar os backups antigos", e);
         }
     }
 
