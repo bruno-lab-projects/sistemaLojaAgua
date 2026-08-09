@@ -210,11 +210,27 @@ public class Database {
             stmt.execute(sqlFuncionarios);
             stmt.execute(sqlProdutos);
             stmt.execute(sqlPedidos);
-            
+
+            createIndexes(stmt);
+
             // Migra dados existentes para os novos campos históricos
             migrateHistoricalData(conn);
         }
         // Propaga a exceção para ser tratada pela camada superior
+    }
+
+    /**
+     * Índices das colunas usadas pelos filtros do dashboard e das abas de pedidos.
+     * Sem eles, toda consulta por período é varredura completa da tabela.
+     *
+     * O índice composto (status, data_hora) atende as consultas que filtram os dois,
+     * que são a maioria do dashboard. Os simples atendem os filtros isolados.
+     */
+    private static void createIndexes(Statement stmt) throws SQLException {
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_data_hora ON Pedidos(data_hora)");
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_status ON Pedidos(status)");
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_cliente_id ON Pedidos(cliente_id)");
+        stmt.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_status_data_hora ON Pedidos(status, data_hora)");
     }
 
     /**
