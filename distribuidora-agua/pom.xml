@@ -49,6 +49,33 @@
         </dependency>
     </dependencies>
     <build>
+        <!--
+            Dois blocos de propósito. A "filtragem" do Maven é substituição de
+            texto dentro dos arquivos: ela troca ${project.version} pelo valor
+            real. Só o app.properties precisa disso.
+
+            Se a filtragem fosse ligada na pasta inteira, o Maven passaria o
+            substituidor de texto por cima dos PNG/JPEG de resources/images/ e
+            os entregaria corrompidos. Por isso o segundo bloco copia todo o
+            resto sem filtrar, excluindo justamente o app.properties para ele
+            não ser copiado duas vezes.
+        -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>app.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>app.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
