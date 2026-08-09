@@ -2,6 +2,7 @@ package com.distribuidora;
 
 import com.distribuidora.util.AlertUtils;
 import com.distribuidora.util.AppLogger;
+import com.distribuidora.util.StartupErrorDialog;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,6 +12,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 /**
  * JavaFX App
@@ -56,14 +58,19 @@ public class App extends Application {
 
         try {
             Database.initialize();
-        } catch (SQLException e) {
-            System.err.println("ERRO CRÍTICO: Falha ao inicializar o banco de dados.");
-            System.err.println("Detalhes: " + e.getMessage());
-            System.err.println("\nO aplicativo será encerrado.");
-            e.printStackTrace();
+        } catch (SQLException | RuntimeException e) {
+            AppLogger.get(App.class).log(Level.SEVERE, "Falha ao inicializar o banco de dados", e);
+
+            StartupErrorDialog.mostrar(
+                "Não foi possível iniciar o sistema",
+                "Ocorreu um erro ao abrir o banco de dados e o programa será encerrado.\n\n"
+                    + "Tente fechar outras janelas do sistema e abrir novamente.\n"
+                    + "Se o erro continuar, envie o arquivo de log ao suporte:\n\n"
+                    + Database.getDatabaseDirectory().resolve("logs"));
+
             System.exit(1);
         }
-        
+
         launch();
     }
 
