@@ -12,45 +12,59 @@ import java.time.LocalDate;
 
 public class Database {
 
+    public static final String DB_DIR_PROPERTY = "distribuidora.db.dir";
+
     private static final String APP_DIRECTORY_NAME = ".distribuidora_agua";
     private static final String DB_FILE_NAME = "distribuidora.db";
-    private static final Path DB_DIRECTORY = Path.of(System.getProperty("user.home"), APP_DIRECTORY_NAME);
-    private static final Path DB_PATH = DB_DIRECTORY.resolve(DB_FILE_NAME);
+
+    /**
+     * Diretório onde ficam banco, backups e logs.
+     * A system property {@value #DB_DIR_PROPERTY} sobrescreve o padrão. Ela existe
+     * para os testes, que não podem escrever no diretório real do usuário.
+     */
+    static Path getDatabaseDirectory() {
+        String override = System.getProperty(DB_DIR_PROPERTY);
+        if (override != null && !override.isBlank()) {
+            return Path.of(override);
+        }
+        return Path.of(System.getProperty("user.home"), APP_DIRECTORY_NAME);
+    }
+
+    public static Path getDatabaseFilePath() {
+        return getDatabaseDirectory().resolve(DB_FILE_NAME);
+    }
 
     private static Path getLegacyDatabasePath() {
         return Path.of(DB_FILE_NAME).toAbsolutePath().normalize();
     }
 
-    public static Path getDatabaseFilePath() {
-        return DB_PATH;
-    }
-
     private static void ensureDatabaseDirectoryExists() throws SQLException {
         try {
-            Files.createDirectories(DB_DIRECTORY);
+            Files.createDirectories(getDatabaseDirectory());
         } catch (IOException e) {
-            throw new SQLException("Não foi possível preparar o diretório do banco de dados: " + DB_DIRECTORY, e);
+            throw new SQLException("Não foi possível preparar o diretório do banco de dados: " + getDatabaseDirectory(), e);
         }
     }
 
     private static void migrateLegacyDatabaseIfNeeded() throws SQLException {
         Path legacyDbPath = getLegacyDatabasePath();
-        if (Files.exists(DB_PATH) || !Files.exists(legacyDbPath)) {
+        Path dbPath = getDatabaseFilePath();
+        if (Files.exists(dbPath) || !Files.exists(legacyDbPath)) {
             return;
         }
 
         try {
-            Files.move(legacyDbPath, DB_PATH, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(legacyDbPath, dbPath, StandardCopyOption.REPLACE_EXISTING);
 
             Path legacyWalPath = Path.of(legacyDbPath.toString() + "-wal");
             Path legacyShmPath = Path.of(legacyDbPath.toString() + "-shm");
-            Path currentWalPath = Path.of(DB_PATH.toString() + "-wal");
-            Path currentShmPath = Path.of(DB_PATH.toString() + "-shm");
+            Path currentWalPath = Path.of(dbPath.toString() + "-wal");
+            Path currentShmPath = Path.of(dbPath.toString() + "-shm");
 
             moveIfExists(legacyWalPath, currentWalPath);
             moveIfExists(legacyShmPath, currentShmPath);
 
-            System.out.println("Banco legado migrado para: " + DB_PATH);
+            System.out.println("Banco legado migrado para: " + dbPath);
         } catch (IOException e) {
             throw new SQLException("Falha ao migrar banco legado para o diretório padrão.", e);
         }
@@ -80,8 +94,8 @@ public class Database {
             throw new IllegalArgumentException("O caminho de destino do backup não pode ser nulo.");
         }
 
-        if (!Files.exists(DB_PATH)) {
-            throw new SQLException("Arquivo do banco de dados não encontrado em: " + DB_PATH);
+        if (!Files.exists(getDatabaseFilePath())) {
+            throw new SQLException("Arquivo do banco de dados não encontrado em: " + getDatabaseFilePath());
         }
 
         Path destination = destinationPath.toAbsolutePath().normalize();
@@ -101,11 +115,11 @@ public class Database {
     }
 
     private static void performDailyBackupIfNeeded() {
-        if (!Files.exists(DB_PATH)) {
+        if (!Files.exists(getDatabaseFilePath())) {
             return;
         }
 
-        Path backupDir = DB_DIRECTORY.resolve("backups");
+        Path backupDir = getDatabaseDirectory().resolve("backups");
         Path backupFile = backupDir.resolve("distribuidora_" + LocalDate.now() + ".db");
         if (Files.exists(backupFile)) {
             return;
@@ -127,7 +141,7 @@ public class Database {
      */
     public static Connection connect() throws SQLException {
         ensureDatabaseDirectoryExists();
-        String url = "jdbc:sqlite:" + DB_PATH.toAbsolutePath();
+        String url = "jdbc:sqlite:" + getDatabaseFilePath().toAbsolutePath();
         Connection conn = DriverManager.getConnection(url);
         configureConnection(conn);
         return conn;
