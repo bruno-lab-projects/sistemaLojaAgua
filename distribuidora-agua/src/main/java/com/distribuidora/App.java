@@ -11,6 +11,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -23,11 +24,9 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) {
+        carregarIcone(stage);
+
         try {
-            // Carrega o ícone personalizado
-            Image icon = new Image(getClass().getResourceAsStream("/images/icon.png"));
-            stage.getIcons().add(icon);
-            
             scene = new Scene(loadFXML("primary"), 640, 480);
             stage.setScene(scene);
             stage.setMinWidth(1000);
@@ -35,12 +34,27 @@ public class App extends Application {
             stage.setMaximized(true);
             stage.setTitle("Distribuidora de Agua");
             stage.show();
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
+            AppLogger.get(App.class).log(Level.SEVERE, "Falha ao carregar a interface", e);
             AlertUtils.mostrarErro(
                 "Erro Crítico",
-                "Não foi possível carregar a interface do sistema.\n\nDetalhes: " + e.getMessage()
-            );
+                "Não foi possível carregar a interface do sistema.\n\n"
+                    + "Envie o arquivo de log ao suporte:\n"
+                    + Database.getDatabaseDirectory().resolve("logs"));
             System.exit(1);
+        }
+    }
+
+    /** O ícone é cosmético. Se faltar, registra e segue: nunca impede a abertura. */
+    private void carregarIcone(Stage stage) {
+        try (InputStream fluxo = getClass().getResourceAsStream("/images/icon.png")) {
+            if (fluxo == null) {
+                AppLogger.get(App.class).warning("Ícone /images/icon.png não encontrado no JAR");
+                return;
+            }
+            stage.getIcons().add(new Image(fluxo));
+        } catch (IOException | RuntimeException e) {
+            AppLogger.get(App.class).log(Level.WARNING, "Falha ao carregar o ícone da janela", e);
         }
     }
 
