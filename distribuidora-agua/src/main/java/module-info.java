@@ -14,6 +14,8 @@ module com.distribuidora {
 
     opens com.distribuidora to javafx.fxml, org.junit.platform.commons;
     opens com.distribuidora.util to org.junit.platform.commons;
+    opens com.distribuidora.update to org.junit.platform.commons;
     exports com.distribuidora;
     exports com.distribuidora.util;
+    exports com.distribuidora.update;
 }

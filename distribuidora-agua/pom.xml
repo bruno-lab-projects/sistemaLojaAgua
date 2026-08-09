@@ -93,6 +93,7 @@
                     <argLine>
                         --add-opens com.distribuidora/com.distribuidora.util=ALL-UNNAMED
                         --add-opens com.distribuidora/com.distribuidora=ALL-UNNAMED
+                        --add-opens com.distribuidora/com.distribuidora.update=ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>
