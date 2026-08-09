@@ -1,7 +1,13 @@
 name: Build do Aplicativo para Windows
 
 on:
-  workflow_dispatch: # Permite rodar manualmente pelo site do GitHub
+  # Publicar uma versao = criar uma tag:  git tag v1.2.0 && git push origin v1.2.0
+  push:
+    tags: ['v*']
+  # Continua existindo como valvula de teste: gera o artifact para download,
+  # mas NAO cria release. Assim da para testar um build sem que a faixa de
+  # "nova versao" pisque na tela da loja.
+  workflow_dispatch:
 
 permissions:
   contents: write # Permissão obrigatória para o robô poder criar a página de Release
@@ -21,13 +27,19 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Definir Versão Automática
+    - name: Definir a versão
       run: |
-        BASE_VERSION=$(mvn -f distribuidora-agua/pom.xml help:evaluate -Dexpression=project.version -q -DforceStdout | sed 's/-SNAPSHOT//')
-        NOVA_VERSAO="$BASE_VERSION.${{ github.run_number }}"
-        echo "Gerando versão automatica: $NOVA_VERSAO"
-        mvn -f distribuidora-agua/pom.xml versions:set -DnewVersion=$NOVA_VERSAO -DgenerateBackupPoms=false
-        echo "APP_VERSION=$NOVA_VERSAO" >> $GITHUB_ENV
+        if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          # v1.2.0 -> 1.2.0. A tag e a fonte unica da verdade sobre a versao.
+          APP_VERSION="${GITHUB_REF_NAME#v}"
+        else
+          # Build de teste. O sufixo -dev faz o app tratar como versao invalida
+          # e nunca oferecer isso como atualizacao para a loja.
+          APP_VERSION="0.0.0-dev.${{ github.run_number }}"
+        fi
+        echo "Versão deste build: $APP_VERSION"
+        mvn -f distribuidora-agua/pom.xml versions:set -DnewVersion=$APP_VERSION -DgenerateBackupPoms=false
+        echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
 
     - name: Fazer o Build (Compilar e Gerar o JAR com tudo dentro)
       run: mvn -f distribuidora-agua/pom.xml clean package -Djavafx.platform=win
@@ -50,15 +62,39 @@ jobs:
         zip -r ../Sistema-Loja-Windows-v${{ env.APP_VERSION }}.zip .
         cd ..
 
+    # Os arquivos que o proprio programa consulta para se atualizar. Gerados
+    # depois do ZIP para nao entrarem nele: quem instala a mao nao usa isso.
+    # O hash TEM que ser calculado do mesmo JAR que vai para o release, senao
+    # a validacao no cliente nunca bate e o download e sempre descartado.
+    - name: Gerar os arquivos de atualização
+      run: |
+        echo "$APP_VERSION" > version.txt
+        sha256sum EntregaWindows/SistemaLoja.jar | awk '{print $1}' > EntregaWindows/SistemaLoja.jar.sha256
+        cat version.txt EntregaWindows/SistemaLoja.jar.sha256
+
     - name: Criar Release no GitHub
+      # Só em tag. Um build manual nunca vira release, portanto nunca aparece
+      # como atualizacao disponivel na loja.
+      if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ env.APP_VERSION }}
         name: Versão ${{ env.APP_VERSION }}
-        files: Sistema-Loja-Windows-v${{ env.APP_VERSION }}.zip
+        files: |
+          Sistema-Loja-Windows-v${{ env.APP_VERSION }}.zip
+          EntregaWindows/SistemaLoja.jar
+          EntregaWindows/SistemaLoja.jar.sha256
+          version.txt
         body: |
           ### Download PRONTO PARA USO (Windows)
-          Para rodar o programa, baixe o arquivo `Sistema-Loja-Windows-v${{ env.APP_VERSION }}.zip` logo abaixo em "Assets". 
+          Para rodar o programa, baixe o arquivo `Sistema-Loja-Windows-v${{ env.APP_VERSION }}.zip` logo abaixo em "Assets".
           Extraia a pasta e dê dois cliques no arquivo **INICIAR.bat**.
+
+          ### Já tem o sistema instalado?
+          Não precisa baixar nada aqui. Abra o programa normalmente: a faixa no
+          topo da tela avisa da versão nova e o botão **Atualizar** cuida do resto.
+
+          <sub>Os arquivos `SistemaLoja.jar`, `SistemaLoja.jar.sha256` e `version.txt`
+          são usados pela atualização automática do programa.</sub>
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
