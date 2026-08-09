@@ -56,7 +56,7 @@ Visualização rápida de métricas essenciais para a tomada de decisão:
 
 ```bash
 # Clone o repositório
-git clone [https://github.com/brunombs/sistemaLojaAgua.git](https://github.com/brunombs/sistemaLojaAgua.git)
+git clone https://github.com/projects-bruno/sistemaLojaAgua.git
 
 # Entre na pasta
 cd sistemaLojaAgua
@@ -65,7 +65,54 @@ cd sistemaLojaAgua
 mvn clean javafx:run
 ```
 
+## 🔄 Atualização remota
+
+O programa instalado se atualiza sozinho a partir dos GitHub Releases.
+
+### Publicar uma versão nova
+
+A tag é o que dispara a publicação e define o número da versão:
+
+```bash
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+O workflow compila, cria o release e publica quatro arquivos: o ZIP da
+instalação completa, o `SistemaLoja.jar`, o `SistemaLoja.jar.sha256` e o
+`version.txt`. Os três últimos são o que o programa consulta sozinho.
+
+> Rodar o workflow pela aba Actions (`workflow_dispatch`) gera só um artifact
+> para teste — **não** cria release e portanto não aparece como atualização
+> para a loja.
+
+### O que acontece na loja
+
+1. Ao abrir o programa (e a cada 4 horas), ele lê o `version.txt` do release.
+2. Se houver versão nova, aparece uma faixa no topo da tela. Nada é baixado
+   sem clique, e a mensagem some com "Lembrar depois" até o dia seguinte.
+3. O botão **Atualizar** baixa o JAR novo para `update\SistemaLoja.jar.new` e
+   confere o SHA-256. O programa em uso **não** é substituído nesse momento —
+   no Windows o arquivo fica travado enquanto a aplicação está aberta.
+4. A troca acontece no próximo início, feita pelo `INICIAR.bat`.
+
+Sem internet, nada aparece na tela: a falha vai só para
+`~/.distribuidora_agua/logs/`.
+
+O banco fica em `~/.distribuidora_agua/`, fora da pasta do programa, então
+atualizar **nunca** apaga clientes, pedidos ou histórico.
+
+### Reverter uma versão com problema
+
+Na pasta do programa, com ele fechado:
+
+1. Apague o `SistemaLoja.jar`.
+2. Renomeie `update\SistemaLoja.jar.bak` para `SistemaLoja.jar`.
+3. Abra o `INICIAR.bat` normalmente.
+
+O `.bak` é a versão que estava rodando antes da última atualização.
+
 ## 🔒 Privacidade
 -  Este repositório contém a estrutura funcional do sistema. Dados reais de clientes e transações foram removidos para garantir a privacidade do estabelecimento comercial.
 
-[Desenvolvido por Bruno Barreto](https://github.com/brunombs)
+[Desenvolvido por Bruno Barreto](https://github.com/projects-bruno)
