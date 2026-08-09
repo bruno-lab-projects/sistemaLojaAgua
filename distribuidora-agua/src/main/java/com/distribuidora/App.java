@@ -1,6 +1,7 @@
 package com.distribuidora;
 
 import com.distribuidora.util.AlertUtils;
+import com.distribuidora.util.AppLogger;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -51,6 +52,8 @@ public class App extends Application {
     }
 
     public static void main(String[] args) {
+        AppLogger.initialize(Database.getDatabaseDirectory().resolve("logs"));
+
         try {
             Database.initialize();
         } catch (SQLException e) {

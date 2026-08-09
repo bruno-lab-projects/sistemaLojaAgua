@@ -3,6 +3,7 @@ module com.distribuidora {
     requires transitive javafx.graphics;
     requires transitive javafx.base;
     requires transitive java.sql;
+    requires java.logging;
     requires javafx.fxml;
 
     opens com.distribuidora to javafx.fxml, org.junit.platform.commons;

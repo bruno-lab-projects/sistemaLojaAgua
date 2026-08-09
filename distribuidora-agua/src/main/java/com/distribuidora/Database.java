@@ -12,6 +12,9 @@ import java.time.LocalDate;
 
 public class Database {
 
+    private static final java.util.logging.Logger LOG =
+            java.util.logging.Logger.getLogger(Database.class.getName());
+
     public static final String DB_DIR_PROPERTY = "distribuidora.db.dir";
 
     private static final String APP_DIRECTORY_NAME = ".distribuidora_agua";
@@ -64,7 +67,7 @@ public class Database {
             moveIfExists(legacyWalPath, currentWalPath);
             moveIfExists(legacyShmPath, currentShmPath);
 
-            System.out.println("Banco legado migrado para: " + dbPath);
+            LOG.info("Banco legado migrado para: " + dbPath);
         } catch (IOException e) {
             throw new SQLException("Falha ao migrar banco legado para o diretório padrão.", e);
         }
@@ -127,9 +130,9 @@ public class Database {
 
         try {
             createBackup(backupFile);
-            System.out.println("Backup diário realizado em: " + backupFile);
+            LOG.info("Backup diário realizado em: " + backupFile);
         } catch (SQLException | IOException e) {
-            System.err.println("Erro ao realizar backup do banco de dados: " + e.getMessage());
+            LOG.log(java.util.logging.Level.WARNING, "Erro ao realizar backup do banco de dados: " + e.getMessage(), e);
         }
     }
 
