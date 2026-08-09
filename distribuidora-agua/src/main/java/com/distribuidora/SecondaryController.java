@@ -1,5 +1,7 @@
 package com.distribuidora;
 
+import com.distribuidora.update.AppVersion;
+import com.distribuidora.update.UpdateService;
 import com.distribuidora.util.AlertUtils;
 import com.distribuidora.util.DbBackground;
 import com.distribuidora.util.FormatUtils;
@@ -106,6 +108,12 @@ public class SecondaryController {
     @FXML private TableColumn<Cliente, String> colInativoUltimaCompra;
     @FXML private Button btnBackup;
 
+    // Atualização do sistema
+    @FXML private Label lblVersaoInstalada;
+    @FXML private Button btnVerificarAtualizacoes;
+
+    private final UpdateService updateService = new UpdateService();
+
     private ObservableList<Cliente> clientesData = FXCollections.observableArrayList();
     private ObservableList<Pedido> pendenciasFinanceiraData = FXCollections.observableArrayList();
     private ObservableList<Pedido> pendenciasGarrafaoData = FXCollections.observableArrayList();
@@ -163,11 +171,40 @@ public class SecondaryController {
                 btnBackup);
     }
 
+    /**
+     * Verificação manual de atualização.
+     *
+     * Diferente da faixa da tela principal, que só aparece quando há novidade,
+     * aqui o usuário pediu explicitamente e precisa de uma resposta nos dois
+     * casos — inclusive no "já está atualizado".
+     */
+    @FXML
+    private void handleVerificarAtualizacoes() {
+        btnVerificarAtualizacoes.setDisable(true);
+        btnVerificarAtualizacoes.setText("Verificando...");
+
+        updateService.verificarAgora(versaoNova -> {
+            btnVerificarAtualizacoes.setDisable(false);
+            btnVerificarAtualizacoes.setText("Verificar atualizações");
+
+            if (versaoNova.isPresent()) {
+                AlertUtils.mostrarSucesso("Atualização disponível",
+                        "A versão " + versaoNova.get() + " já está disponível.\n\n"
+                        + "Volte à tela principal e clique em Atualizar na faixa do topo.");
+            } else {
+                AlertUtils.mostrarSucesso("Sistema atualizado",
+                        "Você já está na versão mais recente (" + AppVersion.atual() + ").");
+            }
+        });
+    }
+
     @FXML
     private void initialize() {
         // Configura máscara de telefone
         FormatUtils.configurarMascaraTelefone(telefoneField);
-        
+
+        lblVersaoInstalada.setText("Versão instalada: " + AppVersion.atual());
+
         // Configura as colunas da tabela de clientes
         colNome.setCellValueFactory(cellData -> cellData.getValue().nomeProperty());
         colTelefone.setCellValueFactory(cellData -> cellData.getValue().telefoneProperty());
