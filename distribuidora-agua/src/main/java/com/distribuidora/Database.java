@@ -297,4 +297,49 @@ public class Database {
             stmt.execute(updateSql);
         }
     }
+
+    /**
+     * Unidade de trabalho executada dentro de uma transação.
+     * Recebe a conexão já com autoCommit desligado.
+     */
+    @FunctionalInterface
+    public interface SqlWork<T> {
+        T apply(Connection conn) throws SQLException;
+    }
+
+    /**
+     * Executa o trabalho numa única transação: ou todas as escritas valem, ou nenhuma.
+     *
+     * Usado hoje pelo executor de migrações, que é o único fluxo multi-passo do
+     * sistema. Handlers de controller executam um único UPDATE ou INSERT por ação,
+     * o que já é atômico no SQLite, e por isso não precisam deste helper.
+     *
+     * Rollback também em RuntimeException: um NullPointerException no meio do
+     * fluxo não pode deixar escritas pela metade.
+     */
+    public static <T> T inTransaction(SqlWork<T> trabalho) throws SQLException {
+        try (Connection conn = connect()) {
+            conn.setAutoCommit(false);
+            try {
+                T resultado = trabalho.apply(conn);
+                conn.commit();
+                return resultado;
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException falhaNoRollback) {
+                    e.addSuppressed(falhaNoRollback);
+                }
+                throw e;
+            } finally {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException falhaAoRestaurarAutoCommit) {
+                    LOG.log(java.util.logging.Level.WARNING,
+                            "Falha ao restaurar autoCommit após transação: " + falhaAoRestaurarAutoCommit.getMessage(),
+                            falhaAoRestaurarAutoCommit);
+                }
+            }
+        }
+    }
 }
