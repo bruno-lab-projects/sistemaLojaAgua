@@ -1,6 +1,7 @@
 package com.distribuidora;
 
 import com.distribuidora.util.AlertUtils;
+import com.distribuidora.util.DbBackground;
 import com.distribuidora.util.FormatUtils;
 import java.io.File;
 import java.io.IOException;
@@ -116,43 +117,46 @@ public class SecondaryController {
      */
     @FXML
     private void handleRealizarBackup() {
+        // O FileChooser é modal e tem que ser aberto na thread da UI. Só a cópia
+        // do arquivo (mais lenta em bancos grandes) vai para o background.
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Salvar Backup do Sistema");
-        
+
         // Define o nome inicial do arquivo com a data de hoje (SEM a extensão)
         String dataHoje = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         fileChooser.setInitialFileName("backup_loja_" + dataHoje);
-        
+
         // Adiciona filtro de extensão para arquivos .db
-        FileChooser.ExtensionFilter extFilter = 
+        FileChooser.ExtensionFilter extFilter =
             new FileChooser.ExtensionFilter("Arquivo de Banco de Dados (*.db)", "*.db");
         fileChooser.getExtensionFilters().add(extFilter);
-        
+
         // Mostra o dialog de salvar
         File file = fileChooser.showSaveDialog(btnBackup.getScene().getWindow());
-        
-        // Se o usuário escolheu um arquivo
-        if (file != null) {
-            try {
-                // Garante que o arquivo tenha a extensão .db
-                String caminhoDestino = file.getAbsolutePath();
-                if (!caminhoDestino.toLowerCase().endsWith(".db")) {
-                    caminhoDestino += ".db";
-                }
-                Path destino = Paths.get(caminhoDestino);
 
-                // Gera uma cópia consistente, inclusive quando o banco estiver em WAL
-                Path backupGerado = Database.createBackup(destino);
-                
-                // Mostra mensagem de sucesso
-                AlertUtils.mostrarSucesso("Backup Concluído", 
-                    "Arquivo salvo em: " + backupGerado.toString());
-                
-            } catch (IOException | SQLException e) {
-                // Mostra mensagem de erro
-                AlertUtils.mostrarErro("Falha no Backup", e.getMessage());
-            }
+        // Se o usuário cancelou, não há nada a fazer
+        if (file == null) {
+            return;
         }
+
+        // Garante que o arquivo tenha a extensão .db
+        String caminhoDestino = file.getAbsolutePath();
+        if (!caminhoDestino.toLowerCase().endsWith(".db")) {
+            caminhoDestino += ".db";
+        }
+        Path destino = Paths.get(caminhoDestino);
+
+        // Gera uma cópia consistente do banco (VACUUM INTO), inclusive quando o
+        // banco estiver em WAL. É a parte lenta, por isso roda em background: o
+        // botão fica desabilitado até terminar, mas a janela continua respondendo.
+        DbBackground.executar(
+                "realizar backup manual",
+                () -> Database.createBackup(destino),
+                backupGerado -> AlertUtils.mostrarSucesso("Backup Concluído",
+                        "Arquivo salvo em: " + backupGerado.toString()),
+                "Não foi possível concluir o backup. Verifique se há espaço em "
+                    + "disco e se a pasta escolhida permite gravação.",
+                btnBackup);
     }
 
     @FXML
